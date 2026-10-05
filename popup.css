@@ -12,7 +12,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 h1 {
@@ -24,7 +24,12 @@ h2 {
     font-size: 12px;
     font-weight: 600;
     color: #a5a49a;
-    margin: 0 0 8px;
+    margin: 12px 0 6px;
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
 }
 
 .toggle {
@@ -32,6 +37,30 @@ h2 {
     align-items: center;
     gap: 6px;
     cursor: pointer;
+}
+
+/* Two buttons side by side, one of them selected: the tabs and the layout switch. */
+.pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background: #20201f;
+}
+
+.pair button {
+    padding: 6px 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #a5a49a;
+}
+
+.pair button[aria-pressed="true"] {
+    background: #3a3a38;
+    color: #e8e6e1;
 }
 
 #choices {
@@ -48,10 +77,10 @@ h2 {
     border-radius: 8px;
     background-size: cover;
     background-position: center;
-    cursor: pointer;
 }
 
-.choice[aria-pressed="true"] {
+.choice[aria-pressed="true"],
+.frame-choice[aria-pressed="true"] {
     border-color: #d97757;
 }
 
@@ -63,15 +92,42 @@ h2 {
     text-shadow: 0 1px 2px #000;
 }
 
-#choose {
+.frames {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+
+.frame-choice {
+    height: 38px;
+    padding: 4px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: #2a2a29;
+    color: #a5a49a;
+    font-size: 10px;
+    overflow: hidden;
+}
+
+/* A small copy of the frame. popup.js fills in the --sample-* values. */
+.sample {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border: var(--sample-width) solid var(--sample-color);
+    border-image-source: var(--sample-source);
+    border-image-slice: var(--sample-slice);
+    border-image-repeat: var(--sample-repeat);
+    border-radius: min(var(--sample-radius), 8px);
+}
+
+.wide {
     width: 100%;
     padding: 10px 16px;
     border: 0;
     border-radius: 8px;
     background: #20201f;
     color: #e8e6e1;
-    font: inherit;
-    cursor: pointer;
 }
 
 .slider {
@@ -92,4 +148,8 @@ input[type="range"] {
 
 input[type="checkbox"] {
     accent-color: #d97757;
+}
+
+#borders .wide {
+    margin-top: 16px;
 }

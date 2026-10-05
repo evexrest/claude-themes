@@ -14,21 +14,54 @@
         </label>
     </header>
 
-    <h2>Background</h2>
-    <div id="choices"></div>
-    <button id="choose">Upload your own image</button>
+    <nav class="pair">
+        <button id="tab-background" aria-pressed="true">Background</button>
+        <button id="tab-borders" aria-pressed="false">Borders</button>
+    </nav>
 
-    <label class="slider" for="opacity">
-        Image opacity
-        <span id="opacity-value"></span>
-    </label>
-    <input type="range" id="opacity" min="0" max="100">
+    <section id="background">
+        <div id="choices"></div>
+        <button id="choose" class="wide">Upload your own image</button>
 
-    <label class="slider" for="panel">
-        Sidebar opacity
-        <span id="panel-value"></span>
-    </label>
-    <input type="range" id="panel" min="0" max="100">
+        <label class="slider" for="opacity">
+            Image opacity
+            <span id="opacity-value"></span>
+        </label>
+        <input type="range" id="opacity" min="0" max="100">
+
+        <label class="slider" for="panel">
+            Sidebar opacity
+            <span id="panel-value"></span>
+        </label>
+        <input type="range" id="panel" min="0" max="100">
+    </section>
+
+    <section id="borders" hidden>
+        <div class="pair">
+            <button id="layout-separate">Separate</button>
+            <button id="layout-combined">One frame</button>
+        </div>
+
+        <div id="separate">
+            <h2>Sidebar</h2>
+            <div class="frames" id="frames-sidebar"></div>
+            <h2>Chat window</h2>
+            <div class="frames" id="frames-main"></div>
+        </div>
+
+        <div id="combined">
+            <h2>Whole window</h2>
+            <div class="frames" id="frames-all"></div>
+        </div>
+
+        <label class="slider" for="frame-width">
+            Thickness
+            <span id="frame-width-value"></span>
+        </label>
+        <input type="range" id="frame-width" min="4" max="40">
+
+        <button id="choose-frame" class="wide">Upload your own frame</button>
+    </section>
 
     <script src="settings.js"></script>
     <script src="popup.js"></script>

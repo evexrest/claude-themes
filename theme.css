@@ -61,3 +61,34 @@ html[data-wallpaper="on"] .epitaxy-chat-panel [class*="bg-[var(--epitaxy-transcr
 html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-color"] {
     --cds-scroll-fade-strip-color: transparent;
 }
+
+/* Frames. content.js switches each one on with a data-frame attribute on <html>
+   and fills in the --frame-* values. A frame is a real border, so the page's own
+   content moves inward instead of being covered. */
+html[data-frame-sidebar] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar {
+    border: var(--frame-sidebar-width) solid var(--frame-sidebar-color) !important;
+    border-image-source: var(--frame-sidebar-source) !important;
+    border-image-slice: var(--frame-sidebar-slice) !important;
+    border-image-repeat: var(--frame-sidebar-repeat) !important;
+    border-radius: var(--frame-sidebar-radius) !important;
+    box-shadow: var(--frame-sidebar-shadow) !important;
+}
+
+html[data-frame-main] .dframe-pane-primary {
+    border: var(--frame-main-width) solid var(--frame-main-color) !important;
+    border-image-source: var(--frame-main-source) !important;
+    border-image-slice: var(--frame-main-slice) !important;
+    border-image-repeat: var(--frame-main-repeat) !important;
+    border-radius: var(--frame-main-radius) !important;
+    box-shadow: var(--frame-main-shadow) !important;
+}
+
+html[data-frame-all] .dframe-root {
+    border: var(--frame-all-width) solid var(--frame-all-color) !important;
+    border-image-source: var(--frame-all-source) !important;
+    border-image-slice: var(--frame-all-slice) !important;
+    border-image-repeat: var(--frame-all-repeat) !important;
+    border-radius: var(--frame-all-radius) !important;
+    box-shadow: var(--frame-all-shadow) !important;
+    overflow: clip;
+}

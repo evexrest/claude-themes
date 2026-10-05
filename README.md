@@ -7,6 +7,9 @@ screens.
 - Upload your own image, then drag and zoom to crop it to the shape of your screen
 - Image opacity slider, so a bright picture does not fight the text
 - Sidebar opacity slider
+- Borders: seven preset frames (bubbles, a rounded "pop" frame, neon, gold and more),
+  around the sidebar and the chat window separately or as one frame around everything
+- Upload your own frame picture; its thickness is measured for you
 - Works in light and dark mode
 
 Unofficial. Not made by, or affiliated with, Anthropic. It restyles the page in your own
@@ -31,8 +34,9 @@ It also works in other Chromium browsers such as Edge, Brave and Arc.
 | File | What it does |
 |---|---|
 | `manifest.json` | Tells Chrome what the extension is and which pages it runs on |
-| `settings.js` | The default settings and the list of presets |
+| `settings.js` | The default settings and the lists of background and frame presets |
 | `content.js` | Runs on claude.ai, reads the saved settings, shows the background |
-| `theme.css` | Styles the background layer and makes the page see-through |
-| `popup.html`, `popup.js`, `popup.css` | The panel behind the toolbar icon: presets, sliders, on/off |
-| `options.html`, `options.js`, `options.css` | The upload and crop page |
+| `theme.css` | Styles the background layer, makes the page see-through, draws the frames |
+| `popup.html`, `popup.js`, `popup.css` | The panel behind the toolbar icon: backgrounds, borders, sliders, on/off |
+| `options.html`, `options.js`, `options.css` | The upload page: crop a background image |
+| `frame-upload.js` | The upload page: read and save your own frame picture |
