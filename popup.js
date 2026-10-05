@@ -1,5 +1,5 @@
-// `defaults`, `presets`, `frames`, `frameValues`, `fonts`, `imageKey` and
-// `filesVersion` come from settings.js.
+// `defaults`, `presets`, `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey`
+// and `filesVersion` come from settings.js.
 
 const choices = document.getElementById("choices");
 const images = document.getElementById("images");
@@ -7,6 +7,9 @@ const enabled = document.getElementById("enabled");
 const opacity = document.getElementById("opacity");
 const panel = document.getElementById("panel");
 const sideOpacity = document.getElementById("side-opacity");
+const stickerSize = document.getElementById("sticker-size");
+const stickerPosition = document.getElementById("sticker-position");
+const stickerOpacity = document.getElementById("sticker-opacity");
 const frameWidth = document.getElementById("frame-width");
 const textColor = document.getElementById("text-color");
 const codeColor = document.getElementById("code-color");
@@ -17,6 +20,8 @@ const fontCustom = document.getElementById("font-custom");
 // words Claude marks out.
 const textSwatches = ["#ffffff", "#f5f0e6", "#cfcfcf", "#ffe9a8", "#0b0b0b", "#2b2b2b", "#10254a", "#3d1010"];
 const codeSwatches = ["#ffffff", "#ffb3b3", "#ffd479", "#a8e6a1", "#8fd3ff", "#d9b8ff", "#0b0b0b", "#0d4a8f"];
+
+const tabs = ["background", "sidebar", "sides", "borders", "text"];
 
 function save(change) {
     chrome.storage.local.set(change);
@@ -34,7 +39,7 @@ function showPercent(slider, id) {
 }
 
 function showTab(name) {
-    for (const other of ["background", "sidebar", "borders", "text"]) {
+    for (const other of tabs) {
         document.getElementById(other).hidden = other !== name;
     }
     select(document.getElementById("tab-" + name));
@@ -44,6 +49,14 @@ function showLayout(layout) {
     document.getElementById("separate").hidden = layout !== "separate";
     document.getElementById("combined").hidden = layout !== "combined";
     select(document.getElementById("layout-" + layout));
+}
+
+// The numbers beside the size and height sliders of the side pictures.
+function showStickerNumbers() {
+    document.getElementById("sticker-size-value").textContent = stickerSize.value + "px";
+    const place = Number(stickerPosition.value);
+    document.getElementById("sticker-position-value").textContent =
+        place < 20 ? "Top" : place > 80 ? "Bottom" : "Middle";
 }
 
 function showSidebarMode(mode) {
@@ -118,6 +131,78 @@ async function removeImage(id, cell) {
     cell.remove();
     showSidebarChoices({ ...saved, ...change });
     document.getElementById("images-title").hidden = change.images.length === 0;
+}
+
+// The side pictures. Each side has a row of buttons: "None", then every saved
+// picture. `key` is the setting a row changes ("stickerLeft" or "stickerRight").
+function showStickerRow(rowId, key, settings) {
+    const row = document.getElementById(rowId);
+    row.replaceChildren();
+
+    const none = document.createElement("button");
+    none.className = "sticker";
+    none.textContent = "None";
+    none.setAttribute("aria-pressed", settings[key] === null);
+    none.addEventListener("click", () => {
+        pressSticker(row, none);
+        save({ [key]: null });
+    });
+    row.appendChild(none);
+
+    for (const sticker of settings.stickers) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        const button = document.createElement("button");
+        button.className = "sticker";
+        button.style.backgroundImage = `url("${sticker.thumb}")`;
+        button.title = "Use this picture";
+        button.setAttribute("aria-pressed", settings[key] === sticker.id);
+        button.addEventListener("click", () => {
+            pressSticker(row, button);
+            save({ [key]: sticker.id });
+        });
+
+        const remove = document.createElement("button");
+        remove.className = "remove";
+        remove.textContent = "×";
+        remove.title = "Remove this picture";
+        remove.addEventListener("click", () => {
+            removeSticker(sticker.id);
+        });
+
+        cell.append(button, remove);
+        row.appendChild(cell);
+    }
+}
+
+function pressSticker(row, button) {
+    for (const other of row.querySelectorAll(".sticker")) {
+        other.setAttribute("aria-pressed", other === button);
+    }
+}
+
+function showStickers(settings) {
+    showStickerRow("stickers-left", "stickerLeft", settings);
+    showStickerRow("stickers-right", "stickerRight", settings);
+}
+
+async function removeSticker(id) {
+    if (!confirm("Remove this picture from your saved pictures?")) {
+        return;
+    }
+    const saved = await chrome.storage.local.get(defaults);
+    const change = { stickers: saved.stickers.filter((sticker) => sticker.id !== id) };
+
+    // Take it off whichever side was showing it.
+    for (const key of ["stickerLeft", "stickerRight"]) {
+        if (saved[key] === id) {
+            change[key] = null;
+        }
+    }
+    await chrome.storage.local.set(change);
+    await chrome.storage.local.remove(stickerKey(id));
+    showStickers({ ...saved, ...change });
 }
 
 // One small button showing a frame. `key` is the setting it changes,
@@ -236,6 +321,11 @@ async function start() {
             backgroundChoice(preset.name, preset.css, settings.preset === preset.id, { preset: preset.id })
         );
     }
+    // No background at all: Claude looks the way it normally does.
+    const plain = backgroundChoice("Claude's own", "none", settings.preset === "none", { preset: "none" });
+    plain.classList.add("plain");
+    choices.appendChild(plain);
+
     for (const image of settings.images) {
         addImage(image, !settings.preset && settings.imageId === image.id);
     }
@@ -247,6 +337,7 @@ async function start() {
 
     showSidebarChoices(settings);
     showSidebarMode(settings.sidebarMode);
+    showStickers(settings);
 
     addColours("text-swatches", "textColor", textColor, textSwatches, settings.textColor, "#ffffff");
     addColours("code-swatches", "codeColor", codeColor, codeSwatches, settings.codeColor, "#8e2626");
@@ -262,10 +353,15 @@ async function start() {
     opacity.value = Math.round(settings.opacity * 100);
     panel.value = Math.round(settings.panelOpacity * 100);
     sideOpacity.value = Math.round(settings.sidebarOpacity * 100);
+    stickerSize.value = settings.stickerSize;
+    stickerPosition.value = settings.stickerPosition;
+    stickerOpacity.value = Math.round(settings.stickerOpacity * 100);
     frameWidth.value = settings.frameWidth;
     showPercent(opacity, "opacity-value");
     showPercent(panel, "panel-value");
     showPercent(sideOpacity, "side-opacity-value");
+    showPercent(stickerOpacity, "sticker-opacity-value");
+    showStickerNumbers();
     document.getElementById("frame-width-value").textContent = frameWidth.value + "px";
 
     enabled.addEventListener("change", () => {
@@ -287,6 +383,21 @@ async function start() {
         save({ sidebarOpacity: sideOpacity.value / 100 });
     });
 
+    stickerSize.addEventListener("input", () => {
+        showStickerNumbers();
+        save({ stickerSize: Number(stickerSize.value) });
+    });
+
+    stickerPosition.addEventListener("input", () => {
+        showStickerNumbers();
+        save({ stickerPosition: Number(stickerPosition.value) });
+    });
+
+    stickerOpacity.addEventListener("input", () => {
+        showPercent(stickerOpacity, "sticker-opacity-value");
+        save({ stickerOpacity: stickerOpacity.value / 100 });
+    });
+
     frameWidth.addEventListener("input", () => {
         document.getElementById("frame-width-value").textContent = frameWidth.value + "px";
         save({ frameWidth: Number(frameWidth.value) });
@@ -301,7 +412,7 @@ async function start() {
         save({ fontCustom: fontCustom.value });
     });
 
-    for (const name of ["background", "sidebar", "borders", "text"]) {
+    for (const name of tabs) {
         document.getElementById("tab-" + name).addEventListener("click", () => {
             showTab(name);
         });
@@ -323,6 +434,10 @@ async function start() {
 
     document.getElementById("choose").addEventListener("click", () => {
         chrome.runtime.openOptionsPage();
+    });
+
+    document.getElementById("choose-sticker").addEventListener("click", () => {
+        chrome.tabs.create({ url: chrome.runtime.getURL("options.html#sides") });
     });
 
     // The upload page, with its crop box already in the sidebar's tall shape.

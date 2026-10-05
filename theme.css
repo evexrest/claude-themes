@@ -62,6 +62,16 @@ html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-c
     --cds-scroll-fade-strip-color: transparent;
 }
 
+/* The pictures beside the chat. content.js creates one for each side and works
+   out where the empty space is, so they never sit on top of the chat itself. */
+.claude-sticker {
+    position: fixed;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+    object-fit: contain;
+}
+
 /* The sidebar's own picture, for when it is not joined to the main background.
    The sidebar goes back to its solid colour so the main background stops showing
    through, and the picture sits on a layer between that colour and the sidebar's

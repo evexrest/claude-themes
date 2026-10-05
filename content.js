@@ -1,6 +1,7 @@
-// Runs on every claude.ai page. Reads the saved settings, shows the background and
-// the sidebar's picture, draws the frames and sets the chat text's colour and font. `defaults`, `presets`,
-// `frameValues`, `fontFamily`, `hslParts` and `imageKey` come from settings.js.
+// Runs on every claude.ai page. Reads the saved settings, shows the background, the
+// sidebar's picture and the pictures beside the chat, draws the frames and sets the
+// chat text's colour and font. `defaults`, `presets`, `frameValues`, `fontFamily`,
+// `hslParts`, `imageKey` and `stickerKey` come from settings.js.
 
 const root = document.documentElement;
 let settings = defaults;
@@ -13,6 +14,17 @@ const layers = {
     main: { url: null, loads: 0 },
     sidebar: { url: null, loads: 0 }
 };
+
+// The pictures beside the chat, one for each side. `setting` names the setting
+// that holds the picture's id; `element` is its <img> once it has been made.
+const stickers = {
+    left: { setting: "stickerLeft", element: null, url: null, loads: 0 },
+    right: { setting: "stickerRight", element: null, url: null, loads: 0 }
+};
+
+// Space kept clear around a side picture, and the least room worth using.
+const stickerGap = 12;
+const stickerSmallest = 48;
 
 function dataUrlToBlob(dataUrl) {
     const [head, base64] = dataUrl.split(",");
@@ -63,7 +75,8 @@ async function loadPicture(layer, presetId, imageId, show) {
 function applyBackground(sourceChanged) {
     const preset = presets.find((item) => item.id === settings.preset);
 
-    if (!settings.enabled || (!preset && !settings.imageId)) {
+    // Off, set to Claude's own background, or nothing to show.
+    if (!settings.enabled || settings.preset === "none" || (!preset && !settings.imageId)) {
         setAttribute("data-wallpaper", false);
         return;
     }
@@ -99,6 +112,107 @@ function applySidebar(sourceChanged) {
         root.style.setProperty("--sidebar-image-opacity", settings.sidebarOpacity);
     }
     setAttribute("data-sidebar-image", own);
+}
+
+// Fetch one side's picture from storage and put it in that side's <img>.
+async function loadSticker(side) {
+    const slot = stickers[side];
+    const id = settings[slot.setting];
+    const turn = ++slot.loads;
+    let url = null;
+
+    if (id) {
+        const key = stickerKey(id);
+        const saved = await chrome.storage.local.get(key);
+        // A newer choice was made while this one was loading.
+        if (turn !== slot.loads) {
+            return;
+        }
+        if (saved[key]) {
+            url = URL.createObjectURL(dataUrlToBlob(saved[key]));
+        }
+    }
+
+    if (slot.url) {
+        URL.revokeObjectURL(slot.url);
+    }
+    slot.url = url;
+
+    if (url && !slot.element) {
+        slot.element = document.createElement("img");
+        slot.element.className = "claude-sticker";
+        slot.element.alt = "";
+        // The picture's height is only known once it has loaded.
+        slot.element.addEventListener("load", placeStickers);
+    }
+    if (slot.element) {
+        if (url) {
+            slot.element.src = url;
+        } else {
+            slot.element.removeAttribute("src");
+        }
+    }
+    placeStickers();
+}
+
+// Put each side picture in the empty space on its side of the chat: between the
+// edge of the chat window and the column the messages sit in. The message box is
+// as wide as that column, so it is used to find it. A picture is never made wider
+// than the space, and is hidden when there is too little of it.
+function placeStickers() {
+    const pane = document.querySelector(".dframe-pane-primary");
+    const column = document.querySelector('[data-cds="ChatComposer"]');
+    const paneBox = pane ? pane.getBoundingClientRect() : null;
+    const columnBox = column ? column.getBoundingClientRect() : null;
+
+    for (const side of ["left", "right"]) {
+        const slot = stickers[side];
+        if (!slot.element) {
+            continue;
+        }
+
+        let width = 0;
+        let start = 0;
+        if (settings.enabled && slot.url && paneBox && columnBox && columnBox.width > 0) {
+            start = side === "left" ? paneBox.left : columnBox.right;
+            const end = side === "left" ? columnBox.left : paneBox.right;
+            const room = end - start - stickerGap * 2;
+            width = Math.min(settings.stickerSize, room);
+            start += (end - start - width) / 2;
+        }
+
+        if (width < stickerSmallest) {
+            slot.element.style.display = "none";
+            continue;
+        }
+        if (!slot.element.isConnected) {
+            root.appendChild(slot.element);
+        }
+
+        // Keep clear of the bar along the top of the chat window.
+        const top = paneBox.top + 56;
+        const height = paneBox.height - 56 - stickerGap;
+        const share = settings.stickerPosition / 100;
+        const style = slot.element.style;
+        style.display = "block";
+        style.left = start + "px";
+        style.width = width + "px";
+        style.maxHeight = height + "px";
+        // `share` of the way down: 0 touches the top, 1 touches the bottom.
+        style.top = top + height * share + "px";
+        style.transform = `translateY(${-share * 100}%)`;
+        style.opacity = settings.stickerOpacity;
+    }
+}
+
+function applyStickers(leftChanged, rightChanged) {
+    if (leftChanged) {
+        loadSticker("left");
+    }
+    if (rightChanged) {
+        loadSticker("right");
+    }
+    placeStickers();
 }
 
 // One frame goes around the sidebar, the chat window, or the whole window ("all").
@@ -160,6 +274,7 @@ async function start() {
     applySidebar(true);
     applyFrames(true);
     applyText();
+    applyStickers(true, true);
 
     chrome.storage.onChanged.addListener((changes) => {
         for (const key of Object.keys(changes)) {
@@ -173,6 +288,7 @@ async function start() {
         applySidebar("sidebarMode" in changes || "sidebarPreset" in changes || "sidebarImageId" in changes);
         applyFrames("frameImage" in changes);
         applyText();
+        applyStickers("stickerLeft" in changes, "stickerRight" in changes);
     });
 
     // If the page removes our element or attributes while it loads, put them back.
@@ -191,6 +307,26 @@ async function start() {
             "data-ct-text", "data-ct-code", "data-ct-font"
         ]
     });
+
+    // The empty space beside the chat changes when the window is resized, the
+    // sidebar opens or closes, or another chat is opened. claude.ai swaps pages
+    // without reloading, so a slow timer catches the changes nothing announces.
+    const watcher = new ResizeObserver(placeStickers);
+    let watched = null;
+    window.addEventListener("resize", placeStickers);
+    setInterval(() => {
+        const pane = document.querySelector(".dframe-pane-primary");
+        if (pane !== watched) {
+            if (watched) {
+                watcher.unobserve(watched);
+            }
+            if (pane) {
+                watcher.observe(pane);
+            }
+            watched = pane;
+        }
+        placeStickers();
+    }, 1000);
 }
 
 start();

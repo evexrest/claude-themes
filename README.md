@@ -15,6 +15,9 @@ screens, with frames and your own text colour and font.
 - Frames lie over the edge of the page. They never move or resize anything
 - The sidebar can share the main background or have a picture of its own, with its own
   opacity
+- Pictures or GIFs in the empty space on either side of the chat, with size, height and
+  opacity sliders. They work with any background, including Claude's own, and never sit
+  on top of the chat
 - Text colour and font for the chat, for backgrounds that make the normal text hard to
   read, and a separate colour for the words Claude marks out (normally crimson)
 - Upload your own frame picture; its thickness is measured for you
@@ -43,8 +46,9 @@ It also works in other Chromium browsers such as Edge, Brave and Arc.
 |---|---|
 | `manifest.json` | Tells Chrome what the extension is and which pages it runs on |
 | `settings.js` | The default settings and the lists of backgrounds, frames and fonts |
-| `content.js` | Runs on claude.ai, reads the saved settings, shows the background, the sidebar's picture, frames and text style |
+| `content.js` | Runs on claude.ai, reads the saved settings, shows the background, the sidebar's picture, the side pictures, frames and text style |
 | `theme.css` | Styles the picture layers, makes the page see-through, draws the frames, recolours the text |
-| `popup.html`, `popup.js`, `popup.css` | The panel behind the toolbar icon: backgrounds, saved images, sidebar, borders, text, on/off |
+| `popup.html`, `popup.js`, `popup.css` | The panel behind the toolbar icon: backgrounds, saved images, sidebar, side pictures, borders, text, on/off |
 | `options.html`, `options.js`, `options.css` | The upload page: crop an image for the screen or the sidebar and add it to your saved images |
 | `frame-upload.js` | The upload page: read and save your own frame picture |
+| `stickers.js` | The upload page: save a picture or GIF for beside the chat |

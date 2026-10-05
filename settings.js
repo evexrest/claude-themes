@@ -2,11 +2,12 @@
 
 // Keep this the same as "version" in manifest.json. The popup compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.4.0";
+const filesVersion = "0.5.0";
 
 const defaults = {
     enabled: true,
-    // The background is a preset, or one of the saved images when `preset` is null.
+    // The background is a preset, one of the saved images when `preset` is null,
+    // or Claude's own background when `preset` is "none".
     preset: "dusk",
     imageId: null,
     // The saved images, as a list of { id, thumb }. `thumb` is a small copy for the
@@ -27,6 +28,15 @@ const defaults = {
     frameWidth: 14,
     frameImage: null,
     frameSlice: null,
+    // Pictures in the empty space beside the chat. `stickers` is the list of saved
+    // ones, as { id, thumb }; each file is stored separately, under stickerKey(id).
+    // `stickerLeft` and `stickerRight` hold the id shown on each side, or null.
+    stickers: [],
+    stickerLeft: null,
+    stickerRight: null,
+    stickerSize: 180,
+    stickerPosition: 85,
+    stickerOpacity: 1,
     // Chat text. A null colour and the "default" font leave Claude's own alone.
     // `codeColor` is for the words Claude marks like `this`, normally crimson.
     textColor: null,
@@ -38,6 +48,11 @@ const defaults = {
 // Where one saved image's full-size picture is kept.
 function imageKey(id) {
     return "image-" + id;
+}
+
+// Where one side picture's file is kept.
+function stickerKey(id) {
+    return "sticker-" + id;
 }
 
 // Fonts that are already on most computers, so nothing has to be downloaded.

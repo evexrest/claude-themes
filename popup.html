@@ -20,9 +20,10 @@
         refresh claude.ai.
     </p>
 
-    <nav class="pair four">
+    <nav class="pair five">
         <button id="tab-background" aria-pressed="true">Background</button>
         <button id="tab-sidebar" aria-pressed="false">Sidebar</button>
+        <button id="tab-sides" aria-pressed="false">Sides</button>
         <button id="tab-borders" aria-pressed="false">Borders</button>
         <button id="tab-text" aria-pressed="false">Text</button>
     </nav>
@@ -67,6 +68,38 @@
             </label>
             <input type="range" id="side-opacity" min="0" max="100">
         </div>
+    </section>
+
+    <section id="sides" hidden>
+        <p class="note first">
+            Pictures or GIFs in the empty space on either side of the chat. They work
+            with any background, including Claude's own.
+        </p>
+
+        <h2>Left side</h2>
+        <div class="stickers" id="stickers-left"></div>
+        <h2>Right side</h2>
+        <div class="stickers" id="stickers-right"></div>
+
+        <button id="choose-sticker" class="wide">Add a picture or GIF</button>
+
+        <label class="slider" for="sticker-size">
+            Size
+            <span id="sticker-size-value"></span>
+        </label>
+        <input type="range" id="sticker-size" min="60" max="400">
+
+        <label class="slider" for="sticker-position">
+            Height on the page
+            <span id="sticker-position-value"></span>
+        </label>
+        <input type="range" id="sticker-position" min="0" max="100">
+
+        <label class="slider" for="sticker-opacity">
+            Opacity
+            <span id="sticker-opacity-value"></span>
+        </label>
+        <input type="range" id="sticker-opacity" min="10" max="100">
     </section>
 
     <section id="borders" hidden>

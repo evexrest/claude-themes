@@ -120,3 +120,20 @@ h2 {
     background: #3a3a38;
     color: #e8e6e1;
 }
+
+/* The preview of a picture for beside the chat, on a checked pattern so that
+   see-through parts can be told apart from white ones. */
+#sticker-preview {
+    display: block;
+    max-width: 320px;
+    max-height: 320px;
+    margin: 24px 0;
+    border-radius: 8px;
+    background: repeating-conic-gradient(#2a2a29 0% 25%, #20201f 0% 50%) 0 0 / 24px 24px;
+}
+
+#sticker-status {
+    min-height: 24px;
+    margin-top: 16px;
+    color: #a5a49a;
+}

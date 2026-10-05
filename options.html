@@ -39,6 +39,27 @@
 
         <p id="status"></p>
 
+        <h2 id="sides">Pictures beside the chat</h2>
+        <p>
+            Choose a picture or a GIF to sit in the empty space at the side of the chat.
+            One with a see-through background (PNG, GIF or WebP) looks best. It is not
+            cropped, and a GIF keeps moving.
+        </p>
+
+        <label class="button" for="sticker-file">Choose a picture or GIF</label>
+        <input type="file" id="sticker-file" accept="image/*" hidden>
+
+        <div id="sticker-editor" hidden>
+            <img id="sticker-preview" alt="">
+
+            <div class="row">
+                <button id="sticker-left">Put it on the left</button>
+                <button id="sticker-right">Put it on the right</button>
+            </div>
+        </div>
+
+        <p id="sticker-status"></p>
+
         <h2>Your own frame</h2>
         <p>Choose a picture of a frame or border. A PNG with a see-through middle works best.</p>
 
@@ -60,5 +81,6 @@
     <script src="settings.js"></script>
     <script src="options.js"></script>
     <script src="frame-upload.js"></script>
+    <script src="stickers.js"></script>
 </body>
 </html>
