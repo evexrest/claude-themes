@@ -25,7 +25,7 @@ window.chrome = {
     },
     onChanged: { addListener(l) { listeners.push(l); } }
   },
-  runtime: { getManifest: () => ({ version: new URLSearchParams(location.search).get("v") || "0.7.1" }), openOptionsPage() { window.openedOptions = true; }, getURL: (p) => 'ext://' + p },
+  runtime: { getManifest: () => ({ version: new URLSearchParams(location.search).get("v") || (typeof filesVersion === "string" ? filesVersion : "0") }), openOptionsPage() { window.openedOptions = true; }, getURL: (p) => 'ext://' + p },
   tabs: { create(o) { window.openedTab = o.url; } }
 };
 window.colourImage = (colour, w = 4, h = 3) => { const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.fillStyle = colour; x.fillRect(0, 0, w, h); return c.toDataURL("image/png"); };
