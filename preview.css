@@ -138,13 +138,18 @@ body {
     font-size: 13px;
 }
 
-/* The page area holds the chat window, and keeps its layers to itself. */
+/* The page area holds the chat window, and keeps its layers to itself. On
+   claude.ai it runs underneath the sidebar, which stands on top of it. The
+   stand-in does the same (288px back under the sidebar, then the 8px gap), so
+   that code measuring either one meets what it will meet on the real page. */
 .dframe-content {
     display: flex;
     flex: 1;
+    box-sizing: border-box;
     min-width: 0;
     isolation: isolate;
-    padding-left: 8px;
+    margin-left: -288px;
+    padding-left: 296px;
     background: var(--cds-surface-1);
 }
 

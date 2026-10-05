@@ -25,5 +25,9 @@ address, for pictures; `logic.html` runs a fixed script.
 `gif.py` writes the two test characters (`char.gif`, `char2.gif`); `gifs.js` holds them as
 text for the test pages.
 
+On claude.ai the page area (`.dframe-content`) is the whole window and the sidebar stands
+on top of it. The stand-ins are built the same way since 0.14.0; before that theirs sat
+beside the sidebar, and code that measured it passed here and was wrong on the real site.
+
 These pages copy claude.ai's class names as they were on 2026-10-05. They show that the
 extension's own code works, not that claude.ai still looks the way the pages assume.
