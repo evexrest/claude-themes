@@ -1,0 +1,93 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<link rel="stylesheet" href="../theme.css">
+<script>window.seed = {};</script>
+<script src="stub.js"></script><script src="gifs.js"></script>
+<script>
+  store.images = [{ id: "a", thumb: "x" }, { id: "b", thumb: "y" }];
+  store["image-a"] = colourImage("#ff0000"); store["image-b"] = colourImage("#00ff00");
+  store.preset = null; store.imageId = "a"; store.textColor = "#ffffff"; store.font = "hand";
+</script>
+<script src="../settings.js"></script>
+<script src="../content.js"></script>
+<style>:root{--cds-text-primary:rgb(11, 11, 11);--cds-text-secondary:rgb(82, 81, 78);--cds-text-muted:rgb(137, 135, 129)}.dframe-root{display:flex;height:400px;position:relative} body{width:1200px}.dframe-sidebar{width:288px;position:relative;z-index:20;isolation:isolate;--df-web-sidebar-bg:#eee}.dframe-pane-primary{flex:1;position:relative;contain:layout}</style></head><body><div class="dframe-root" data-variant="web"><nav class="dframe-sidebar"><span id="sbt" style="color: var(--cds-text-primary); font-family: var(--font-ui, sans-serif)">s</span><span id="sbplain">plain</span><i id="icon" style="font-family: IconFont">i</i></nav><div class="dframe-pane-primary"><div class="standard-markdown"><p id="p" style="color: var(--cds-text-primary); font-family: var(--font-claude-response)">text <code id="c" style="color: var(--cds-prose-code-color, rgb(142, 38, 38))">code</code></p><div id="wrap"><span id="label" style="color: var(--cds-text-secondary)">python</span><div><pre id="pre"><code id="pc" style="color: rgb(1, 2, 3)">block</code><span id="plain" style="color: var(--cds-text-primary)">plain</span></pre></div></div></div><div data-cds="ChatComposer" style="width:300px;height:40px;margin:200px auto 0"><div class="relative bg-surface-3 z-1"><div class="ProseMirror" id="ed" style="color: var(--cds-text-primary); font-family: var(--font-user-message, serif)"><code id="edcode" style="color: var(--cds-editor-code-ink, rgb(142, 38, 38))">x</code></div><div class="cds-root"><span id="edinner" style="color: var(--cds-text-secondary)">inner</span></div></div><div class="bg-page"><span id="small" style="color: var(--cds-text-muted, rgb(137, 135, 129))">Claude is AI and can make mistakes.</span><span id="model" style="color: var(--cds-text-secondary)">Opus</span></div></div><button id="btn" style="color: var(--cds-text-primary)">Share</button><aside class="w-full bg-surface-2"><span id="panel" style="color: var(--cds-text-primary)">panel</span></aside><div class="flex bg-yellow-50"><span id="chip" style="color: var(--cds-text-primary)">file</span></div><div role="menu"><span id="menu" style="color: var(--cds-text-primary)">menu</span></div></div></div>
+<pre id="out"></pre><i id="mark"></i>
+<script>
+const R = document.documentElement, results = {};
+async function pixel() { // colour of the wallpaper's current picture
+  const m = /url\("(blob:[^"]+)"\)/.exec(document.getElementById("claude-wallpaper").style.backgroundImage);
+  if (!m) return document.getElementById("claude-wallpaper").style.backgroundImage.slice(0, 30);
+  const img = new Image(); await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = m[1]; });
+  const c = document.createElement("canvas"); c.width = 1; c.height = 1; const x = c.getContext("2d"); x.drawImage(img, 0, 0); return [...x.getImageData(0, 0, 1, 1).data].join(",");
+}
+const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttribute("data-ct-text"), font: R.getAttribute("data-ct-font"), pColor: getComputedStyle(p).color, pFont: getComputedStyle(p).fontFamily.slice(0, 22), hsl: R.style.getPropertyValue("--ct-text-hsl") });
+(async () => {
+  const sb = document.querySelector(".dframe-sidebar"), pane = document.querySelector(".dframe-pane-primary");
+  const size = () => [sb, pane].map((e) => { const r = e.getBoundingClientRect(); return [r.left, r.top, r.width, r.height].map(Math.round).join(","); }).join(" | ");
+  const side = async () => { const v = R.style.getPropertyValue("--sidebar-image"); const m = /url\("(blob:[^"]+)"\)/.exec(v); if (!m) return v.slice(0, 28); const img = new Image(); await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = m[1]; }); const c = document.createElement("canvas"); c.width = 1; c.height = 1; const x = c.getContext("2d"); x.drawImage(img, 0, 0); return [...x.getImageData(0, 0, 1, 1).data].join(","); };
+  const pseudo = () => ({ before: getComputedStyle(sb, "::before").content, beforeOpacity: getComputedStyle(sb, "::before").opacity, after: getComputedStyle(sb, "::after").content, afterBorder: getComputedStyle(sb, "::after").borderTopWidth, paneAfter: getComputedStyle(pane, "::after").borderTopWidth, events: getComputedStyle(sb, "::after").pointerEvents });
+  await wait(100);
+  const g = (id) => getComputedStyle(document.getElementById(id));
+  results.promptBoxUntouched = { text: g("ed").color, inner: g("edinner").color, font: g("ed").fontFamily, code: g("edcode").color, codeBlockPlain: g("plain").color, codeBlockLabel: g("label").color, preOwn: g("pre").color, panel: g("panel").color, chip: g("chip").color, menu: g("menu").color };
+  results.pageText = { message: g("p").color, smallPrint: g("small").color, model: g("model").color, titleBarButton: g("btn").color };
+  results.start = { ...state(), pixel: await pixel(), sideAttr: R.getAttribute("data-sidebar-image"), size: size(), pseudo: pseudo() };
+  await chrome.storage.local.set({ frameSidebar: "raised", frameMain: "brush", frameWidth: 40 }); await wait(60);
+  results.framesOn = { size: size(), pseudo: pseudo(), hostBorder: getComputedStyle(sb).borderTopWidth + "/" + getComputedStyle(pane).borderTopWidth };
+  await chrome.storage.local.set({ frameLayout: "combined", frameAll: "key" }); await wait(60);
+  results.combined = { size: size(), rootAfter: getComputedStyle(document.querySelector(".dframe-root"), "::after").borderTopWidth, sidebarAfter: getComputedStyle(sb, "::after").content };
+  await chrome.storage.local.set({ sidebarMode: "own", sidebarPreset: null, sidebarImageId: "b", sidebarOpacity: 0.4 }); await wait(100);
+  results.sideOwnB = { attr: R.getAttribute("data-sidebar-image"), pixel: await side(), mainStill: await pixel(), pseudo: pseudo(), size: size() };
+  await chrome.storage.local.set({ sidebarImageId: "a" }); await wait(100);
+  results.sideA = await side();
+  await chrome.storage.local.set({ sidebarPreset: "forest" }); await wait(60);
+  results.sidePreset = await side();
+  await chrome.storage.local.set({ sidebarOpacity: 1 }); await wait(30);
+  results.sideOpacity = getComputedStyle(sb, "::before").opacity;
+  await chrome.storage.local.set({ sidebarMode: "joined" }); await wait(60);
+  results.sideJoined = { attr: R.getAttribute("data-sidebar-image"), before: getComputedStyle(sb, "::before").content };
+  await chrome.storage.local.set({ codeColor: "#00aa00" }); await wait(60);
+  results.code = { attr: R.getAttribute("data-ct-code"), color: getComputedStyle(document.getElementById("c")).color, pre: getComputedStyle(document.getElementById("pc")).color };
+  await chrome.storage.local.set({ codeColor: null }); await wait(60);
+  results.codeOff = { attr: R.getAttribute("data-ct-code"), color: getComputedStyle(document.getElementById("c")).color };
+  // ----- sidebar and main page, separately -----
+  const look = (id) => { const s = getComputedStyle(document.getElementById(id)); return s.color + " " + s.fontFamily.split(",")[0]; };
+  await chrome.storage.local.set({ enabled: true, textColor: "#ffffff", font: "hand", sidebarTextColor: null, sidebarFont: "default", frameLayout: "separate", sidebarMode: "joined", preset: "dusk" }); await wait(80);
+  results.onlyMain = { message: look("p"), sidebar: look("sbt"), sidebarPlainText: look("sbplain"), sideAttr: R.getAttribute("data-ct-side-text") };
+  await chrome.storage.local.set({ sidebarTextColor: "#10254a", sidebarFont: "serif" }); await wait(80);
+  results.bothSet = { message: look("p"), sidebar: look("sbt"), sidebarPlainText: look("sbplain"), icon: look("icon"), promptBox: look("ed"), button: look("btn") };
+  await chrome.storage.local.set({ textColor: null, font: "default" }); await wait(80);
+  results.onlySidebar = { message: look("p"), sidebar: look("sbt"), mainAttr: R.getAttribute("data-ct-text") };
+  await chrome.storage.local.set({ sidebarTextColor: null, sidebarFont: "default" }); await wait(80);
+  results.neither = { message: look("p"), sidebar: look("sbt"), attrs: [R.getAttribute("data-ct-side-text"), R.getAttribute("data-ct-side-font")] };
+  await chrome.storage.local.set({ frameSidebar: "brush", frameMain: "brush", frameSidebarWidth: 8, frameWidth: 30 }); await wait(80);
+  results.thickness = { sidebar: getComputedStyle(sb, "::after").borderTopWidth, main: getComputedStyle(pane, "::after").borderTopWidth, size: size() };
+  await chrome.storage.local.set({ sidebarMode: "plain" }); await wait(80);
+  results.plainSidebar = { plain: R.getAttribute("data-sidebar-plain"), image: R.getAttribute("data-sidebar-image"), bg: getComputedStyle(sb).backgroundColor, before: getComputedStyle(sb, "::before").content, wallStillOn: R.getAttribute("data-wallpaper") };
+  await chrome.storage.local.set({ sidebarMode: "joined", frameSidebar: "none", frameMain: "none" }); await wait(80);
+  results.joinedAgain = { plain: R.getAttribute("data-sidebar-plain"), bg: getComputedStyle(sb).backgroundColor };
+  // ----- side pictures -----
+  const st = (side) => { const e = document.querySelectorAll(".claude-sticker")[side]; if (!e) return null; const b = e.getBoundingClientRect(); return { shown: e.style.display !== "none", left: Math.round(b.left), right: Math.round(b.right), top: Math.round(b.top), bottom: Math.round(b.bottom), width: Math.round(b.width), opacity: e.style.opacity, type: e.src ? "blob" : "none", pe: getComputedStyle(e).pointerEvents }; };
+  const box = () => { const p = pane.getBoundingClientRect(), c = document.querySelector('[data-cds="ChatComposer"]').getBoundingClientRect(); return { paneLeft: Math.round(p.left), colLeft: Math.round(c.left), colRight: Math.round(c.right), paneRight: Math.round(p.right), paneTop: Math.round(p.top), paneBottom: Math.round(p.bottom) }; };
+  store["sticker-a"] = GIF1; store["sticker-b"] = GIF2; store.stickers = [{ id: "a", thumb: "t" }, { id: "b", thumb: "t" }];
+  results.noStickers = document.querySelectorAll(".claude-sticker").length;
+  await chrome.storage.local.set({ stickerLeft: "a", stickerRight: "b", stickerSize: 100, stickerPosition: 100 }); await wait(200);
+  results.stickers = { box: box(), left: st(0), right: st(1), size: size() };
+  const blobType = await fetch(document.querySelector(".claude-sticker").src).then((r) => r.blob()).then((b) => b.type + " " + b.size);
+  results.stickerBlob = blobType;
+  await chrome.storage.local.set({ stickerSize: 400, stickerPosition: 0, stickerOpacity: 0.5 }); await wait(60);
+  results.clamped = { left: st(0), right: st(1) };
+  await chrome.storage.local.set({ preset: "none" }); await wait(60);
+  results.claudeOwnBackground = { wall: R.getAttribute("data-wallpaper"), leftShown: st(0).shown };
+  document.querySelector(".dframe-root").style.width = "820px"; await wait(1200);
+  results.narrow = { box: box(), left: st(0).shown, right: st(1).shown };
+  document.querySelector(".dframe-root").style.width = ""; await wait(1200);
+  results.wideAgain = { left: st(0).shown, right: st(1).shown };
+  await chrome.storage.local.set({ stickerRight: null }); await wait(100);
+  results.rightOff = { left: st(0).shown, right: st(1).shown };
+  await chrome.storage.local.set({ stickerLeft: "b" }); await wait(150);
+  results.leftSwapped = { shown: st(0).shown, blob: await fetch(document.querySelector(".claude-sticker").src).then((r) => r.blob()).then((b) => b.size) };
+  await chrome.storage.local.set({ preset: "dusk" }); await wait(60);
+  await chrome.storage.local.set({ sidebarMode: "own", enabled: false }); await wait(60);
+  results.disabled = { ...state(), side: R.getAttribute("data-sidebar-image"), frame: R.getAttribute("data-frame-all"), sticker: st(0).shown };
+  document.getElementById("out").textContent = "RESULT" + JSON.stringify(results, null, 1) + "END"; 
+})().catch((e) => { document.getElementById("out").textContent = "RESULT error " + e.stack + "END"; });
+</script></body></html>

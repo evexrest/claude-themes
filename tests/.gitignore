@@ -1,0 +1,8 @@
+# Made by build.py, dump.sh and shot.sh
+popup-test.html
+popup-logic.html
+options-logic.html
+popups.html
+*.png
+*.dom
+.profile-*

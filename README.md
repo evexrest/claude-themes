@@ -56,3 +56,4 @@ It also works in other Chromium browsers such as Edge, Brave and Arc.
 | `options.html`, `options.js`, `options.css` | The upload page: crop an image for the screen or the sidebar and add it to your saved images |
 | `frame-upload.js` | The upload page: read and save your own frame picture |
 | `stickers.js` | The upload page: save a picture or GIF for beside the chat |
+| `tests/` | Checks that run the extension's code in a separate, throwaway Chrome. See `tests/README.md` |

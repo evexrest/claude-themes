@@ -1,0 +1,32 @@
+<pre id="out"></pre>
+<script>
+(async () => {
+  const r = {}; await wait(100);
+  const gifBytes = Uint8Array.from(atob(GIF1.split(",")[1]), (c) => c.charCodeAt(0));
+  const give = (file) => { const dt = new DataTransfer(); dt.items.add(file); const input = document.getElementById("file"); input.files = dt.files; input.dispatchEvent(new Event("change")); };
+  const shown = () => ({ editor: !editor.hidden, crop: !document.getElementById("crop").hidden, whole: !document.getElementById("whole").hidden });
+  give(new File([gifBytes], "wave.gif", { type: "image/gif" })); await wait(300);
+  r.gifChosen = { ...shown(), preview: moving.naturalWidth + "x" + moving.naturalHeight, previewShape: moving.style.width + " " + moving.style.aspectRatio, status: status.textContent };
+  document.getElementById("save").click(); await wait(300);
+  const id1 = store.imageId;
+  r.gifSavedMain = { n: store.images.length, identicalFile: store[imageKey(id1)] === GIF1, type: store[imageKey(id1)].slice(0, 14), animated: store.images[0].animated, thumb: store.images[0].thumb.slice(0, 15), preset: store.preset, status: status.textContent };
+  document.getElementById("for-sidebar").click(); await wait(50);
+  r.sidebarShape = { ...shown(), previewShape: moving.style.width + " " + moving.style.aspectRatio };
+  document.getElementById("save").click(); await wait(300);
+  r.gifSavedSidebar = { n: store.images.length, identicalFile: store[imageKey(store.sidebarImageId)] === GIF1, mode: store.sidebarMode, sidebarPreset: store.sidebarPreset, mainUnchanged: store.imageId === id1, status: status.textContent };
+  // a still picture after a GIF goes back to cropping
+  const c = document.createElement("canvas"); c.width = 1600; c.height = 1000; c.getContext("2d").fillRect(0, 0, 1600, 1000);
+  const blob = await new Promise((ok) => c.toBlob(ok, "image/png"));
+  document.getElementById("for-main").click();
+  give(new File([blob], "still.png", { type: "image/png" })); await wait(400);
+  r.stillChosen = shown();
+  document.getElementById("save").click(); await wait(300);
+  const last = store.images[store.images.length - 1];
+  r.stillSaved = { n: store.images.length, type: store[imageKey(store.imageId)].slice(0, 15), animated: last.animated, isLast: last.id === store.imageId };
+  give(new File([new Uint8Array(26 * 1024 * 1024)], "huge.gif", { type: "image/gif" })); await wait(100);
+  r.tooBig = status.textContent;
+  give(new File(["nope"], "bad.gif", { type: "image/gif" })); await wait(300);
+  r.broken = { status: status.textContent, editorHidden: editor.hidden };
+  document.getElementById("out").textContent = "RESULT" + JSON.stringify(r, null, 1) + "END";
+})().catch((e) => { document.getElementById("out").textContent = "RESULT" + JSON.stringify("error " + e.stack) + "END"; });
+</script>

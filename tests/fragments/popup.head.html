@@ -1,0 +1,15 @@
+<base href="../">
+<script src="tests/stub.js"></script>
+<script src="tests/gifs.js"></script>
+<script>
+  const q = new URLSearchParams(location.search);
+  store.images = [{ id: "a", thumb: colourImage("#c0392b", 240, 150) }, { id: "b", thumb: GIF1, animated: true }];
+  store["image-a"] = "A"; store["image-b"] = "B";
+  store.preset = q.get("preset") || "dusk";
+  store.stickers = [{ id: "s1", thumb: GIF1 }, { id: "s2", thumb: GIF2 }]; store["sticker-s1"] = GIF1; store["sticker-s2"] = GIF2; store.stickerLeft = "s1";
+  store.sidebarMode = q.get("side") || "joined"; store.frameSidebar = "brush"; store.frameMain = "key"; store.frameSidebarWidth = 22;
+  store.textColor = "#ffffff"; store.sidebarTextColor = q.get("sidetext") || null;
+  if (q.get("layout")) store.frameLayout = q.get("layout");
+  window.confirm = () => true;
+  addEventListener("load", () => setTimeout(() => { if (q.get("area")) document.getElementById("area-" + q.get("area")).click(); if (q.get("tab")) document.getElementById("tab-" + q.get("tab")).click(); }, 100));
+</script>

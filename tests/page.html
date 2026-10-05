@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html data-mode="light">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root { --cds-surface-1: #faf9f5; --df-web-sidebar-bg: #f0eee6; --text: #1f1e1d; --cds-text-primary: #0b0b0b; --cds-text-secondary: #52514e; }
+  html.dark { --cds-surface-1: #262624; --df-web-sidebar-bg: #1f1e1d; --text: #e8e6e1; --cds-text-primary: #f0eee6; --cds-text-secondary: #b8b5a9; }
+  body { margin: 0; font: 13px system-ui; color: var(--text); }
+  .dframe-root { display: flex; height: 100vh; box-sizing: border-box; position: relative; }
+  .dframe-sidebar { width: 30%; box-sizing: border-box; background: var(--df-web-sidebar-bg); padding: 8px; position: relative; z-index: 20; isolation: isolate; }
+  .dframe-pane-primary { flex: 1; box-sizing: border-box; position: relative; contain: layout; }
+  code { color: var(--cds-prose-code-color, #8e2626); background: rgba(0,0,0,.05); padding: 1px 4px; border-radius: 4px; }
+  html.dark code { color: var(--cds-prose-code-color, #f4a9a9); }
+  .dframe-content { height: 100%; padding: 8px; box-sizing: border-box; background: var(--cds-surface-1); }
+  .col { max-width: var(--col, 300px); margin: 0 auto; }
+  [data-cds="ChatComposer"] { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); width: var(--col, 300px); height: 54px; box-sizing: border-box; border: 1px solid rgba(128,128,128,.5); border-radius: 14px; padding: 8px 12px; color: var(--cds-text-secondary); background: var(--cds-surface-1); }
+  html.wide { --col: 768px; } html.wide .dframe-sidebar { width: 288px; }
+</style>
+<link rel="stylesheet" href="../theme.css">
+<script>
+  const q = new URLSearchParams(location.search);
+  if (q.get("dark")) document.documentElement.classList.add("dark"); if (q.get("wide")) document.documentElement.classList.add("wide");
+  const saved = { preset: q.get("bg") === "image" ? null : (q.get("preset") || "ocean"), imageId: "pic", opacity: Number(q.get("o") || 0.6), frameWidth: Number(q.get("w") || 14),
+                  frameLayout: q.get("layout") || "separate",
+                  frameSidebar: q.get("f"), frameMain: q.get("f"), frameAll: q.get("f"),
+                  textColor: q.get("text"), font: q.get("font") || "default", codeColor: q.get("code"),
+                  sidebarMode: q.get("side") ? "own" : "joined", sidebarPreset: q.get("side") === "image" ? null : q.get("side"), sidebarImageId: "pic", sidebarOpacity: Number(q.get("so") || 0.8), panelOpacity: Number(q.get("po") || 0.6),
+                  stickerLeft: q.get("sl"), stickerRight: q.get("sr"), stickerSize: Number(q.get("ss") || 180), stickerPosition: Number(q.get("sp") || 85), stickerOpacity: Number(q.get("sop") || 1) };
+  const pic = (() => { const c = document.createElement("canvas"); c.width = 288; c.height = 800; const x = c.getContext("2d"); const g = x.createLinearGradient(0, 0, 288, 800); g.addColorStop(0, "#f6d365"); g.addColorStop(0.5, "#fda085"); g.addColorStop(1, "#6a11cb"); x.fillStyle = g; x.fillRect(0, 0, 288, 800); for (let i = 0; i < 14; i++) { x.fillStyle = "rgba(255,255,255,0.35)"; x.beginPath(); x.arc(40 + (i * 67) % 240, 50 + i * 55, 22, 0, 7); x.fill(); } return c.toDataURL("image/png"); })();
+  window.chrome = { storage: { local: { get: async (d) => typeof d === "string" ? (d === "image-pic" ? { "image-pic": q.get("gif") ? GIF1 : pic } : d === "sticker-a" ? { "sticker-a": GIF1 } : d === "sticker-b" ? { "sticker-b": GIF2 } : {}) : Object.assign({}, d, saved) }, onChanged: { addListener() {} } } };
+</script>
+<script src="gifs.js"></script>
+<script src="../settings.js"></script>
+<script src="../content.js"></script>
+</head>
+<body>
+<div class="dframe-root" data-variant="web">
+  <nav class="dframe-sidebar"><span style="color: var(--cds-text-primary)">Sidebar</span></nav>
+  <div class="dframe-pane-primary"><main class="dframe-content"><div class="col standard-markdown"><b id="t" style="color: var(--cds-text-primary)"></b><p style="color: var(--cds-text-primary); font-family: var(--font-claude-response, Georgia)">A reply from Claude, in the chosen colour and font.</p><p style="color: var(--cds-text-primary)">Claude marks words <code>like this</code> and <code>this_one</code>.</p><p style="color: var(--cds-text-secondary)">Secondary text, a little fainter.</p><pre id="m" style="position:absolute;bottom:4px;left:8px;margin:0;font-size:10px;color:var(--cds-text-primary)"></pre></div><div data-cds="ChatComposer">Reply to Claude</div></main></div>
+</div>
+<script>setTimeout(() => { const r = (s) => { const b = document.querySelector(s).getBoundingClientRect(); return Math.round(b.width) + "x" + Math.round(b.height) + "@" + Math.round(b.left); }; const inner = document.querySelector(".dframe-content").getBoundingClientRect(); document.getElementById("m").textContent = "sidebar " + r(".dframe-sidebar") + "  pane " + r(".dframe-pane-primary") + "  content " + Math.round(inner.width) + "x" + Math.round(inner.height); }, 300);
+document.getElementById("t").textContent = q.get("f") + " " + saved.frameWidth + "px " + saved.frameLayout;</script>
+</body>
+</html>
