@@ -3,25 +3,15 @@
 
 const choices = document.getElementById("choices");
 const images = document.getElementById("images");
-const enabled = document.getElementById("enabled");
-const opacity = document.getElementById("opacity");
-const panel = document.getElementById("panel");
-const sideOpacity = document.getElementById("side-opacity");
-const stickerSize = document.getElementById("sticker-size");
-const stickerPosition = document.getElementById("sticker-position");
-const stickerOpacity = document.getElementById("sticker-opacity");
-const frameWidth = document.getElementById("frame-width");
-const textColor = document.getElementById("text-color");
-const codeColor = document.getElementById("code-color");
-const font = document.getElementById("font");
-const fontCustom = document.getElementById("font-custom");
 
 // A few text colours that are easy to read on most backgrounds, and a few for the
 // words Claude marks out.
 const textSwatches = ["#ffffff", "#f5f0e6", "#cfcfcf", "#ffe9a8", "#0b0b0b", "#2b2b2b", "#10254a", "#3d1010"];
 const codeSwatches = ["#ffffff", "#ffb3b3", "#ffd479", "#a8e6a1", "#8fd3ff", "#d9b8ff", "#0b0b0b", "#0d4a8f"];
 
-const tabs = ["background", "sidebar", "sides", "borders", "text"];
+// The popup shows one area (the main page or the sidebar) and one tab at a time.
+let area = "main";
+let tab = "background";
 
 function save(change) {
     chrome.storage.local.set(change);
@@ -34,39 +24,57 @@ function select(button) {
     }
 }
 
-function showPercent(slider, id) {
-    document.getElementById(id).textContent = slider.value + "%";
-}
+// Show one area and one of its tabs. The sidebar has no Sides tab.
+function show(newArea, newTab) {
+    area = newArea;
+    tab = area === "side" && newTab === "sides" ? "background" : newTab;
 
-function showTab(name) {
-    for (const other of tabs) {
-        document.getElementById(other).hidden = other !== name;
+    for (const section of document.querySelectorAll("section")) {
+        section.hidden = section.id !== area + "-" + tab;
     }
-    select(document.getElementById("tab-" + name));
+    document.getElementById("tab-sides").hidden = area === "side";
+    select(document.getElementById("area-" + area));
+    select(document.getElementById("tab-" + tab));
 }
 
+// Tie a slider to a setting. `shown` turns the slider's number into the text
+// beside it, and `stored` turns it into the value that is saved.
+function slider(id, key, value, shown, stored) {
+    const input = document.getElementById(id);
+    const label = document.getElementById(id + "-value");
+    input.value = value;
+    label.textContent = shown(Number(input.value));
+
+    input.addEventListener("input", () => {
+        label.textContent = shown(Number(input.value));
+        save({ [key]: stored(Number(input.value)) });
+    });
+}
+
+const percent = (number) => number + "%";
+const pixels = (number) => number + "px";
+const fraction = (number) => number / 100;
+const same = (number) => number;
+const place = (number) => number < 20 ? "Top" : number > 80 ? "Bottom" : "Middle";
+
+// The main page's frame goes around the chat window ("separate", which leaves the
+// sidebar free to have its own) or around the whole window ("combined").
 function showLayout(layout) {
     document.getElementById("separate").hidden = layout !== "separate";
     document.getElementById("combined").hidden = layout !== "combined";
+    document.getElementById("side-combined").hidden = layout !== "combined";
     select(document.getElementById("layout-" + layout));
 }
 
-// The numbers beside the size and height sliders of the side pictures.
-function showStickerNumbers() {
-    document.getElementById("sticker-size-value").textContent = stickerSize.value + "px";
-    const place = Number(stickerPosition.value);
-    document.getElementById("sticker-position-value").textContent =
-        place < 20 ? "Top" : place > 80 ? "Bottom" : "Middle";
-}
-
 function showSidebarMode(mode) {
-    document.getElementById("joined").hidden = mode !== "joined";
-    document.getElementById("own").hidden = mode !== "own";
+    for (const other of ["joined", "own", "plain"]) {
+        document.getElementById(other).hidden = other !== mode;
+    }
     select(document.getElementById("side-" + mode));
 }
 
 // One picture button: a preset or a saved image. Only one of them is selected at
-// a time within its tab.
+// a time within its section.
 function backgroundChoice(name, background, selected, change) {
     const button = document.createElement("button");
     button.className = "choice";
@@ -114,7 +122,7 @@ async function removeImage(id, cell) {
     const saved = await chrome.storage.local.get(defaults);
     const change = { images: saved.images.filter((image) => image.id !== id) };
 
-    // If it was the background, go back to the first preset.
+    // If it was the main page's background, go back to the first preset.
     if (!saved.preset && saved.imageId === id) {
         change.preset = defaults.preset;
         change.imageId = null;
@@ -129,8 +137,27 @@ async function removeImage(id, cell) {
     await chrome.storage.local.remove(imageKey(id));
 
     cell.remove();
-    showSidebarChoices({ ...saved, ...change });
     document.getElementById("images-title").hidden = change.images.length === 0;
+    showSidebarChoices({ ...saved, ...change });
+}
+
+// The sidebar's own picture: every preset and every saved image.
+function showSidebarChoices(settings) {
+    const grid = document.getElementById("side-choices");
+    grid.replaceChildren();
+
+    for (const preset of presets) {
+        grid.appendChild(backgroundChoice(
+            preset.name, preset.css, settings.sidebarPreset === preset.id,
+            { sidebarPreset: preset.id }
+        ));
+    }
+    for (const image of settings.images) {
+        grid.appendChild(backgroundChoice(
+            image.animated ? "GIF" : "", `url("${image.thumb}")`, !settings.sidebarPreset && settings.sidebarImageId === image.id,
+            { sidebarPreset: null, sidebarImageId: image.id }
+        ));
+    }
 }
 
 // The side pictures. Each side has a row of buttons: "None", then every saved
@@ -246,26 +273,7 @@ function addFrameRow(rowId, key, settings) {
     }
 }
 
-// The sidebar's own picture: every preset and every saved image.
-function showSidebarChoices(settings) {
-    const grid = document.getElementById("side-choices");
-    grid.replaceChildren();
-
-    for (const preset of presets) {
-        grid.appendChild(backgroundChoice(
-            preset.name, preset.css, settings.sidebarPreset === preset.id,
-            { sidebarPreset: preset.id }
-        ));
-    }
-    for (const image of settings.images) {
-        grid.appendChild(backgroundChoice(
-            image.animated ? "GIF" : "", `url("${image.thumb}")`, !settings.sidebarPreset && settings.sidebarImageId === image.id,
-            { sidebarPreset: null, sidebarImageId: image.id }
-        ));
-    }
-}
-
-// One colour button. `key` is the setting it changes ("textColor" or "codeColor")
+// One colour button. `key` is the setting it changes, for example "textColor",
 // and `picker` is the colour picker next to it. A null colour means Claude's own.
 function addSwatch(row, key, picker, colour, selected) {
     const button = document.createElement("button");
@@ -291,8 +299,10 @@ function addSwatch(row, key, picker, colour, selected) {
 }
 
 // A row of colour buttons and its colour picker, for one colour setting.
-function addColours(rowId, key, picker, colours, current, fallback) {
+function addColours(rowId, pickerId, key, colours, current, fallback) {
     const row = document.getElementById(rowId);
+    const picker = document.getElementById(pickerId);
+
     addSwatch(row, key, picker, null, current === null);
     for (const colour of colours) {
         addSwatch(row, key, picker, colour, current === colour);
@@ -308,14 +318,42 @@ function addColours(rowId, key, picker, colours, current, fallback) {
     });
 }
 
+// A font list and the box for typing another font's name, for one font setting.
+function addFonts(listId, boxId, fontKey, nameKey, settings) {
+    const list = document.getElementById(listId);
+    const box = document.getElementById(boxId);
+
+    for (const item of fonts) {
+        list.add(new Option(item.name, item.id));
+    }
+    list.value = settings[fontKey];
+    box.value = settings[nameKey];
+    box.hidden = list.value !== "custom";
+
+    list.addEventListener("change", () => {
+        box.hidden = list.value !== "custom";
+        save({ [fontKey]: list.value });
+    });
+    box.addEventListener("input", () => {
+        save({ [nameKey]: box.value });
+    });
+}
+
+// Open the upload page in a new tab, at one of its parts.
+function openUploads(part) {
+    chrome.tabs.create({ url: chrome.runtime.getURL("options.html" + part) });
+}
+
 async function start() {
     const settings = await chrome.storage.local.get(defaults);
+    const enabled = document.getElementById("enabled");
 
     // Chrome reads this popup fresh from the folder each time, but keeps the page
     // script and the manifest it loaded earlier. A different version number means
     // the folder has changed since then.
     document.getElementById("stale").hidden = chrome.runtime.getManifest().version === filesVersion;
 
+    // The main page's background.
     for (const preset of presets) {
         choices.appendChild(
             backgroundChoice(preset.name, preset.css, settings.preset === preset.id, { preset: preset.id })
@@ -329,92 +367,53 @@ async function start() {
     for (const image of settings.images) {
         addImage(image, !settings.preset && settings.imageId === image.id);
     }
+    slider("opacity", "opacity", Math.round(settings.opacity * 100), percent, fraction);
 
-    addFrameRow("frames-sidebar", "frameSidebar", settings);
+    // The main page's text.
+    addColours("text-swatches", "text-color", "textColor", textSwatches, settings.textColor, "#ffffff");
+    addColours("code-swatches", "code-color", "codeColor", codeSwatches, settings.codeColor, "#8e2626");
+    addFonts("font", "font-custom", "font", "fontCustom", settings);
+
+    // The main page's border.
     addFrameRow("frames-main", "frameMain", settings);
     addFrameRow("frames-all", "frameAll", settings);
     showLayout(settings.frameLayout);
+    slider("frame-width", "frameWidth", settings.frameWidth, pixels, same);
 
+    // The pictures beside the chat.
+    showStickers(settings);
+    slider("sticker-size", "stickerSize", settings.stickerSize, pixels, same);
+    slider("sticker-position", "stickerPosition", settings.stickerPosition, place, same);
+    slider("sticker-opacity", "stickerOpacity", Math.round(settings.stickerOpacity * 100), percent, fraction);
+
+    // The sidebar's background.
     showSidebarChoices(settings);
     showSidebarMode(settings.sidebarMode);
-    showStickers(settings);
+    slider("panel", "panelOpacity", Math.round(settings.panelOpacity * 100), percent, fraction);
+    slider("side-opacity", "sidebarOpacity", Math.round(settings.sidebarOpacity * 100), percent, fraction);
 
-    addColours("text-swatches", "textColor", textColor, textSwatches, settings.textColor, "#ffffff");
-    addColours("code-swatches", "codeColor", codeColor, codeSwatches, settings.codeColor, "#8e2626");
+    // The sidebar's text.
+    addColours("side-text-swatches", "side-text-color", "sidebarTextColor", textSwatches, settings.sidebarTextColor, "#ffffff");
+    addFonts("side-font", "side-font-custom", "sidebarFont", "sidebarFontCustom", settings);
 
-    for (const item of fonts) {
-        font.add(new Option(item.name, item.id));
-    }
-    font.value = settings.font;
-    fontCustom.value = settings.fontCustom;
-    fontCustom.hidden = settings.font !== "custom";
+    // The sidebar's border.
+    addFrameRow("frames-sidebar", "frameSidebar", settings);
+    slider("frame-width-side", "frameSidebarWidth", settings.frameSidebarWidth, pixels, same);
 
     enabled.checked = settings.enabled;
-    opacity.value = Math.round(settings.opacity * 100);
-    panel.value = Math.round(settings.panelOpacity * 100);
-    sideOpacity.value = Math.round(settings.sidebarOpacity * 100);
-    stickerSize.value = settings.stickerSize;
-    stickerPosition.value = settings.stickerPosition;
-    stickerOpacity.value = Math.round(settings.stickerOpacity * 100);
-    frameWidth.value = settings.frameWidth;
-    showPercent(opacity, "opacity-value");
-    showPercent(panel, "panel-value");
-    showPercent(sideOpacity, "side-opacity-value");
-    showPercent(stickerOpacity, "sticker-opacity-value");
-    showStickerNumbers();
-    document.getElementById("frame-width-value").textContent = frameWidth.value + "px";
-
     enabled.addEventListener("change", () => {
         save({ enabled: enabled.checked });
     });
 
-    opacity.addEventListener("input", () => {
-        showPercent(opacity, "opacity-value");
-        save({ opacity: opacity.value / 100 });
-    });
+    for (const name of ["main", "side"]) {
+        document.getElementById("area-" + name).addEventListener("click", () => {
+            show(name, tab);
+        });
+    }
 
-    panel.addEventListener("input", () => {
-        showPercent(panel, "panel-value");
-        save({ panelOpacity: panel.value / 100 });
-    });
-
-    sideOpacity.addEventListener("input", () => {
-        showPercent(sideOpacity, "side-opacity-value");
-        save({ sidebarOpacity: sideOpacity.value / 100 });
-    });
-
-    stickerSize.addEventListener("input", () => {
-        showStickerNumbers();
-        save({ stickerSize: Number(stickerSize.value) });
-    });
-
-    stickerPosition.addEventListener("input", () => {
-        showStickerNumbers();
-        save({ stickerPosition: Number(stickerPosition.value) });
-    });
-
-    stickerOpacity.addEventListener("input", () => {
-        showPercent(stickerOpacity, "sticker-opacity-value");
-        save({ stickerOpacity: stickerOpacity.value / 100 });
-    });
-
-    frameWidth.addEventListener("input", () => {
-        document.getElementById("frame-width-value").textContent = frameWidth.value + "px";
-        save({ frameWidth: Number(frameWidth.value) });
-    });
-
-    font.addEventListener("change", () => {
-        fontCustom.hidden = font.value !== "custom";
-        save({ font: font.value });
-    });
-
-    fontCustom.addEventListener("input", () => {
-        save({ fontCustom: fontCustom.value });
-    });
-
-    for (const name of tabs) {
+    for (const name of ["background", "text", "borders", "sides"]) {
         document.getElementById("tab-" + name).addEventListener("click", () => {
-            showTab(name);
+            show(area, name);
         });
     }
 
@@ -425,7 +424,7 @@ async function start() {
         });
     }
 
-    for (const mode of ["joined", "own"]) {
+    for (const mode of ["joined", "own", "plain"]) {
         document.getElementById("side-" + mode).addEventListener("click", () => {
             showSidebarMode(mode);
             save({ sidebarMode: mode });
@@ -436,18 +435,22 @@ async function start() {
         chrome.runtime.openOptionsPage();
     });
 
-    document.getElementById("choose-sticker").addEventListener("click", () => {
-        chrome.tabs.create({ url: chrome.runtime.getURL("options.html#sides") });
-    });
-
     // The upload page, with its crop box already in the sidebar's tall shape.
     document.getElementById("choose-side").addEventListener("click", () => {
-        chrome.tabs.create({ url: chrome.runtime.getURL("options.html#sidebar") });
+        openUploads("#sidebar");
     });
 
-    document.getElementById("choose-frame").addEventListener("click", () => {
-        chrome.runtime.openOptionsPage();
+    document.getElementById("choose-sticker").addEventListener("click", () => {
+        openUploads("#sides");
     });
+
+    for (const id of ["choose-frame", "choose-frame-side"]) {
+        document.getElementById(id).addEventListener("click", () => {
+            chrome.runtime.openOptionsPage();
+        });
+    }
+
+    show("main", "background");
 }
 
 start();

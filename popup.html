@@ -20,15 +20,22 @@
         refresh claude.ai.
     </p>
 
-    <nav class="pair five">
-        <button id="tab-background" aria-pressed="true">Background</button>
-        <button id="tab-sidebar" aria-pressed="false">Sidebar</button>
-        <button id="tab-sides" aria-pressed="false">Sides</button>
-        <button id="tab-borders" aria-pressed="false">Borders</button>
-        <button id="tab-text" aria-pressed="false">Text</button>
+    <!-- Which part of claude.ai is being changed. Each has its own settings. -->
+    <div class="pair areas">
+        <button id="area-main">Main page</button>
+        <button id="area-side">Sidebar</button>
+    </div>
+
+    <nav class="pair tabs">
+        <button id="tab-background">Background</button>
+        <button id="tab-text">Text</button>
+        <button id="tab-borders">Borders</button>
+        <button id="tab-sides">Sides</button>
     </nav>
 
-    <section id="background">
+    <!-- The main page -->
+
+    <section id="main-background">
         <div class="grid" id="choices"></div>
 
         <h2 id="images-title" hidden>Your images</h2>
@@ -42,35 +49,57 @@
         <input type="range" id="opacity" min="0" max="100">
     </section>
 
-    <section id="sidebar" hidden>
-        <div class="pair">
-            <button id="side-joined">Joined</button>
-            <button id="side-own">Its own image</button>
-        </div>
+    <section id="main-text" hidden>
+        <h2>Text colour</h2>
+        <div class="swatches" id="text-swatches"></div>
+        <label class="line" for="text-color">
+            Any other colour
+            <input type="color" id="text-color">
+        </label>
 
-        <div id="joined">
-            <p class="note first">The main background carries on behind the sidebar.</p>
+        <h2>Highlight colour</h2>
+        <div class="swatches" id="code-swatches"></div>
+        <label class="line" for="code-color">
+            Any other colour
+            <input type="color" id="code-color">
+        </label>
 
-            <label class="slider" for="panel">
-                Sidebar opacity
-                <span id="panel-value"></span>
-            </label>
-            <input type="range" id="panel" min="0" max="100">
-        </div>
+        <h2>Font</h2>
+        <select id="font"></select>
+        <input type="text" id="font-custom" placeholder="Type the font's name, e.g. Futura" hidden>
 
-        <div id="own">
-            <div class="grid" id="side-choices"></div>
-            <button id="choose-side" class="wide">Add an image for the sidebar</button>
-
-            <label class="slider" for="side-opacity">
-                Image opacity
-                <span id="side-opacity-value"></span>
-            </label>
-            <input type="range" id="side-opacity" min="0" max="100">
-        </div>
+        <p class="note">
+            For Claude's replies and your messages. The highlight colour is for the words
+            Claude marks out, which are normally crimson. The message box, buttons and
+            menus always keep Claude's own look.
+        </p>
     </section>
 
-    <section id="sides" hidden>
+    <section id="main-borders" hidden>
+        <div class="pair">
+            <button id="layout-separate">Chat window</button>
+            <button id="layout-combined">Whole window</button>
+        </div>
+
+        <div id="separate">
+            <div class="frames" id="frames-main"></div>
+        </div>
+
+        <div id="combined">
+            <div class="frames" id="frames-all"></div>
+            <p class="note">One frame around everything, in place of the sidebar's own.</p>
+        </div>
+
+        <label class="slider" for="frame-width">
+            Thickness
+            <span id="frame-width-value"></span>
+        </label>
+        <input type="range" id="frame-width" min="4" max="40">
+
+        <button id="choose-frame" class="wide">Upload your own frame</button>
+    </section>
+
+    <section id="main-sides" hidden>
         <p class="note first">
             Pictures or GIFs in the empty space on either side of the chat. They work
             with any background, including Claude's own.
@@ -102,58 +131,72 @@
         <input type="range" id="sticker-opacity" min="10" max="100">
     </section>
 
-    <section id="borders" hidden>
-        <div class="pair">
-            <button id="layout-separate">Separate</button>
-            <button id="layout-combined">One frame</button>
+    <!-- The sidebar -->
+
+    <section id="side-background" hidden>
+        <div class="pair three">
+            <button id="side-joined">Joined</button>
+            <button id="side-own">Its own</button>
+            <button id="side-plain">Claude's own</button>
         </div>
 
-        <div id="separate">
-            <h2>Sidebar</h2>
-            <div class="frames" id="frames-sidebar"></div>
-            <h2>Chat window</h2>
-            <div class="frames" id="frames-main"></div>
+        <div id="joined">
+            <p class="note first">The main page's background carries on behind the sidebar.</p>
+
+            <label class="slider" for="panel">
+                Sidebar opacity
+                <span id="panel-value"></span>
+            </label>
+            <input type="range" id="panel" min="0" max="100">
         </div>
 
-        <div id="combined">
-            <h2>Whole window</h2>
-            <div class="frames" id="frames-all"></div>
+        <div id="own">
+            <div class="grid" id="side-choices"></div>
+            <button id="choose-side" class="wide">Add an image for the sidebar</button>
+
+            <label class="slider" for="side-opacity">
+                Image opacity
+                <span id="side-opacity-value"></span>
+            </label>
+            <input type="range" id="side-opacity" min="0" max="100">
         </div>
 
-        <label class="slider" for="frame-width">
-            Thickness
-            <span id="frame-width-value"></span>
-        </label>
-        <input type="range" id="frame-width" min="4" max="40">
-
-        <button id="choose-frame" class="wide">Upload your own frame</button>
+        <div id="plain">
+            <p class="note first">The sidebar looks the way Claude draws it, whatever the main page has.</p>
+        </div>
     </section>
 
-    <section id="text" hidden>
+    <section id="side-text" hidden>
         <h2>Text colour</h2>
-        <div class="swatches" id="text-swatches"></div>
-        <label class="line" for="text-color">
+        <div class="swatches" id="side-text-swatches"></div>
+        <label class="line" for="side-text-color">
             Any other colour
-            <input type="color" id="text-color">
-        </label>
-
-        <h2>Highlight colour</h2>
-        <div class="swatches" id="code-swatches"></div>
-        <label class="line" for="code-color">
-            Any other colour
-            <input type="color" id="code-color">
+            <input type="color" id="side-text-color">
         </label>
 
         <h2>Font</h2>
-        <select id="font"></select>
-        <input type="text" id="font-custom" placeholder="Type the font's name, e.g. Futura" hidden>
+        <select id="side-font"></select>
+        <input type="text" id="side-font-custom" placeholder="Type the font's name, e.g. Futura" hidden>
 
-        <p class="note">
-            The text colour changes the sidebar, Claude's replies and your messages. The
-            highlight colour is for the words Claude marks out, which are normally
-            crimson. The font changes Claude's replies and your messages. The message
-            box, buttons and menus always keep Claude's own look.
+        <p class="note">For everything written in the sidebar. Icons stay as they are.</p>
+    </section>
+
+    <section id="side-borders" hidden>
+        <p class="note first" id="side-combined" hidden>
+            The main page is set to one frame around the whole window, so the sidebar's
+            own frame is not shown. Choose Chat window under Main page, Borders, to
+            bring it back.
         </p>
+
+        <div class="frames" id="frames-sidebar"></div>
+
+        <label class="slider" for="frame-width-side">
+            Thickness
+            <span id="frame-width-side-value"></span>
+        </label>
+        <input type="range" id="frame-width-side" min="4" max="40">
+
+        <button id="choose-frame-side" class="wide">Upload your own frame</button>
     </section>
 
     <script src="settings.js"></script>

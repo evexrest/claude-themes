@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The popup compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.6.0";
+const filesVersion = "0.7.0";
 
 const defaults = {
     enabled: true,
@@ -16,8 +16,9 @@ const defaults = {
     images: [],
     opacity: 0.5,
     panelOpacity: 0.6,
-    // The sidebar is "joined" to the main background, or has a picture of its "own":
-    // a preset, or one of the saved images when `sidebarPreset` is null.
+    // The sidebar is "joined" to the main background, has a picture of its "own"
+    // (a preset, or one of the saved images when `sidebarPreset` is null), or is
+    // "plain": Claude's own sidebar, with nothing behind it.
     sidebarMode: "joined",
     sidebarPreset: "graphite",
     sidebarImageId: null,
@@ -26,7 +27,10 @@ const defaults = {
     frameSidebar: "none",
     frameMain: "none",
     frameAll: "none",
+    // Thickness: `frameWidth` for the chat window or the whole window,
+    // `frameSidebarWidth` for the sidebar.
     frameWidth: 14,
+    frameSidebarWidth: 14,
     frameImage: null,
     frameSlice: null,
     // Pictures in the empty space beside the chat. `stickers` is the list of saved
@@ -43,7 +47,11 @@ const defaults = {
     textColor: null,
     codeColor: null,
     font: "default",
-    fontCustom: ""
+    fontCustom: "",
+    // The sidebar's text, set separately from the chat's.
+    sidebarTextColor: null,
+    sidebarFont: "default",
+    sidebarFontCustom: ""
 };
 
 // Where one saved image's full-size picture is kept.

@@ -50,9 +50,25 @@ button {
     background: #20201f;
 }
 
-.pair.five {
-    grid-template-columns: repeat(5, auto);
-    font-size: 12.5px;
+.pair.three {
+    grid-template-columns: repeat(3, auto);
+}
+
+/* The switch between the main page and the sidebar, above the tabs. */
+.pair.areas {
+    margin-bottom: 8px;
+}
+
+.pair.areas button {
+    font-weight: 600;
+}
+
+/* The tabs share the row evenly, whichever of them are showing. */
+.pair.tabs {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    font-size: 13px;
 }
 
 .pair button {
@@ -187,8 +203,9 @@ input[type="checkbox"] {
     accent-color: #d97757;
 }
 
-#borders .wide,
-#sides .wide {
+#main-borders .wide,
+#side-borders .wide,
+#main-sides .wide {
     margin-top: 16px;
 }
 

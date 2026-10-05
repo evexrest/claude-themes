@@ -79,11 +79,13 @@ html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-c
     object-fit: contain;
 }
 
-/* The sidebar's own picture, for when it is not joined to the main background.
-   The sidebar goes back to its solid colour so the main background stops showing
-   through, and the picture sits on a layer between that colour and the sidebar's
-   contents. Lowering the opacity fades the picture into the sidebar's colour. */
-html[data-sidebar-image] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar {
+/* The sidebar on its own, for when it is not joined to the main background: with
+   a picture of its own, or plain. The sidebar goes back to its solid colour so the
+   main background stops showing through. A picture sits on a layer between that
+   colour and the sidebar's contents, and lowering its opacity fades it into the
+   sidebar's colour. */
+html[data-sidebar-image] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar,
+html[data-sidebar-plain] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar {
     background-color: var(--df-web-sidebar-bg) !important;
 }
 
@@ -144,19 +146,16 @@ html[data-frame-all] .dframe-root::after {
     box-shadow: var(--frame-all-shadow);
 }
 
-/* Text colour. claude.ai takes its text colours from a few shared values. These
-   rules replace them in three places only: the sidebar, Claude's replies and your
-   messages. The message box, buttons, menus and pop-ups have solid backgrounds
-   of their own, so they keep Claude's colours and stay readable. Links keep
-   theirs too. Checked on claude.ai on 2026-10-05. */
-html[data-ct-text] .dframe-sidebar,
+/* Text colour for the chat. claude.ai takes its text colours from a few shared
+   values. These rules replace them in Claude's replies and your messages only.
+   The message box, buttons, menus and pop-ups have solid backgrounds of their own,
+   so they keep Claude's colours and stay readable. Links keep theirs too.
+   Checked on claude.ai on 2026-10-05. */
 html[data-ct-text] .dframe-pane-primary .standard-markdown,
 html[data-ct-text] .dframe-pane-primary [data-testid="user-message"] {
     color: var(--ct-text) !important;
 }
 
-html[data-ct-text] .dframe-sidebar,
-html[data-ct-text] .dframe-sidebar .cds-root,
 html[data-ct-text] .dframe-pane-primary .standard-markdown,
 html[data-ct-text] .dframe-pane-primary [data-testid="user-message"] {
     --cds-text-primary: var(--ct-text) !important;
@@ -220,4 +219,36 @@ html[data-ct-code] .dframe-pane-primary :is(.standard-markdown, [data-testid="us
 
 html[data-ct-code] .dframe-pane-primary :is(.standard-markdown, [data-testid="user-message"]) code:not(pre code) {
     color: var(--ct-code) !important;
+}
+
+/* The sidebar's text colour, set separately from the chat's, in the same way. */
+html[data-ct-side-text] .dframe-sidebar {
+    color: var(--ct-side-text) !important;
+}
+
+html[data-ct-side-text] .dframe-sidebar,
+html[data-ct-side-text] .dframe-sidebar .cds-root {
+    --cds-text-primary: var(--ct-side-text) !important;
+    --cds-text-secondary: color-mix(in srgb, var(--ct-side-text) 80%, transparent) !important;
+    --cds-text-muted: color-mix(in srgb, var(--ct-side-text) 60%, transparent) !important;
+    --text-000: var(--ct-side-text-hsl) !important;
+    --text-100: var(--ct-side-text-hsl) !important;
+    --text-200: var(--ct-side-text-hsl) !important;
+    --text-300: var(--ct-side-text-hsl) !important;
+    --text-400: var(--ct-side-text-hsl) !important;
+    --text-500: var(--ct-side-text-hsl) !important;
+}
+
+/* The sidebar's font. Most of the sidebar takes its font from the sidebar itself;
+   the rest reads it from these values. Icons are drawn with a font of their own
+   and are not affected. */
+html[data-ct-side-font] .dframe-sidebar {
+    font-family: var(--ct-side-font) !important;
+}
+
+html[data-ct-side-font] .dframe-sidebar,
+html[data-ct-side-font] .dframe-sidebar .cds-root {
+    --font-ui: var(--ct-side-font) !important;
+    --font-sans: var(--ct-side-font) !important;
+    --cds-font-sans: var(--ct-side-font) !important;
 }

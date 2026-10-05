@@ -15,8 +15,10 @@ screens, with frames and your own text colour and font.
   frame around everything
 - Two pop-out frames, dark and pale, with sloping sides and a shadow, for a raised, 3D look
 - Frames lie over the edge of the page. They never move or resize anything
-- The sidebar can share the main background or have a picture of its own, with its own
-  opacity
+- The main page and the sidebar are set up separately: each has its own background, text
+  colour, font, frame and frame thickness
+- The sidebar can share the main background, have a picture of its own with its own
+  opacity, or stay exactly as Claude draws it
 - Pictures or GIFs in the empty space on either side of the chat, with size, height and
   opacity sliders. They work with any background, including Claude's own, and never sit
   on top of the chat

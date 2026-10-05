@@ -99,7 +99,8 @@ function applyBackground(sourceChanged) {
     setAttribute("data-wallpaper", true);
 }
 
-// The sidebar's own picture, when it is not joined to the main background.
+// The sidebar's background: joined to the main one (nothing to do here), a
+// picture of its own, or plain, which is Claude's own sidebar.
 function applySidebar(sourceChanged) {
     const own = settings.enabled && settings.sidebarMode === "own";
 
@@ -112,6 +113,7 @@ function applySidebar(sourceChanged) {
         root.style.setProperty("--sidebar-image-opacity", settings.sidebarOpacity);
     }
     setAttribute("data-sidebar-image", own);
+    setAttribute("data-sidebar-plain", settings.enabled && settings.sidebarMode === "plain");
 }
 
 // Fetch one side's picture from storage and put it in that side's <img>.
@@ -216,9 +218,11 @@ function applyStickers(leftChanged, rightChanged) {
 }
 
 // One frame goes around the sidebar, the chat window, or the whole window ("all").
+// The sidebar's frame has a thickness of its own.
 function applyFrame(place, id) {
+    const width = place === "sidebar" ? settings.frameSidebarWidth : settings.frameWidth;
     const values = settings.enabled
-        ? frameValues(id, settings.frameWidth, frameUrl, settings.frameSlice)
+        ? frameValues(id, width, frameUrl, settings.frameSlice)
         : null;
 
     if (values) {
@@ -246,26 +250,35 @@ function applyFrames(imageChanged) {
     applyFrame("all", combined ? settings.frameAll : "none");
 }
 
-// Chat text. theme.css does the restyling; this hands it the colour and the font.
+// Switch one text setting on or off. `name` is the attribute theme.css looks
+// for, `variable` the value it reads, and a null value means "leave Claude's own".
+function applyTextValue(name, variable, value) {
+    if (value) {
+        root.style.setProperty(variable, value);
+    }
+    setAttribute(name, value !== null);
+}
+
+// Text, set separately for the chat and for the sidebar. theme.css does the
+// restyling; this hands it the colours and the fonts.
 function applyText() {
-    const colour = settings.enabled ? settings.textColor : null;
+    const on = settings.enabled;
+
+    const colour = on ? settings.textColor : null;
+    applyTextValue("data-ct-text", "--ct-text", colour);
     if (colour) {
-        root.style.setProperty("--ct-text", colour);
         root.style.setProperty("--ct-text-hsl", hslParts(colour));
     }
-    setAttribute("data-ct-text", colour !== null);
+    applyTextValue("data-ct-code", "--ct-code", on ? settings.codeColor : null);
+    applyTextValue("data-ct-font", "--ct-font", on ? fontFamily(settings.font, settings.fontCustom) : null);
 
-    const code = settings.enabled ? settings.codeColor : null;
-    if (code) {
-        root.style.setProperty("--ct-code", code);
+    const sideColour = on ? settings.sidebarTextColor : null;
+    applyTextValue("data-ct-side-text", "--ct-side-text", sideColour);
+    if (sideColour) {
+        root.style.setProperty("--ct-side-text-hsl", hslParts(sideColour));
     }
-    setAttribute("data-ct-code", code !== null);
-
-    const font = settings.enabled ? fontFamily(settings.font, settings.fontCustom) : null;
-    if (font) {
-        root.style.setProperty("--ct-font", font);
-    }
-    setAttribute("data-ct-font", font !== null);
+    applyTextValue("data-ct-side-font", "--ct-side-font",
+        on ? fontFamily(settings.sidebarFont, settings.sidebarFontCustom) : null);
 }
 
 async function start() {
@@ -302,9 +315,10 @@ async function start() {
         childList: true,
         attributes: true,
         attributeFilter: [
-            "data-wallpaper", "data-sidebar-image",
+            "data-wallpaper", "data-sidebar-image", "data-sidebar-plain",
             "data-frame-sidebar", "data-frame-main", "data-frame-all",
-            "data-ct-text", "data-ct-code", "data-ct-font"
+            "data-ct-text", "data-ct-code", "data-ct-font",
+            "data-ct-side-text", "data-ct-side-font"
         ]
     });
 
