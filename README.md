@@ -6,6 +6,8 @@ screens, with frames and your own text colour and font.
 - Six built-in gradient presets
 - Upload your own images, then drag and zoom to crop each one to the shape of your screen
 - Every image you save is kept, so you can switch between them without uploading again
+- A GIF can be a background too, for the page or the sidebar, and keeps moving. GIFs are
+  saved whole, not cropped
 - Image opacity slider, so a bright picture does not fight the text
 - Sidebar opacity slider
 - Borders: seven black ink frames (fineliner, double rule, draft lines, brush, sketch,

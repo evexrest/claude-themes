@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The popup compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.5.2";
+const filesVersion = "0.6.0";
 
 const defaults = {
     enabled: true,
@@ -10,8 +10,9 @@ const defaults = {
     // or Claude's own background when `preset` is "none".
     preset: "dusk",
     imageId: null,
-    // The saved images, as a list of { id, thumb }. `thumb` is a small copy for the
-    // popup. Each full-size picture is stored separately, under imageKey(id).
+    // The saved images, as a list of { id, thumb, animated }. `thumb` is a small still
+    // copy for the popup and `animated` is true for a GIF. Each full-size picture is
+    // stored separately, under imageKey(id).
     images: [],
     opacity: 0.5,
     panelOpacity: 0.6,

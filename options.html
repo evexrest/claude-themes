@@ -14,7 +14,7 @@
         <p>
             Choose an image, then drag and zoom until the box shows the part you want.
             Every image you save is kept, so you can switch between them from the
-            toolbar icon without uploading again.
+            toolbar icon without uploading again. A GIF works too, and keeps moving.
         </p>
 
         <div class="pair">
@@ -26,11 +26,21 @@
         <input type="file" id="file" accept="image/*" hidden>
 
         <div id="editor" hidden>
-            <canvas id="frame"></canvas>
-            <p class="hint">Drag the image to move it. <span id="shape-hint"></span></p>
+            <div id="crop">
+                <canvas id="frame"></canvas>
+                <p class="hint">Drag the image to move it. <span id="shape-hint"></span></p>
 
-            <label for="zoom">Zoom</label>
-            <input type="range" id="zoom" min="1" max="4" step="0.01" value="1">
+                <label for="zoom">Zoom</label>
+                <input type="range" id="zoom" min="1" max="4" step="0.01" value="1">
+            </div>
+
+            <div id="whole" hidden>
+                <img id="moving" alt="">
+                <p class="hint">
+                    A GIF is saved whole, so that it keeps moving. It is fitted to fill the
+                    space, as shown here, with its middle in the middle.
+                </p>
+            </div>
 
             <div class="row">
                 <button id="save">Save to my images</button>

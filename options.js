@@ -4,7 +4,13 @@ const editor = document.getElementById("editor");
 const status = document.getElementById("status");
 const context = frame.getContext("2d");
 
+const moving = document.getElementById("moving");
 const maxSavedWidth = 2560;
+const maxMovingBytes = 25 * 1024 * 1024;
+
+// The chosen file as stored text, when it is a GIF. A GIF is saved exactly as it
+// is, because cropping it here would keep only its first frame.
+let movingData = null;
 
 // What the image is for: "main" (the whole screen) or "sidebar". The crop box is
 // drawn in that shape. The popup opens this page with #sidebar for the second one.
@@ -58,6 +64,10 @@ function shapeFrame() {
     frame.style.aspectRatio = `${frameWidth} / ${frameHeight}`;
     context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
 
+    // The GIF preview takes the same shape.
+    moving.style.width = frame.style.width;
+    moving.style.aspectRatio = frame.style.aspectRatio;
+
     document.getElementById("for-main").setAttribute("aria-pressed", target === "main");
     document.getElementById("for-sidebar").setAttribute("aria-pressed", target === "sidebar");
     document.getElementById("shape-hint").textContent = target === "sidebar"
@@ -84,7 +94,7 @@ function loadImage(source) {
     loaded.onload = () => {
         image = loaded;
         centre();
-        editor.hidden = false;
+        showEditor(false);
         draw();
     };
     loaded.onerror = () => {
@@ -93,12 +103,46 @@ function loadImage(source) {
     loaded.src = source;
 }
 
+// Show the crop box for a still image, or the whole-picture preview for a GIF.
+function showEditor(isMoving) {
+    document.getElementById("crop").hidden = isMoving;
+    document.getElementById("whole").hidden = !isMoving;
+    editor.hidden = false;
+}
+
 document.getElementById("file").addEventListener("change", (event) => {
     const file = event.target.files[0];
-    if (file) {
-        status.textContent = "";
-        loadImage(URL.createObjectURL(file));
+    if (!file) {
+        return;
     }
+    status.textContent = "";
+    movingData = null;
+
+    if (file.type !== "image/gif") {
+        loadImage(URL.createObjectURL(file));
+        return;
+    }
+    if (file.size > maxMovingBytes) {
+        status.textContent = "That GIF is over 25 MB. Please choose a smaller one.";
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        movingData = reader.result;
+        moving.src = movingData;
+        showEditor(true);
+    };
+    reader.onerror = () => {
+        status.textContent = "That file could not be read.";
+    };
+    reader.readAsDataURL(file);
+});
+
+moving.addEventListener("error", () => {
+    editor.hidden = true;
+    movingData = null;
+    status.textContent = "That file could not be opened as an image.";
 });
 
 // Zoom around the middle of the frame, so the centre stays where it is.
@@ -137,16 +181,18 @@ frame.addEventListener("pointerup", () => {
     frame.classList.remove("dragging");
 });
 
-// A small copy of a saved image, for the buttons in the popup.
-function thumbnail(picture) {
+// A small still copy of a saved image, for the buttons in the popup. `picture` is
+// a canvas or an image, `width` and `height` its size.
+function thumbnail(picture, width, height) {
     const small = document.createElement("canvas");
     small.width = 240;
-    small.height = Math.round(small.width * picture.height / picture.width);
+    small.height = Math.round(small.width * height / width);
     small.getContext("2d").drawImage(picture, 0, 0, small.width, small.height);
     return small.toDataURL("image/jpeg", 0.7);
 }
 
-document.getElementById("save").addEventListener("click", async () => {
+// The cropped picture as stored text, and its small copy.
+function croppedPicture() {
     // The part of the original image that is inside the frame.
     const cropX = -x / scale;
     const cropY = -y / scale;
@@ -160,6 +206,17 @@ document.getElementById("save").addEventListener("click", async () => {
         image, cropX, cropY, cropWidth, cropHeight,
         0, 0, output.width, output.height
     );
+    return {
+        data: output.toDataURL("image/jpeg", 0.85),
+        thumb: thumbnail(output, output.width, output.height)
+    };
+}
+
+document.getElementById("save").addEventListener("click", async () => {
+    // A GIF is kept whole; anything else is cropped to the frame.
+    const picture = movingData
+        ? { data: movingData, thumb: thumbnail(moving, moving.naturalWidth, moving.naturalHeight), animated: true }
+        : croppedPicture();
 
     // Each saved image gets its own id, so earlier ones are kept.
     const id = Date.now().toString(36);
@@ -172,8 +229,8 @@ document.getElementById("save").addEventListener("click", async () => {
 
     try {
         await chrome.storage.local.set({
-            [imageKey(id)]: output.toDataURL("image/jpeg", 0.85),
-            images: [...saved.images, { id: id, thumb: thumbnail(output) }],
+            [imageKey(id)]: picture.data,
+            images: [...saved.images, { id: id, thumb: picture.thumb, animated: picture.animated === true }],
             enabled: true,
             ...use
         });

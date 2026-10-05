@@ -91,7 +91,7 @@ function addImage(image, selected) {
     const cell = document.createElement("div");
     cell.className = "cell";
 
-    const button = backgroundChoice("", `url("${image.thumb}")`, selected, { preset: null, imageId: image.id });
+    const button = backgroundChoice(image.animated ? "GIF" : "", `url("${image.thumb}")`, selected, { preset: null, imageId: image.id });
     button.title = "Use this image";
 
     const remove = document.createElement("button");
@@ -259,7 +259,7 @@ function showSidebarChoices(settings) {
     }
     for (const image of settings.images) {
         grid.appendChild(backgroundChoice(
-            "", `url("${image.thumb}")`, !settings.sidebarPreset && settings.sidebarImageId === image.id,
+            image.animated ? "GIF" : "", `url("${image.thumb}")`, !settings.sidebarPreset && settings.sidebarImageId === image.id,
             { sidebarPreset: null, sidebarImageId: image.id }
         ));
     }

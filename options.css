@@ -137,3 +137,14 @@ h2 {
     margin-top: 16px;
     color: #a5a49a;
 }
+
+/* The preview of a GIF background: the shape of the screen or the sidebar, with
+   the GIF filling it the way it will on claude.ai. */
+#moving {
+    display: block;
+    max-width: 100%;
+    margin: 24px auto 0;
+    border-radius: 8px;
+    background: #0b0b0b;
+    object-fit: cover;
+}
