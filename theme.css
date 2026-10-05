@@ -41,10 +41,19 @@ html[data-wallpaper="on"] [data-testid="transcript-bottom-fade"] {
     display: none;
 }
 
-html[data-wallpaper="on"] [data-chat-input-container] .bg-page,
+html[data-wallpaper="on"] [data-chat-input-container] .bg-page:not(.bg-surface-3 *),
 html[data-wallpaper="on"] [data-composer-card-holder],
 html[data-wallpaper="on"] [data-cds="ChatComposer"] {
     background-color: transparent !important;
+}
+
+/* The strip under the box is part of the same patch, and widens it with a
+   page-coloured shadow that would stick out on either side of the box. Only that
+   kind of shadow is removed: a solid spread in the page colour. The box's own
+   shadow and the thin rings on buttons are different and are left alone. */
+html[data-wallpaper="on"] [data-chat-input-container] .bg-page:not(.bg-surface-3 *),
+html[data-wallpaper="on"] [class*="shadow-[0_0_0_"][class*="px_var(--cds-page-bg)]"] {
+    box-shadow: none !important;
 }
 
 /* Code: the session card, and the transcript surface inside it. */
