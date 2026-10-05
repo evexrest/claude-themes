@@ -11,8 +11,6 @@
   const picture = (side) => page.querySelector(`.claude-sticker[data-side="${side}"]`);
   const tileFor = (kind, id) => document.querySelector(`#library .tile[data-kind="${kind}"][data-id="${id}"]`);
   const selected = () => [...document.querySelectorAll(".zone.selected")].map((z) => z.id).join(",");
-  // Reading a file takes real time, which the test's clock does not wait for, so wait for the page itself.
-  const until = async (ready) => { for (let i = 0; i < 400 && !ready(); i++) await wait(25); await wait(60); };
   const classes = () => [...document.body.classList].join(" ");
   const shrink = Number(/scale\(([\d.]+)\)/.exec(el("preview").style.transform)[1]);
 
@@ -116,12 +114,26 @@
   const g = () => el("grip-left").getBoundingClientRect();
   let at = g(); const placeBefore = store.stickerPosition; const topBefore = picture("left").getBoundingClientRect().top;
   point(el("grip-left"), "pointerdown", at.left + 10, at.top + 10); point(el("grip-left"), "pointermove", at.left + 10, at.top + 10 - 60); point(el("grip-left"), "pointerup", at.left + 10, at.top - 50); await wait(250);
-  r.dragPictureUp = { position: placeBefore + " to " + store.stickerPosition, movedUpInPreview: Math.round(topBefore - picture("left").getBoundingClientRect().top), expected: Math.round(60 / shrink), slider: el("sticker-position").value, gripFollowed: Math.round(g().top - at.top) };
+  r.dragPictureUp = { position: placeBefore + " to " + store.stickerLeftPosition, rightStill: store.stickerRightPosition ?? "shared " + store.stickerPosition, movedUpInPreview: Math.round(topBefore - picture("left").getBoundingClientRect().top), expected: Math.round(60 / shrink), slider: el("sticker-position").value, gripFollowed: Math.round(g().top - at.top) };
   at = g(); const handle = el("grip-left").querySelector(".handle"); const widthBefore = picture("left").getBoundingClientRect().width;
   point(handle, "pointerdown", at.right, at.bottom); point(handle, "pointermove", at.right + 30, at.bottom); point(handle, "pointerup", at.right + 30, at.bottom); await wait(250);
-  r.dragCorner = { size: "120 to " + store.stickerSize, widthInPreview: Math.round(widthBefore) + " to " + Math.round(picture("left").getBoundingClientRect().width), slider: el("sticker-size").value };
+  r.dragCorner = { size: "120 to " + store.stickerLeftSize, rightStill: store.stickerRightSize ?? "shared " + store.stickerSize, widthInPreview: Math.round(widthBefore) + " to " + Math.round(picture("left").getBoundingClientRect().width), slider: el("sticker-size").value };
   el("undo").click(); await wait(60); el("undo").click(); await wait(60);
-  r.bothDragsUndone = { size: store.stickerSize, position: store.stickerPosition };
+  r.bothDragsUndone = { size: store.stickerLeftSize ?? "shared " + store.stickerSize, position: store.stickerLeftPosition ?? "shared " + store.stickerPosition };
+  // each side has sliders of its own
+  set("sticker-size", 300); set("sticker-opacity", 40); await wait(250);
+  const leftNow = { size: store.stickerLeftSize, opacity: store.stickerLeftOpacity, widthInPreview: Math.round(picture("left").getBoundingClientRect().width), seeThrough: picture("left").style.opacity };
+  el("part-right").click(); await wait(250);
+  const rightShows = { size: el("sticker-size").value, opacity: el("sticker-opacity").value, label: el("sticker-size-value").textContent };
+  set("sticker-size", 90); set("sticker-position", 10); await wait(250);
+  r.eachSideHasItsOwn = { left: leftNow, rightSlidersShowedItsOwn: rightShows, right: { size: store.stickerRightSize, position: store.stickerRightPosition, opacity: store.stickerRightOpacity ?? "shared " + (store.stickerOpacity ?? 1), widthInPreview: Math.round(picture("right").getBoundingClientRect().width) },
+    leftUntouched: store.stickerLeftSize + "/" + Math.round(picture("left").getBoundingClientRect().width), button: el("side-match").textContent };
+  el("part-left").click(); await wait(60);
+  r.leftSlidersShowItsOwn = { size: el("sticker-size").value, opacity: el("sticker-opacity").value, button: el("side-match").textContent };
+  el("side-match").click(); await wait(250);
+  r.makeTheOtherMatch = { right: [store.stickerRightSize, store.stickerRightPosition, store.stickerRightOpacity].join("/"), left: [store.stickerLeftSize, store.stickerLeftPosition ?? "shared " + store.stickerPosition, store.stickerLeftOpacity].join("/"), widths: Math.round(picture("left").getBoundingClientRect().width) + "/" + Math.round(picture("right").getBoundingClientRect().width), said: el("toast").textContent };
+  el("undo").click(); await wait(100);
+  r.matchUndoneInOneStep = [store.stickerRightSize, store.stickerRightPosition, store.stickerRightOpacity ?? "shared"].join("/");
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "Backspace", bubbles: true })); await wait(200);
   r.deleteKeyTakesItOff = { left: store.stickerLeft, stillInLibrary: store.stickers.some((s) => s.id === "s1"), gripShown: !el("grip-left").hidden, sideChoices: pressed("#side-choices .tile").slice(0, 3) };
 

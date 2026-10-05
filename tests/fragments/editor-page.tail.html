@@ -28,7 +28,7 @@
   const point = (target, type, x, y) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, clientX: x, clientY: y }));
   const before = store.stickerPosition ?? 85;
   point(el("grip-left"), "pointerdown", 400, 700); point(el("grip-left"), "pointermove", 400, 500); point(el("grip-left"), "pointerup", 400, 500); await wait(60);
-  r.dragOnThePage = { position: before + " to " + store.stickerPosition };
+  r.dragOnThePage = { position: before + " to " + store.stickerLeftPosition, sharedUntouched: store.stickerPosition ?? "default" };
 
   // dropping a file straight onto the page's sidebar
   const canvas = document.createElement("canvas"); canvas.width = 400; canvas.height = 300; canvas.getContext("2d").fillRect(0, 0, 400, 300);
@@ -38,7 +38,7 @@
   fire(document.body, "dragenter");
   r.whileDragging = { classes: classes(), panelsLetItThrough: getComputedStyle(el("library")).pointerEvents + "/" + getComputedStyle(el("inspector")).pointerEvents + "/" + getComputedStyle(el("bar")).pointerEvents, zone: getComputedStyle(el("zone-sidebar")).borderTopStyle };
   const n = store.images.length; fire(el("zone-sidebar"), "dragover"); fire(el("zone-sidebar"), "drop");
-  for (let i = 0; i < 400 && store.images.length === n; i++) await wait(25); await wait(80);
+  await until(() => store.images.length > n);
   r.droppedOnTheSidebar = { images: store.images.length - n, sidebarMode: store.sidebarMode, usesIt: store.sidebarImageId === store.images[store.images.length - 1].id, classes: classes() };
 
   // a page with no sidebar and no message box (a settings page, or the sidebar collapsed)

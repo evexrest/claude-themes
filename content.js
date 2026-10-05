@@ -1,7 +1,7 @@
 // Runs on every claude.ai page. Reads the saved settings, shows the background, the
 // sidebar's picture and the pictures beside the chat, draws the frames and sets the
 // chat text's colour and font. `defaults`, `presets`, `frameValues`, `fontFamily`,
-// `hslParts`, `imageKey` and `stickerKey` come from settings.js.
+// `hslParts`, `imageKey`, `stickerKey` and `sideValue` come from settings.js.
 
 const root = document.documentElement;
 let settings = defaults;
@@ -199,7 +199,7 @@ function placeStickers() {
 
         // As wide as asked for, but never wider than the chat window, and never
         // so wide that the picture's own shape would make it taller than the window.
-        let width = Math.min(settings.stickerSize, paneBox.width - stickerGap * 2);
+        let width = Math.min(sideValue(settings, side, "Size"), paneBox.width - stickerGap * 2);
         if (slot.element.naturalWidth && slot.element.naturalHeight) {
             width = Math.min(width, height * slot.element.naturalWidth / slot.element.naturalHeight);
         }
@@ -211,7 +211,7 @@ function placeStickers() {
             ? paneBox.left + stickerGap + spare
             : paneBox.right - stickerGap - spare - width;
 
-        const share = settings.stickerPosition / 100;
+        const share = sideValue(settings, side, "Position") / 100;
         const style = slot.element.style;
         style.display = "block";
         style.left = start + "px";
@@ -220,7 +220,7 @@ function placeStickers() {
         // `share` of the way down: 0 touches the top, 1 touches the bottom.
         style.top = top + height * share + "px";
         style.transform = `translateY(${-share * 100}%)`;
-        style.opacity = settings.stickerOpacity;
+        style.opacity = sideValue(settings, side, "Opacity");
     }
 }
 

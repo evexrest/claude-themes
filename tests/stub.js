@@ -38,3 +38,7 @@ window.chrome = {
 };
 window.colourImage = (colour, w = 4, h = 3) => { const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.fillStyle = colour; x.fillRect(0, 0, w, h); return c.toDataURL("image/png"); };
 window.wait = (ms) => new Promise((r) => setTimeout(r, ms));
+// Wait until the page shows something. Reading a chosen file takes real time, and the tests run on a clock that
+// jumps ahead whenever the page is idle, so a plain `wait` can be over before the file has been read. That clock
+// does stop for a file being fetched, so each turn fetches this page: real time passes, and the read gets done.
+window.until = async (ready) => { for (let i = 0; i < 400 && !ready(); i++) { await fetch(location.href).then((r) => r.text()).catch(() => {}); await wait(25); } await wait(60); };

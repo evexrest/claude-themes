@@ -4,8 +4,6 @@
   const r = {}; await wait(100);
   const gifBytes = Uint8Array.from(atob(GIF1.split(",")[1]), (c) => c.charCodeAt(0));
   const give = (file) => { const dt = new DataTransfer(); dt.items.add(file); const input = document.getElementById("file"); input.files = dt.files; input.dispatchEvent(new Event("change")); };
-  // Reading a file takes real time, which the test's clock does not wait for, so wait for the page itself.
-  const until = async (ready) => { for (let i = 0; i < 400 && !ready(); i++) await wait(25); await wait(50); };
   const shown = () => ({ editor: !editor.hidden, crop: !document.getElementById("crop").hidden, whole: !document.getElementById("whole").hidden });
   give(new File([gifBytes], "wave.gif", { type: "image/gif" })); await until(() => !editor.hidden && moving.naturalWidth > 0);
   r.gifChosen = { ...shown(), preview: moving.naturalWidth + "x" + moving.naturalHeight, previewShape: moving.style.width + " " + moving.style.aspectRatio, status: status.textContent };

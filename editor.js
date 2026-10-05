@@ -6,8 +6,8 @@
 // selected. They can be moved, resized, folded away and closed like any window.
 // Every change to the theme is saved straight away, and the page picks it up from
 // storage. `defaults`, `presets`,
-// `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey` and `filesVersion` come
-// from settings.js.
+// `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey`, `sideKey`, `sideValue`
+// and `filesVersion` come from settings.js.
 
 const preview = document.getElementById("preview");
 const screenBox = document.getElementById("screen");
@@ -164,6 +164,23 @@ function slider(id, key, shown, stored, slid) {
     updaters.push(() => {
         input.value = slid(state[key]);
         label.textContent = shown(Number(input.value));
+    });
+}
+
+// The same for one of a side picture's own settings (`what` is "Size", "Position"
+// or "Opacity"): the slider shows and changes it for whichever side is selected.
+function sideSlider(id, what, shown, stored, slid) {
+    const input = byId(id);
+    const label = byId(id + "-value");
+
+    input.addEventListener("input", () => {
+        save({ [sideKey(part, what)]: stored(Number(input.value)) }, "flow");
+    });
+    updaters.push(() => {
+        if (part in sideKeys) {
+            input.value = slid(sideValue(state, part, what));
+            label.textContent = shown(Number(input.value));
+        }
     });
 }
 
@@ -819,10 +836,10 @@ function watchGrip(grip) {
             // A picture that fits its space is centred there, so it grows on both sides.
             const towardsChat = side === "left" ? across : -across;
             const grown = start.width < start.room ? towardsChat * 2 : towardsChat;
-            save({ stickerSize: clamp(Math.round(start.width + grown), 60, 800) }, "flow");
+            save({ [sideKey(side, "Size")]: clamp(Math.round(start.width + grown), 60, 800) }, "flow");
         } else if (start.spare > 0) {
             const share = (start.top + down - start.highest) / start.spare;
-            save({ stickerPosition: clamp(Math.round(share * 100), 0, 100) }, "flow");
+            save({ [sideKey(side, "Position")]: clamp(Math.round(share * 100), 0, 100) }, "flow");
         }
     });
 
@@ -1075,6 +1092,7 @@ function sync() {
     byId("panel-sidebar").hidden = part !== "sidebar";
     byId("panel-side").hidden = !(part in sideKeys);
     byId("side-title").textContent = part === "left" ? "Picture on the left" : "Picture on the right";
+    byId("side-match").textContent = part === "left" ? "Make the right one match" : "Make the left one match";
 
     byId("main-now").textContent = backgroundName(state.preset, state.imageId);
     byId("side-now").textContent = backgroundName(state.sidebarPreset, state.sidebarImageId);
@@ -1145,9 +1163,18 @@ async function start() {
     slider("frame-width-side", "frameSidebarWidth", pixels, same, same);
 
     // The pictures beside the chat.
-    slider("sticker-size", "stickerSize", pixels, same, same);
-    slider("sticker-position", "stickerPosition", place, same, same);
-    slider("sticker-opacity", "stickerOpacity", percent, fraction, hundredths);
+    sideSlider("sticker-size", "Size", pixels, same, same);
+    sideSlider("sticker-position", "Position", place, same, same);
+    sideSlider("sticker-opacity", "Opacity", percent, fraction, hundredths);
+    byId("side-match").addEventListener("click", () => {
+        const other = part === "left" ? "right" : "left";
+        const change = {};
+        for (const what of ["Size", "Position", "Opacity"]) {
+            change[sideKey(other, what)] = sideValue(state, part, what);
+        }
+        save(change);
+        say("The picture on the " + other + " now has the same size, height and opacity.");
+    });
 
     showFrames();
     showLibrary();

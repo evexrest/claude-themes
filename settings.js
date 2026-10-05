@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The editor compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.11.0";
+const filesVersion = "0.12.0";
 
 const defaults = {
     enabled: true,
@@ -39,6 +39,15 @@ const defaults = {
     stickers: [],
     stickerLeft: null,
     stickerRight: null,
+    // Each side's picture has a size, a height on the page and an opacity of its
+    // own. Null means that side's has never been set, and the three shared values
+    // below are used: they are where these were kept before each side had its own.
+    stickerLeftSize: null,
+    stickerLeftPosition: null,
+    stickerLeftOpacity: null,
+    stickerRightSize: null,
+    stickerRightPosition: null,
+    stickerRightOpacity: null,
     stickerSize: 180,
     stickerPosition: 85,
     stickerOpacity: 1,
@@ -62,6 +71,18 @@ function imageKey(id) {
 // Where one side picture's file is kept.
 function stickerKey(id) {
     return "sticker-" + id;
+}
+
+// The name of one of a side picture's own settings. `side` is "left" or "right"
+// and `what` is "Size", "Position" or "Opacity".
+function sideKey(side, what) {
+    return (side === "left" ? "stickerLeft" : "stickerRight") + what;
+}
+
+// That setting's value: the side's own if it has one, otherwise the shared one.
+function sideValue(settings, side, what) {
+    const own = settings[sideKey(side, what)];
+    return own === null || own === undefined ? settings["sticker" + what] : own;
 }
 
 // Fonts that are already on most computers, so nothing has to be downloaded.

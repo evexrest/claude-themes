@@ -75,6 +75,11 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   results.stickerBlob = blobType;
   await chrome.storage.local.set({ stickerSize: 400, stickerPosition: 0, stickerOpacity: 0.5 }); await wait(60);
   results.heldByHeight = { left: st(0), right: st(1) };
+  // each side with its own size, height and opacity; a side that has none of its own uses the shared one
+  await chrome.storage.local.set({ stickerLeftSize: 80, stickerLeftPosition: 100, stickerLeftOpacity: 0.3, stickerRightSize: 140 }); await wait(60);
+  results.eachSideItsOwn = { left: st(0), right: st(1) };
+  await chrome.storage.local.set({ stickerLeftSize: null, stickerLeftPosition: null, stickerLeftOpacity: null, stickerRightSize: null }); await wait(60);
+  results.backToShared = { left: st(0), right: st(1), same: JSON.stringify(results.heldByHeight) === JSON.stringify({ left: st(0), right: st(1) }) };
   // a taller window, so the picture's height no longer holds it back: wider than the empty space, it goes behind the chat
   const layers = () => { const e = document.querySelector(".claude-sticker"), c = document.querySelector('[data-cds="ChatComposer"]'), b = c.getBoundingClientRect(); e.style.pointerEvents = "auto"; const list = document.elementsFromPoint(b.left + 20, b.top + 10); e.style.pointerEvents = ""; return { parent: e.parentElement.className, z: getComputedStyle(e).zIndex, underTheMessageBox: list.indexOf(e) > list.indexOf(c), aboveThePageColour: list.indexOf(e) >= 0 && list.indexOf(e) < list.indexOf(e.parentElement), clicksPassThrough: getComputedStyle(e).pointerEvents }; };
   document.querySelector(".dframe-root").style.height = "1300px"; await wait(1200);
