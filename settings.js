@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The popup compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.7.2";
+const filesVersion = "0.8.0";
 
 const defaults = {
     enabled: true,

@@ -157,15 +157,19 @@ async function loadSticker(side) {
     placeStickers();
 }
 
-// Put each side picture in the empty space on its side of the chat: between the
-// edge of the chat window and the column the messages sit in. The message box is
-// as wide as that column, so it is used to find it. A picture is never made wider
-// than the space, and is hidden when there is too little of it.
+// Put each side picture beside the chat: in the empty space between the edge of
+// the chat window and the column the messages sit in. The message box is as wide
+// as that column, so it is used to find it. A picture that fits is centred in
+// that space. A bigger one starts at the window's edge and carries on behind the
+// chat: the pictures live inside the page area, above its background and below
+// everything written on it (see .claude-sticker in theme.css). With no empty
+// space at all they are hidden.
 function placeStickers() {
     const pane = document.querySelector(".dframe-pane-primary");
     const column = document.querySelector('[data-cds="ChatComposer"]');
     const paneBox = pane ? pane.getBoundingClientRect() : null;
     const columnBox = column ? column.getBoundingClientRect() : null;
+    const home = pane ? pane.closest(".dframe-content") || pane.parentElement : null;
 
     for (const side of ["left", "right"]) {
         const slot = stickers[side];
@@ -173,27 +177,38 @@ function placeStickers() {
             continue;
         }
 
-        let width = 0;
-        let start = 0;
-        if (settings.enabled && slot.url && paneBox && columnBox && columnBox.width > 0) {
-            start = side === "left" ? paneBox.left : columnBox.right;
-            const end = side === "left" ? columnBox.left : paneBox.right;
-            const room = end - start - stickerGap * 2;
-            width = Math.min(settings.stickerSize, room);
-            start += (end - start - width) / 2;
+        let room = 0;
+        if (settings.enabled && slot.url && home && columnBox && columnBox.width > 0) {
+            room = side === "left" ? columnBox.left - paneBox.left : paneBox.right - columnBox.right;
+            room -= stickerGap * 2;
         }
 
-        if (width < stickerSmallest) {
+        if (room < stickerSmallest) {
             slot.element.style.display = "none";
             continue;
         }
-        if (!slot.element.isConnected) {
-            root.appendChild(slot.element);
+        if (slot.element.parentNode !== home) {
+            home.appendChild(slot.element);
         }
 
         // Keep clear of the bar along the top of the chat window.
         const top = paneBox.top + 56;
         const height = paneBox.height - 56 - stickerGap;
+
+        // As wide as asked for, but never wider than the chat window, and never
+        // so wide that the picture's own shape would make it taller than the window.
+        let width = Math.min(settings.stickerSize, paneBox.width - stickerGap * 2);
+        if (slot.element.naturalWidth && slot.element.naturalHeight) {
+            width = Math.min(width, height * slot.element.naturalWidth / slot.element.naturalHeight);
+        }
+        width = Math.max(width, 1);
+
+        // Centred in the empty space when it fits, from the window's edge when it does not.
+        const spare = Math.max(0, room - width) / 2;
+        const start = side === "left"
+            ? paneBox.left + stickerGap + spare
+            : paneBox.right - stickerGap - spare - width;
+
         const share = settings.stickerPosition / 100;
         const style = slot.element.style;
         style.display = "block";

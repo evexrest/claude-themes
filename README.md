@@ -20,8 +20,8 @@ screens, with frames and your own text colour and font.
 - The sidebar can share the main background, have a picture of its own with its own
   opacity, or stay exactly as Claude draws it
 - Pictures or GIFs in the empty space on either side of the chat, with size, height and
-  opacity sliders. They work with any background, including Claude's own, and never sit
-  on top of the chat
+  opacity sliders. They work with any background, including Claude's own. A picture
+  bigger than the empty space carries on behind the chat, never on top of it
 - Text colour and font for the chat, for backgrounds that make the normal text hard to
   read, and a separate colour for the words Claude marks out (normally crimson)
 - Upload your own frame picture; its thickness is measured for you

@@ -69,14 +69,22 @@ html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-c
     --cds-scroll-fade-strip-color: transparent;
 }
 
-/* The pictures beside the chat. content.js creates one for each side and works
-   out where the empty space is, so they never sit on top of the chat itself. */
+/* The pictures beside the chat. content.js creates one for each side, puts it in
+   the page area and works out where the empty space is. They are drawn above the
+   page area's own background and below everything in it, so a picture bigger than
+   the empty space carries on behind the chat and never sits on top of it. */
 .claude-sticker {
     position: fixed;
-    z-index: 1;
+    z-index: -1;
     pointer-events: none;
     user-select: none;
     object-fit: contain;
+}
+
+/* That order holds only while the page area keeps its layers to itself. claude.ai
+   already sets this on it; it is repeated here in case that changes. */
+.dframe-root :has(> .claude-sticker) {
+    isolation: isolate;
 }
 
 /* The sidebar on its own, for when it is not joined to the main background: with

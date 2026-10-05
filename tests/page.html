@@ -8,10 +8,10 @@
   body { margin: 0; font: 13px system-ui; color: var(--text); }
   .dframe-root { display: flex; height: 100vh; box-sizing: border-box; position: relative; }
   .dframe-sidebar { width: 30%; box-sizing: border-box; background: var(--df-web-sidebar-bg); padding: 8px; position: relative; z-index: 20; isolation: isolate; }
-  .dframe-pane-primary { flex: 1; box-sizing: border-box; position: relative; contain: layout; }
+  .dframe-pane-primary { height: 100%; padding: 8px; box-sizing: border-box; position: relative; contain: layout; }
   code { color: var(--cds-prose-code-color, #8e2626); background: rgba(0,0,0,.05); padding: 1px 4px; border-radius: 4px; }
   html.dark code { color: var(--cds-prose-code-color, #f4a9a9); }
-  .dframe-content { height: 100%; padding: 8px; box-sizing: border-box; background: var(--cds-surface-1); }
+  .dframe-content { flex: 1; min-width: 0; isolation: isolate; background: var(--cds-surface-1); }
   .col { max-width: var(--col, 300px); margin: 0 auto; }
   [data-cds="ChatComposer"] { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); width: var(--col, 300px); height: 54px; box-sizing: border-box; border: 1px solid rgba(128,128,128,.5); border-radius: 14px; padding: 8px 12px; color: var(--cds-text-secondary); background: var(--cds-surface-1); }
   html.wide { --col: 768px; } html.wide .dframe-sidebar { width: 288px; }
@@ -36,7 +36,7 @@
 <body>
 <div class="dframe-root" data-variant="web">
   <nav class="dframe-sidebar"><span style="color: var(--cds-text-primary)">Sidebar</span></nav>
-  <div class="dframe-pane-primary"><main class="dframe-content"><div class="col standard-markdown"><b id="t" style="color: var(--cds-text-primary)"></b><p style="color: var(--cds-text-primary); font-family: var(--font-claude-response, Georgia)">A reply from Claude, in the chosen colour and font.</p><p style="color: var(--cds-text-primary)">Claude marks words <code>like this</code> and <code>this_one</code>.</p><p style="color: var(--cds-text-secondary)">Secondary text, a little fainter.</p><pre id="m" style="position:absolute;bottom:4px;left:8px;margin:0;font-size:10px;color:var(--cds-text-primary)"></pre></div><div data-cds="ChatComposer">Reply to Claude</div></main></div>
+  <main class="dframe-content"><div class="dframe-pane-primary"><div class="col standard-markdown"><b id="t" style="color: var(--cds-text-primary)"></b><p style="color: var(--cds-text-primary); font-family: var(--font-claude-response, Georgia)">A reply from Claude, in the chosen colour and font.</p><p style="color: var(--cds-text-primary)">Claude marks words <code>like this</code> and <code>this_one</code>.</p><p style="color: var(--cds-text-secondary)">Secondary text, a little fainter.</p><pre id="m" style="position:absolute;bottom:4px;left:8px;margin:0;font-size:10px;color:var(--cds-text-primary)"></pre></div><div data-cds="ChatComposer">Reply to Claude</div></div></main>
 </div>
 <script>setTimeout(() => { const r = (s) => { const b = document.querySelector(s).getBoundingClientRect(); return Math.round(b.width) + "x" + Math.round(b.height) + "@" + Math.round(b.left); }; const inner = document.querySelector(".dframe-content").getBoundingClientRect(); document.getElementById("m").textContent = "sidebar " + r(".dframe-sidebar") + "  pane " + r(".dframe-pane-primary") + "  content " + Math.round(inner.width) + "x" + Math.round(inner.height); }, 300);
 document.getElementById("t").textContent = q.get("f") + " " + saved.frameWidth + "px " + saved.frameLayout;</script>
