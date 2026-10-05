@@ -1,13 +1,18 @@
-// Runs on every claude.ai page. Reads the saved settings, shows the background,
-// draws the frames and sets the chat text's colour and font. `defaults`, `presets`,
+// Runs on every claude.ai page. Reads the saved settings, shows the background and
+// the sidebar's picture, draws the frames and sets the chat text's colour and font. `defaults`, `presets`,
 // `frameValues`, `fontFamily`, `hslParts` and `imageKey` come from settings.js.
 
 const root = document.documentElement;
 let settings = defaults;
 let wallpaper = null;
-let imageUrl = null;
 let frameUrl = null;
-let loads = 0;
+
+// The two picture layers: the main background and the sidebar's own picture.
+// Each remembers its image's address and counts its loads.
+const layers = {
+    main: { url: null, loads: 0 },
+    sidebar: { url: null, loads: 0 }
+};
 
 function dataUrlToBlob(dataUrl) {
     const [head, base64] = dataUrl.split(",");
@@ -29,29 +34,30 @@ function setAttribute(name, on) {
     }
 }
 
-// Put the chosen picture on the image layer: a preset's gradient, or one of the
-// saved images, which has to be fetched from storage first.
-async function showSource(preset) {
-    const turn = ++loads;
-    let background = preset ? preset.css : null;
+// Find the CSS for a picture, then hand it to `show`. The picture is a preset's
+// gradient, or one of the saved images, which has to be fetched from storage first.
+async function loadPicture(layer, presetId, imageId, show) {
+    const turn = ++layer.loads;
+    const preset = presets.find((item) => item.id === presetId);
+    let css = preset ? preset.css : null;
     let url = null;
 
     if (!preset) {
-        const key = imageKey(settings.imageId);
+        const key = imageKey(imageId);
         const saved = await chrome.storage.local.get(key);
         // A newer choice was made while this one was loading, or the image is gone.
-        if (turn !== loads || !saved[key]) {
+        if (turn !== layer.loads || !saved[key]) {
             return;
         }
         url = URL.createObjectURL(dataUrlToBlob(saved[key]));
-        background = `url("${url}")`;
+        css = `url("${url}")`;
     }
 
-    if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
+    if (layer.url) {
+        URL.revokeObjectURL(layer.url);
     }
-    imageUrl = url;
-    wallpaper.style.backgroundImage = background;
+    layer.url = url;
+    show(css);
 }
 
 function applyBackground(sourceChanged) {
@@ -71,11 +77,28 @@ function applyBackground(sourceChanged) {
         root.appendChild(wallpaper);
     }
     if (sourceChanged) {
-        showSource(preset);
+        loadPicture(layers.main, settings.preset, settings.imageId, (css) => {
+            wallpaper.style.backgroundImage = css;
+        });
     }
     wallpaper.style.opacity = settings.opacity;
     root.style.setProperty("--panel-opacity", settings.panelOpacity * 100 + "%");
     setAttribute("data-wallpaper", true);
+}
+
+// The sidebar's own picture, when it is not joined to the main background.
+function applySidebar(sourceChanged) {
+    const own = settings.enabled && settings.sidebarMode === "own";
+
+    if (own && sourceChanged) {
+        loadPicture(layers.sidebar, settings.sidebarPreset, settings.sidebarImageId, (css) => {
+            root.style.setProperty("--sidebar-image", css);
+        });
+    }
+    if (own) {
+        root.style.setProperty("--sidebar-image-opacity", settings.sidebarOpacity);
+    }
+    setAttribute("data-sidebar-image", own);
 }
 
 // One frame goes around the sidebar, the chat window, or the whole window ("all").
@@ -118,6 +141,12 @@ function applyText() {
     }
     setAttribute("data-ct-text", colour !== null);
 
+    const code = settings.enabled ? settings.codeColor : null;
+    if (code) {
+        root.style.setProperty("--ct-code", code);
+    }
+    setAttribute("data-ct-code", code !== null);
+
     const font = settings.enabled ? fontFamily(settings.font, settings.fontCustom) : null;
     if (font) {
         root.style.setProperty("--ct-font", font);
@@ -128,6 +157,7 @@ function applyText() {
 async function start() {
     settings = await chrome.storage.local.get(defaults);
     applyBackground(true);
+    applySidebar(true);
     applyFrames(true);
     applyText();
 
@@ -140,6 +170,7 @@ async function start() {
             }
         }
         applyBackground("preset" in changes || "imageId" in changes);
+        applySidebar("sidebarMode" in changes || "sidebarPreset" in changes || "sidebarImageId" in changes);
         applyFrames("frameImage" in changes);
         applyText();
     });
@@ -147,6 +178,7 @@ async function start() {
     // If the page removes our element or attributes while it loads, put them back.
     const observer = new MutationObserver(() => {
         applyBackground(false);
+        applySidebar(false);
         applyFrames(false);
         applyText();
     });
@@ -154,8 +186,9 @@ async function start() {
         childList: true,
         attributes: true,
         attributeFilter: [
-            "data-wallpaper", "data-frame-sidebar", "data-frame-main", "data-frame-all",
-            "data-ct-text", "data-ct-font"
+            "data-wallpaper", "data-sidebar-image",
+            "data-frame-sidebar", "data-frame-main", "data-frame-all",
+            "data-ct-text", "data-ct-code", "data-ct-font"
         ]
     });
 }

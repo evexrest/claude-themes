@@ -20,7 +20,8 @@ h1 {
 #frame {
     display: block;
     width: 100%;
-    margin-top: 24px;
+    max-width: 100%;
+    margin: 24px auto 0;
     border-radius: 8px;
     background: #0b0b0b;
     cursor: grab;
@@ -94,4 +95,28 @@ h2 {
     min-height: 24px;
     margin-top: 16px;
     color: #a5a49a;
+}
+
+/* The choice between cropping for the main background and for the sidebar. */
+.pair {
+    display: grid;
+    width: fit-content;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    margin: 8px 0 16px;
+    border-radius: 10px;
+    background: #20201f;
+}
+
+.pair button {
+    padding: 6px 14px;
+    background: transparent;
+    color: #a5a49a;
+    font-weight: 400;
+}
+
+.pair button[aria-pressed="true"] {
+    background: #3a3a38;
+    color: #e8e6e1;
 }

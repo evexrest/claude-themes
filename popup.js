@@ -6,13 +6,17 @@ const images = document.getElementById("images");
 const enabled = document.getElementById("enabled");
 const opacity = document.getElementById("opacity");
 const panel = document.getElementById("panel");
+const sideOpacity = document.getElementById("side-opacity");
 const frameWidth = document.getElementById("frame-width");
 const textColor = document.getElementById("text-color");
+const codeColor = document.getElementById("code-color");
 const font = document.getElementById("font");
 const fontCustom = document.getElementById("font-custom");
 
-// A few text colours that are easy to read on most backgrounds.
-const swatches = ["#ffffff", "#f5f0e6", "#cfcfcf", "#ffe9a8", "#0b0b0b", "#2b2b2b", "#10254a", "#3d1010"];
+// A few text colours that are easy to read on most backgrounds, and a few for the
+// words Claude marks out.
+const textSwatches = ["#ffffff", "#f5f0e6", "#cfcfcf", "#ffe9a8", "#0b0b0b", "#2b2b2b", "#10254a", "#3d1010"];
+const codeSwatches = ["#ffffff", "#ffb3b3", "#ffd479", "#a8e6a1", "#8fd3ff", "#d9b8ff", "#0b0b0b", "#0d4a8f"];
 
 function save(change) {
     chrome.storage.local.set(change);
@@ -30,7 +34,7 @@ function showPercent(slider, id) {
 }
 
 function showTab(name) {
-    for (const other of ["background", "borders", "text"]) {
+    for (const other of ["background", "sidebar", "borders", "text"]) {
         document.getElementById(other).hidden = other !== name;
     }
     select(document.getElementById("tab-" + name));
@@ -42,8 +46,14 @@ function showLayout(layout) {
     select(document.getElementById("layout-" + layout));
 }
 
-// One background button: a preset or a saved image. Only one of them is selected
-// at a time, across both grids.
+function showSidebarMode(mode) {
+    document.getElementById("joined").hidden = mode !== "joined";
+    document.getElementById("own").hidden = mode !== "own";
+    select(document.getElementById("side-" + mode));
+}
+
+// One picture button: a preset or a saved image. Only one of them is selected at
+// a time within its tab.
 function backgroundChoice(name, background, selected, change) {
     const button = document.createElement("button");
     button.className = "choice";
@@ -55,7 +65,7 @@ function backgroundChoice(name, background, selected, change) {
     button.appendChild(label);
 
     button.addEventListener("click", () => {
-        for (const other of document.querySelectorAll(".choice")) {
+        for (const other of button.closest("section").querySelectorAll(".choice")) {
             other.setAttribute("aria-pressed", other === button);
         }
         save(change);
@@ -97,10 +107,16 @@ async function removeImage(id, cell) {
         change.imageId = null;
         choices.firstElementChild.setAttribute("aria-pressed", true);
     }
+    // The same for the sidebar's own picture.
+    if (!saved.sidebarPreset && saved.sidebarImageId === id) {
+        change.sidebarPreset = defaults.sidebarPreset;
+        change.sidebarImageId = null;
+    }
     await chrome.storage.local.set(change);
     await chrome.storage.local.remove(imageKey(id));
 
     cell.remove();
+    showSidebarChoices({ ...saved, ...change });
     document.getElementById("images-title").hidden = change.images.length === 0;
 }
 
@@ -145,8 +161,28 @@ function addFrameRow(rowId, key, settings) {
     }
 }
 
-// One text colour button. A null colour means Claude's own.
-function addSwatch(colour, selected) {
+// The sidebar's own picture: every preset and every saved image.
+function showSidebarChoices(settings) {
+    const grid = document.getElementById("side-choices");
+    grid.replaceChildren();
+
+    for (const preset of presets) {
+        grid.appendChild(backgroundChoice(
+            preset.name, preset.css, settings.sidebarPreset === preset.id,
+            { sidebarPreset: preset.id }
+        ));
+    }
+    for (const image of settings.images) {
+        grid.appendChild(backgroundChoice(
+            "", `url("${image.thumb}")`, !settings.sidebarPreset && settings.sidebarImageId === image.id,
+            { sidebarPreset: null, sidebarImageId: image.id }
+        ));
+    }
+}
+
+// One colour button. `key` is the setting it changes ("textColor" or "codeColor")
+// and `picker` is the colour picker next to it. A null colour means Claude's own.
+function addSwatch(row, key, picker, colour, selected) {
     const button = document.createElement("button");
     button.className = "swatch";
     button.setAttribute("aria-pressed", selected);
@@ -161,12 +197,30 @@ function addSwatch(colour, selected) {
 
     button.addEventListener("click", () => {
         select(button);
-        save({ textColor: colour });
+        save({ [key]: colour });
         if (colour) {
-            textColor.value = colour;
+            picker.value = colour;
         }
     });
-    document.getElementById("swatches").appendChild(button);
+    row.appendChild(button);
+}
+
+// A row of colour buttons and its colour picker, for one colour setting.
+function addColours(rowId, key, picker, colours, current, fallback) {
+    const row = document.getElementById(rowId);
+    addSwatch(row, key, picker, null, current === null);
+    for (const colour of colours) {
+        addSwatch(row, key, picker, colour, current === colour);
+    }
+    picker.value = current || fallback;
+
+    // The picker gives any colour, so none of the ready-made buttons is selected.
+    picker.addEventListener("input", () => {
+        for (const swatch of row.children) {
+            swatch.setAttribute("aria-pressed", false);
+        }
+        save({ [key]: picker.value });
+    });
 }
 
 async function start() {
@@ -191,11 +245,11 @@ async function start() {
     addFrameRow("frames-all", "frameAll", settings);
     showLayout(settings.frameLayout);
 
-    addSwatch(null, settings.textColor === null);
-    for (const colour of swatches) {
-        addSwatch(colour, settings.textColor === colour);
-    }
-    textColor.value = settings.textColor || "#ffffff";
+    showSidebarChoices(settings);
+    showSidebarMode(settings.sidebarMode);
+
+    addColours("text-swatches", "textColor", textColor, textSwatches, settings.textColor, "#ffffff");
+    addColours("code-swatches", "codeColor", codeColor, codeSwatches, settings.codeColor, "#8e2626");
 
     for (const item of fonts) {
         font.add(new Option(item.name, item.id));
@@ -207,9 +261,11 @@ async function start() {
     enabled.checked = settings.enabled;
     opacity.value = Math.round(settings.opacity * 100);
     panel.value = Math.round(settings.panelOpacity * 100);
+    sideOpacity.value = Math.round(settings.sidebarOpacity * 100);
     frameWidth.value = settings.frameWidth;
     showPercent(opacity, "opacity-value");
     showPercent(panel, "panel-value");
+    showPercent(sideOpacity, "side-opacity-value");
     document.getElementById("frame-width-value").textContent = frameWidth.value + "px";
 
     enabled.addEventListener("change", () => {
@@ -226,17 +282,14 @@ async function start() {
         save({ panelOpacity: panel.value / 100 });
     });
 
+    sideOpacity.addEventListener("input", () => {
+        showPercent(sideOpacity, "side-opacity-value");
+        save({ sidebarOpacity: sideOpacity.value / 100 });
+    });
+
     frameWidth.addEventListener("input", () => {
         document.getElementById("frame-width-value").textContent = frameWidth.value + "px";
         save({ frameWidth: Number(frameWidth.value) });
-    });
-
-    // The colour picker: any colour, so none of the ready-made buttons is selected.
-    textColor.addEventListener("input", () => {
-        for (const swatch of document.querySelectorAll(".swatch")) {
-            swatch.setAttribute("aria-pressed", false);
-        }
-        save({ textColor: textColor.value });
     });
 
     font.addEventListener("change", () => {
@@ -248,7 +301,7 @@ async function start() {
         save({ fontCustom: fontCustom.value });
     });
 
-    for (const name of ["background", "borders", "text"]) {
+    for (const name of ["background", "sidebar", "borders", "text"]) {
         document.getElementById("tab-" + name).addEventListener("click", () => {
             showTab(name);
         });
@@ -261,8 +314,20 @@ async function start() {
         });
     }
 
+    for (const mode of ["joined", "own"]) {
+        document.getElementById("side-" + mode).addEventListener("click", () => {
+            showSidebarMode(mode);
+            save({ sidebarMode: mode });
+        });
+    }
+
     document.getElementById("choose").addEventListener("click", () => {
         chrome.runtime.openOptionsPage();
+    });
+
+    // The upload page, with its crop box already in the sidebar's tall shape.
+    document.getElementById("choose-side").addEventListener("click", () => {
+        chrome.tabs.create({ url: chrome.runtime.getURL("options.html#sidebar") });
     });
 
     document.getElementById("choose-frame").addEventListener("click", () => {

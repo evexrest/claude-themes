@@ -62,38 +62,69 @@ html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-c
     --cds-scroll-fade-strip-color: transparent;
 }
 
-/* Frames. content.js switches each one on with a data-frame attribute on <html>
-   and fills in the --frame-* values. A frame is a real border, so the page's own
-   content moves inward instead of being covered. */
-html[data-frame-sidebar] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar {
-    border: var(--frame-sidebar-width) solid var(--frame-sidebar-color) !important;
-    border-image-source: var(--frame-sidebar-source) !important;
-    border-image-slice: var(--frame-sidebar-slice) !important;
-    border-image-repeat: var(--frame-sidebar-repeat) !important;
-    border-radius: var(--frame-sidebar-radius) !important;
-    box-shadow: var(--frame-sidebar-shadow) !important;
-    background-clip: var(--frame-sidebar-clip) !important;
+/* The sidebar's own picture, for when it is not joined to the main background.
+   The sidebar goes back to its solid colour so the main background stops showing
+   through, and the picture sits on a layer between that colour and the sidebar's
+   contents. Lowering the opacity fades the picture into the sidebar's colour. */
+html[data-sidebar-image] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar {
+    background-color: var(--df-web-sidebar-bg) !important;
 }
 
-html[data-frame-main] .dframe-pane-primary {
-    border: var(--frame-main-width) solid var(--frame-main-color) !important;
-    border-image-source: var(--frame-main-source) !important;
-    border-image-slice: var(--frame-main-slice) !important;
-    border-image-repeat: var(--frame-main-repeat) !important;
-    border-radius: var(--frame-main-radius) !important;
-    box-shadow: var(--frame-main-shadow) !important;
-    background-clip: var(--frame-main-clip) !important;
+html[data-sidebar-image] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--sidebar-image);
+    background-size: cover;
+    background-position: center;
+    opacity: var(--sidebar-image-opacity);
 }
 
-html[data-frame-all] .dframe-root {
-    border: var(--frame-all-width) solid var(--frame-all-color) !important;
-    border-image-source: var(--frame-all-source) !important;
-    border-image-slice: var(--frame-all-slice) !important;
-    border-image-repeat: var(--frame-all-repeat) !important;
-    border-radius: var(--frame-all-radius) !important;
-    box-shadow: var(--frame-all-shadow) !important;
-    background-clip: var(--frame-all-clip) !important;
-    overflow: clip;
+/* Frames. Each frame is drawn on a layer that lies over the edge of its panel.
+   Nothing on the page is moved or resized, and clicks pass straight through it.
+   content.js switches a frame on with a data-frame attribute on <html> and fills
+   in the --frame-* values. */
+html[data-frame-sidebar] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar::after,
+html[data-frame-main] .dframe-pane-primary::after,
+html[data-frame-all] .dframe-root::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+html[data-frame-sidebar] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar::after {
+    z-index: 1000;
+    border: var(--frame-sidebar-width) solid var(--frame-sidebar-color);
+    border-image-source: var(--frame-sidebar-source);
+    border-image-slice: var(--frame-sidebar-slice);
+    border-image-repeat: var(--frame-sidebar-repeat);
+    border-radius: var(--frame-sidebar-radius);
+    box-shadow: var(--frame-sidebar-shadow);
+}
+
+html[data-frame-main] .dframe-pane-primary::after {
+    z-index: 1000;
+    border: var(--frame-main-width) solid var(--frame-main-color);
+    border-image-source: var(--frame-main-source);
+    border-image-slice: var(--frame-main-slice);
+    border-image-repeat: var(--frame-main-repeat);
+    border-radius: var(--frame-main-radius);
+    box-shadow: var(--frame-main-shadow);
+}
+
+/* Above the sidebar, below claude.ai's own pop-up windows. */
+html[data-frame-all] .dframe-root::after {
+    z-index: 30;
+    border: var(--frame-all-width) solid var(--frame-all-color);
+    border-image-source: var(--frame-all-source);
+    border-image-slice: var(--frame-all-slice);
+    border-image-repeat: var(--frame-all-repeat);
+    border-radius: var(--frame-all-radius);
+    box-shadow: var(--frame-all-shadow);
 }
 
 /* Text colour. claude.ai takes its text colours from a few shared values. These
@@ -129,4 +160,15 @@ html[data-ct-font] {
 html[data-ct-font] [data-testid="user-message"],
 html[data-ct-font] [data-cds="ChatComposer"] .ProseMirror {
     font-family: var(--ct-font) !important;
+}
+
+/* The words Claude marks like `this`, normally crimson. claude.ai reads their
+   colour from these two values when they are set. Code blocks are left alone. */
+html[data-ct-code] .dframe-pane-primary {
+    --cds-prose-code-color: var(--ct-code) !important;
+    --cds-editor-code-ink: var(--ct-code) !important;
+}
+
+html[data-ct-code] .dframe-pane-primary code:not(pre code) {
+    color: var(--ct-code) !important;
 }

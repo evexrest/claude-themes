@@ -1,5 +1,5 @@
 body {
-    width: 280px;
+    width: 300px;
     margin: 0;
     padding: 16px;
     background: #151515;
@@ -50,8 +50,9 @@ button {
     background: #20201f;
 }
 
-.pair.three {
-    grid-template-columns: 1fr 1fr 1fr;
+.pair.four {
+    grid-template-columns: repeat(4, auto);
+    font-size: 12.5px;
 }
 
 .pair button {
@@ -246,6 +247,10 @@ input[type="text"] {
 
 input[type="text"] {
     margin-top: 8px;
+}
+
+.note.first {
+    margin: 0;
 }
 
 .note {

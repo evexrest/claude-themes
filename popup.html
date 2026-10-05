@@ -20,8 +20,9 @@
         refresh claude.ai.
     </p>
 
-    <nav class="pair three">
+    <nav class="pair four">
         <button id="tab-background" aria-pressed="true">Background</button>
+        <button id="tab-sidebar" aria-pressed="false">Sidebar</button>
         <button id="tab-borders" aria-pressed="false">Borders</button>
         <button id="tab-text" aria-pressed="false">Text</button>
     </nav>
@@ -38,12 +39,34 @@
             <span id="opacity-value"></span>
         </label>
         <input type="range" id="opacity" min="0" max="100">
+    </section>
 
-        <label class="slider" for="panel">
-            Sidebar opacity
-            <span id="panel-value"></span>
-        </label>
-        <input type="range" id="panel" min="0" max="100">
+    <section id="sidebar" hidden>
+        <div class="pair">
+            <button id="side-joined">Joined</button>
+            <button id="side-own">Its own image</button>
+        </div>
+
+        <div id="joined">
+            <p class="note first">The main background carries on behind the sidebar.</p>
+
+            <label class="slider" for="panel">
+                Sidebar opacity
+                <span id="panel-value"></span>
+            </label>
+            <input type="range" id="panel" min="0" max="100">
+        </div>
+
+        <div id="own">
+            <div class="grid" id="side-choices"></div>
+            <button id="choose-side" class="wide">Add an image for the sidebar</button>
+
+            <label class="slider" for="side-opacity">
+                Image opacity
+                <span id="side-opacity-value"></span>
+            </label>
+            <input type="range" id="side-opacity" min="0" max="100">
+        </div>
     </section>
 
     <section id="borders" hidden>
@@ -74,11 +97,18 @@
     </section>
 
     <section id="text" hidden>
-        <h2>Colour</h2>
-        <div class="swatches" id="swatches"></div>
+        <h2>Text colour</h2>
+        <div class="swatches" id="text-swatches"></div>
         <label class="line" for="text-color">
             Any other colour
             <input type="color" id="text-color">
+        </label>
+
+        <h2>Highlight colour</h2>
+        <div class="swatches" id="code-swatches"></div>
+        <label class="line" for="code-color">
+            Any other colour
+            <input type="color" id="code-color">
         </label>
 
         <h2>Font</h2>
@@ -86,8 +116,9 @@
         <input type="text" id="font-custom" placeholder="Type the font's name, e.g. Futura" hidden>
 
         <p class="note">
-            The colour changes the sidebar and the chat. The font changes Claude's replies,
-            your messages and the message box. Code and links keep their own look.
+            The text colour changes the sidebar and the chat. The highlight colour is for
+            the words Claude marks out, which are normally crimson. The font changes
+            Claude's replies, your messages and the message box.
         </p>
     </section>
 

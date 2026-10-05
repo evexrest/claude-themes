@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The popup compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.3.0";
+const filesVersion = "0.4.0";
 
 const defaults = {
     enabled: true,
@@ -14,6 +14,12 @@ const defaults = {
     images: [],
     opacity: 0.5,
     panelOpacity: 0.6,
+    // The sidebar is "joined" to the main background, or has a picture of its "own":
+    // a preset, or one of the saved images when `sidebarPreset` is null.
+    sidebarMode: "joined",
+    sidebarPreset: "graphite",
+    sidebarImageId: null,
+    sidebarOpacity: 0.8,
     frameLayout: "separate",
     frameSidebar: "none",
     frameMain: "none",
@@ -22,7 +28,9 @@ const defaults = {
     frameImage: null,
     frameSlice: null,
     // Chat text. A null colour and the "default" font leave Claude's own alone.
+    // `codeColor` is for the words Claude marks like `this`, normally crimson.
     textColor: null,
+    codeColor: null,
     font: "default",
     fontCustom: ""
 };
@@ -171,26 +179,24 @@ function keyPicture() {
         </g>` + turns.join(""));
 }
 
-// A raised slab, for a pop-out look: four sloping sides lit from the top left, with
-// a soft shadow underneath. The outer part of the band is left empty so the shadow
-// has room to fall on the background.
+// A raised frame, for a pop-out look: four sloping sides lit from the top left,
+// casting a soft shadow inwards onto the panel it surrounds.
 function raisedPicture(top, left, right, bottom) {
     return inkPicture(300,
-        `<filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter>
-        <rect x="47" y="53" width="220" height="220" fill="#000" fill-opacity="0.6" stroke="none" filter="url(#soft)"/>
+        `<filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>
+        <rect x="80" y="80" width="156" height="156" stroke="#000" stroke-opacity="0.55" stroke-width="16" filter="url(#soft)"/>
         <g stroke="none">
-            <path fill="${top}" d="M40,40 H260 L200,100 H100 Z"/>
-            <path fill="${right}" d="M260,40 V260 L200,200 V100 Z"/>
-            <path fill="${bottom}" d="M260,260 H40 L100,200 H200 Z"/>
-            <path fill="${left}" d="M40,260 V40 L100,100 V200 Z"/>
+            <path fill="${top}" d="M0,0 H300 L228,72 H72 Z"/>
+            <path fill="${right}" d="M300,0 V300 L228,228 V72 Z"/>
+            <path fill="${bottom}" d="M300,300 H0 L72,228 H228 Z"/>
+            <path fill="${left}" d="M0,300 V0 L72,72 V228 Z"/>
         </g>
-        <rect x="41.5" y="41.5" width="217" height="217" stroke-width="3"/>
-        <rect x="98" y="98" width="104" height="104" stroke-width="3"/>`);
+        <rect x="1.5" y="1.5" width="297" height="297" stroke-width="3"/>
+        <rect x="70.5" y="70.5" width="159" height="159" stroke-width="3"/>`);
 }
 
 // A frame is either a picture cut into edge pieces (source, slice, repeat)
 // or a plain coloured border (color, radius). `scale` makes thin styles thin.
-// `clip: "padding-box"` keeps a panel's own colour out from under the frame.
 const frames = [
     {
         id: "fineliner",
@@ -279,7 +285,6 @@ const frames = [
         color: "transparent",
         radius: "0px",
         shadow: "none",
-        clip: "padding-box",
         scale: 1.6
     },
     {
@@ -291,7 +296,6 @@ const frames = [
         color: "transparent",
         radius: "0px",
         shadow: "none",
-        clip: "padding-box",
         scale: 1.6
     }
 ];
@@ -323,7 +327,6 @@ function frameValues(id, width, customUrl, customSlice) {
         slice: frame.slice,
         repeat: frame.repeat,
         radius: frame.radius,
-        shadow: frame.shadow,
-        clip: frame.clip || "border-box"
+        shadow: frame.shadow
     };
 }

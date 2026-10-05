@@ -4,20 +4,18 @@ const editor = document.getElementById("editor");
 const status = document.getElementById("status");
 const context = frame.getContext("2d");
 
-// The frame is drawn 720 wide, in the same shape as the screen.
-const frameWidth = 720;
-const frameHeight = Math.round(frameWidth * screen.height / screen.width);
 const maxSavedWidth = 2560;
+
+// What the image is for: "main" (the whole screen) or "sidebar". The crop box is
+// drawn in that shape. The popup opens this page with #sidebar for the second one.
+let target = location.hash === "#sidebar" ? "sidebar" : "main";
+let frameWidth = 720;
+let frameHeight = 0;
 
 let image = null;
 let scale = 1;
 let x = 0;
 let y = 0;
-
-frame.width = frameWidth * devicePixelRatio;
-frame.height = frameHeight * devicePixelRatio;
-frame.style.aspectRatio = `${frameWidth} / ${frameHeight}`;
-context.scale(devicePixelRatio, devicePixelRatio);
 
 // The smallest scale at which the image still fills the whole frame.
 function coverScale() {
@@ -35,14 +33,57 @@ function draw() {
     context.drawImage(image, x, y, image.width * scale, image.height * scale);
 }
 
+// Start again with the whole image fitted and centred in the frame.
+function centre() {
+    scale = coverScale();
+    x = (frameWidth - image.width * scale) / 2;
+    y = (frameHeight - image.height * scale) / 2;
+    zoom.value = 1;
+}
+
+// Give the frame the shape of the screen, or of the sidebar: 288 wide and about
+// as tall as the browser window.
+function shapeFrame() {
+    if (target === "sidebar") {
+        frameHeight = 560;
+        frameWidth = Math.round(frameHeight * 288 / (screen.height * 0.87));
+    } else {
+        frameWidth = 720;
+        frameHeight = Math.round(frameWidth * screen.height / screen.width);
+    }
+
+    frame.width = frameWidth * devicePixelRatio;
+    frame.height = frameHeight * devicePixelRatio;
+    frame.style.width = target === "sidebar" ? frameWidth + "px" : "100%";
+    frame.style.aspectRatio = `${frameWidth} / ${frameHeight}`;
+    context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+
+    document.getElementById("for-main").setAttribute("aria-pressed", target === "main");
+    document.getElementById("for-sidebar").setAttribute("aria-pressed", target === "sidebar");
+    document.getElementById("shape-hint").textContent = target === "sidebar"
+        ? "The box is the shape of the sidebar."
+        : "The box is the shape of your screen.";
+
+    if (image) {
+        centre();
+        draw();
+    }
+}
+
+for (const choice of ["main", "sidebar"]) {
+    document.getElementById("for-" + choice).addEventListener("click", () => {
+        target = choice;
+        shapeFrame();
+    });
+}
+
+shapeFrame();
+
 function loadImage(source) {
     const loaded = new Image();
     loaded.onload = () => {
         image = loaded;
-        scale = coverScale();
-        x = (frameWidth - image.width * scale) / 2;
-        y = (frameHeight - image.height * scale) / 2;
-        zoom.value = 1;
+        centre();
         editor.hidden = false;
         draw();
     };
@@ -124,16 +165,21 @@ document.getElementById("save").addEventListener("click", async () => {
     const id = Date.now().toString(36);
     const saved = await chrome.storage.local.get({ images: [] });
 
+    // Use it straight away, as the main background or as the sidebar's own picture.
+    const use = target === "sidebar"
+        ? { sidebarMode: "own", sidebarPreset: null, sidebarImageId: id }
+        : { preset: null, imageId: id };
+
     try {
         await chrome.storage.local.set({
             [imageKey(id)]: output.toDataURL("image/jpeg", 0.85),
             images: [...saved.images, { id: id, thumb: thumbnail(output) }],
-            preset: null,
-            imageId: id,
-            enabled: true
+            enabled: true,
+            ...use
         });
-        status.textContent = "Saved to your images and set as the background. " +
-            "You now have " + (saved.images.length + 1) + ". Switch between them from the toolbar icon.";
+        status.textContent = "Saved to your images and set as the " +
+            (target === "sidebar" ? "sidebar's picture" : "background") +
+            ". You now have " + (saved.images.length + 1) + ". Switch between them from the toolbar icon.";
     } catch (error) {
         status.textContent = "Could not save: " + error.message;
     }
