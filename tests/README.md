@@ -1,19 +1,20 @@
 # Tests
 
-These check the extension without loading it into Chrome. They run the real
-`settings.js`, `content.js`, `theme.css`, `popup.js` and `options.js` in a separate,
-throwaway headless Chrome, with a stand-in for Chrome's storage (`stub.js`). The Chrome
-you have open is never touched.
+These check the extension in a separate, throwaway headless Chrome. The Chrome you have
+open is never touched. Most of them run the real `settings.js`, `content.js`, `theme.css`,
+`editor.js` and `options.js` as ordinary pages, with a stand-in for Chrome's storage
+(`stub.js`). `real.mjs` loads the folder as an extension, the way Chrome will.
 
 Run from the project folder:
 
 | Command | What it checks |
 |---|---|
-| `python3 tests/build.py` | Makes the popup and upload test pages. Run it first, and again after changing `popup.html` or `options.html` |
+| `python3 tests/build.py` | Makes the editor and upload test pages. Run it first, and again after changing `editor.html`, `preview.html` or `options.html` |
 | `tests/dump.sh logic 14000` | The page script and stylesheet: backgrounds, sidebar, frames, text, side pictures |
-| `tests/dump.sh popup-logic` | Every area and tab of the popup, and that main-page and sidebar settings change separately |
+| `tests/dump.sh editor-logic 20000` | The editor: selecting parts, the library, dropping files, dragging pictures, moving and resizing a side picture, undo and redo, every setting, the toolbar icon |
 | `tests/dump.sh options-logic` | Uploading a GIF and a still image, for the main page and the sidebar |
-| `tests/shot.sh popups 1480 1250` | A picture of every popup tab, saved as `tests/popups.png` |
+| `tests/shot.sh editor-test 1512 900 "part=left&dark=1"` | A picture of the editor, saved as `tests/editor-test.png`. The last part is optional: `part=` selects a part, `dark=1` the dark preview, `drag=files` shows the drop areas |
+| `node tests/real.mjs` | The real thing: loads the folder as an extension, opens the editor, changes a setting, drops a picture, clicks the toolbar icon. Saves `tests/real.png` |
 | `node tests/cdp.mjs "file://$PWD/tests/page.html?bg=image&gif=1&f=none&o=1" /tmp/ct-profile` | Whether a GIF background moves: several real-time captures, counted |
 
 Each `dump.sh` run prints its results as JSON. There is no pass or fail line yet: read the

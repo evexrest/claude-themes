@@ -1,0 +1,644 @@
+/* The editor: a bar along the top, the library on the left, the screen in the
+   middle and the selected part's settings on the right. */
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #0e0e0d;
+    color: #e8e6e1;
+    font-family: system-ui, sans-serif;
+    font-size: 14px;
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+/* The bar along the top. */
+#bar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 14px;
+    height: 52px;
+    padding: 0 16px;
+    border-bottom: 1px solid #2a2a29;
+    background: #151515;
+}
+
+.name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.mark {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, #1f3a5f, #7b3f61 55%, #d97757);
+}
+
+.space {
+    flex: 1;
+}
+
+.group {
+    display: flex;
+    gap: 4px;
+    margin-left: 12px;
+}
+
+.group button {
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: #20201f;
+    color: #e8e6e1;
+}
+
+.group button:disabled {
+    color: #55534c;
+    cursor: default;
+}
+
+.group button:not(:disabled):hover,
+.wide:hover {
+    background: #2c2c2a;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.go {
+    padding: 7px 14px;
+    border-radius: 8px;
+    background: #d97757;
+    color: #151515;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.go:hover {
+    background: #e58a6b;
+}
+
+#stale {
+    flex: none;
+    margin: 0;
+    padding: 10px 16px;
+    background: #4a2a1c;
+    color: #ffd9c7;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+#work {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* The two side panels. */
+#library,
+#inspector {
+    box-sizing: border-box;
+    flex: none;
+    padding: 16px;
+    overflow-y: auto;
+    background: #151515;
+}
+
+#library {
+    width: 272px;
+    border-right: 1px solid #2a2a29;
+}
+
+#inspector {
+    width: 320px;
+    border-left: 1px solid #2a2a29;
+}
+
+h2 {
+    margin: 22px 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.panel h2:first-child,
+#panel-side h2 {
+    margin-top: 4px;
+}
+
+h3 {
+    margin: 12px 0 6px;
+    color: #a5a49a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.note,
+.empty,
+.now {
+    margin: 14px 0 0;
+    color: #a5a49a;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.note.first,
+.empty,
+.now {
+    margin-top: 0;
+}
+
+.now {
+    margin-bottom: 4px;
+}
+
+.now b {
+    color: #e8e6e1;
+    font-weight: 600;
+}
+
+/* The box at the top of the library, for adding files. */
+#add {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    border: 1px dashed #55534c;
+    border-radius: 10px;
+    color: #a5a49a;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+#add b {
+    color: #e8e6e1;
+    font-size: 13px;
+}
+
+#add button {
+    padding: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: #d97757;
+    color: #151515;
+    font-weight: 600;
+}
+
+#add button:hover {
+    background: #e58a6b;
+}
+
+/* The pictures: presets, saved images and side pictures. */
+.tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.tiles.small {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.cell {
+    position: relative;
+}
+
+.tile {
+    position: relative;
+    width: 100%;
+    height: 52px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background-color: #20201f;
+    background-position: center;
+    background-size: cover;
+    color: #a5a49a;
+    font-size: 11px;
+}
+
+.tile[draggable="true"] {
+    cursor: grab;
+}
+
+.tile:hover {
+    border-color: #55534c;
+}
+
+.tile[aria-pressed="true"],
+.frame-choice[aria-pressed="true"],
+.swatch[aria-pressed="true"] {
+    border-color: #d97757;
+}
+
+.tile span {
+    position: absolute;
+    right: 0;
+    bottom: 3px;
+    left: 0;
+    color: #fff;
+    font-size: 11px;
+    text-shadow: 0 1px 2px #000;
+}
+
+/* Side pictures are shown whole, whatever their shape. */
+.tiles.small .tile {
+    height: 54px;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+/* "Claude's own": no background picture. */
+.tile.plain {
+    border-style: dashed;
+    border-color: #55534c;
+    background: #2a2a29;
+}
+
+.tile.plain[aria-pressed="true"] {
+    border-style: solid;
+    border-color: #d97757;
+}
+
+/* The small cross on a saved picture. */
+.remove {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #151515;
+    color: #e8e6e1;
+    font-size: 13px;
+    line-height: 18px;
+    opacity: 0;
+}
+
+.cell:hover .remove,
+.remove:focus-visible {
+    opacity: 1;
+}
+
+.remove:hover {
+    background: #d97757;
+    color: #151515;
+}
+
+/* A shelf of the library while files are held over it. */
+[data-takes].over {
+    border-radius: 8px;
+    outline: 2px dashed #d97757;
+    outline-offset: 4px;
+}
+
+/* The middle: the screen on a dotted surface. */
+#stage {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    background: #0e0e0d radial-gradient(#262624 1px, transparent 1px) 0 0 / 22px 22px;
+}
+
+#screen {
+    position: relative;
+    flex: none;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #fcfcfb;
+    box-shadow: 0 0 0 1px #3a3a38, 0 18px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Drawn at a real window's size and shrunk to fit; editor.js sets the size. */
+#preview {
+    display: block;
+    border: 0;
+    transform-origin: 0 0;
+}
+
+#overlay {
+    position: absolute;
+    inset: 0;
+}
+
+#hint,
+#toast {
+    flex: none;
+    max-width: 80%;
+    margin: 16px 0 0;
+    color: #a5a49a;
+    font-size: 13px;
+    text-align: center;
+}
+
+#toast {
+    position: absolute;
+    bottom: 52px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    background: #e8e6e1;
+    color: #151515;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* A part of the screen that can be selected, or dropped on. */
+.zone {
+    position: absolute;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.zone:hover {
+    border-color: rgba(217, 119, 87, 0.6);
+}
+
+.zone.selected {
+    border-color: #d97757;
+}
+
+/* An empty side shows where a picture could go. */
+.zone.bare:hover,
+.zone.bare.selected {
+    border-style: dashed;
+}
+
+.tag {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    display: none;
+    padding: 2px 8px;
+    border-radius: 5px;
+    background: #d97757;
+    color: #151515;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.zone:hover > .tag,
+.zone.selected > .tag {
+    display: block;
+}
+
+/* The sides lie over the main page, so the main page's own name moves aside. */
+#zone-main > .tag {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.drop {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    text-shadow: 0 1px 3px #000;
+    pointer-events: none;
+}
+
+/* While something is being dragged, the parts that take it light up. */
+body.dragging-files .zone,
+body.dragging-image #zone-main,
+body.dragging-image #zone-sidebar,
+body.dragging-sticker #zone-left,
+body.dragging-sticker #zone-right {
+    border: 2px dashed #d97757;
+    background: rgba(21, 21, 21, 0.45);
+}
+
+body.dragging-files .zone > .drop,
+body.dragging-image #zone-main > .drop,
+body.dragging-image #zone-sidebar > .drop,
+body.dragging-sticker #zone-left > .drop,
+body.dragging-sticker #zone-right > .drop {
+    display: flex;
+}
+
+body.dragging .zone > .tag {
+    display: none;
+}
+
+body.dragging .zone.over {
+    border-style: solid;
+    background: rgba(217, 119, 87, 0.6);
+}
+
+/* A background dragged over the empty space beside the chat lands on the main page. */
+body.dragging-image #zone-left,
+body.dragging-image #zone-right,
+body.dragging .grip {
+    pointer-events: none;
+}
+
+/* Over a selected side picture: drag it to move it, drag the corner to resize it. */
+.grip {
+    position: absolute;
+    box-sizing: border-box;
+    border: 2px solid #d97757;
+    cursor: ns-resize;
+    touch-action: none;
+}
+
+.handle {
+    position: absolute;
+    bottom: -2px;
+    box-sizing: border-box;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #d97757;
+    border-radius: 3px;
+    background: #fff;
+}
+
+#grip-left .handle {
+    right: -2px;
+    cursor: nwse-resize;
+}
+
+#grip-right .handle {
+    left: -2px;
+    cursor: nesw-resize;
+}
+
+/* The settings on the right. */
+
+/* A row of buttons, one of them selected. */
+.pair {
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 10px;
+    background: #20201f;
+}
+
+.pair button {
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #a5a49a;
+    white-space: nowrap;
+}
+
+.pair button[aria-pressed="true"] {
+    background: #3a3a38;
+    color: #e8e6e1;
+}
+
+.pair.parts {
+    margin-bottom: 18px;
+    font-size: 13px;
+}
+
+.pair.parts button {
+    padding: 6px 2px;
+    font-weight: 600;
+}
+
+#inspector .pair:not(.parts) {
+    margin-bottom: 12px;
+}
+
+.frames {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+
+/* Paper-coloured, so the black ink of the frames shows up. */
+.frame-choice {
+    height: 42px;
+    padding: 4px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: #ece8dd;
+    color: #55534c;
+    font-size: 10px;
+}
+
+/* A small copy of the frame. editor.js fills in the --sample-* values. */
+.sample {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border: var(--sample-width) solid var(--sample-color);
+    border-image-source: var(--sample-source);
+    border-image-slice: var(--sample-slice);
+    border-image-repeat: var(--sample-repeat);
+    border-radius: min(var(--sample-radius), 8px);
+}
+
+.wide {
+    width: 100%;
+    margin-top: 16px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #20201f;
+    color: #e8e6e1;
+}
+
+.slider {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.slider span {
+    color: #a5a49a;
+}
+
+input[type="range"] {
+    width: 100%;
+    margin: 8px 0 0;
+    accent-color: #d97757;
+}
+
+input[type="checkbox"] {
+    accent-color: #d97757;
+}
+
+.swatches {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 4px;
+}
+
+.swatch {
+    height: 26px;
+    padding: 0;
+    border: 2px solid #3a3a38;
+    border-radius: 6px;
+    background: #20201f;
+    color: #a5a49a;
+    font-size: 9px;
+}
+
+.line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+}
+
+input[type="color"] {
+    width: 44px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+
+select,
+input[type="text"] {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #3a3a38;
+    border-radius: 8px;
+    background: #20201f;
+    color: #e8e6e1;
+    font: inherit;
+}
+
+input[type="text"] {
+    margin-top: 8px;
+}
+
+#side-choices {
+    margin-bottom: 14px;
+}

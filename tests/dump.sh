@@ -4,7 +4,7 @@
 # page wrote into its <pre id="out">. Never touches the Chrome you have open.
 T=${0:A:h}
 P=$T/.profile-$1-$$
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --no-first-run --allow-file-access-from-files --user-data-dir=$P --virtual-time-budget=${2:-9000} --dump-dom "file://$T/$1.html" > $T/$1.dom 2>/dev/null &
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --no-first-run --allow-file-access-from-files --user-data-dir=$P --window-size=1512,900 --virtual-time-budget=${2:-9000} --dump-dom "file://$T/$1.html" > $T/$1.dom 2>/dev/null &
 pid=$!
 for i in {1..50}; do sleep 0.5; grep -q "END</pre>" $T/$1.dom 2>/dev/null && break; kill -0 $pid 2>/dev/null || break; done
 sleep 0.5; kill $pid 2>/dev/null; sleep 0.3

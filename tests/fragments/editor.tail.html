@@ -1,0 +1,162 @@
+<pre id="out"></pre>
+<script>
+(async () => {
+  const r = {}; await wait(700);
+  const el = (id) => document.getElementById(id);
+  const page = el("preview").contentDocument;
+  const pressed = (sel) => [...document.querySelectorAll(sel)].map((b) => b.getAttribute("aria-pressed") === "true" ? 1 : 0).join("");
+  const set = (id, v) => { el(id).value = v; el(id).dispatchEvent(new Event("input")); };
+  const panels = () => ["main", "sidebar", "side"].filter((p) => !el("panel-" + p).hidden).join(",");
+  const box = (e) => { const b = e.getBoundingClientRect(); return [b.left, b.top, b.width, b.height].map(Math.round).join(","); };
+  const picture = (side) => page.querySelector(`.claude-sticker[data-side="${side}"]`);
+  const tileFor = (kind, id) => document.querySelector(`#library .tile[data-kind="${kind}"][data-id="${id}"]`);
+  const selected = () => [...document.querySelectorAll(".zone.selected")].map((z) => z.id).join(",");
+  // Reading a file takes real time, which the test's clock does not wait for, so wait for the page itself.
+  const until = async (ready) => { for (let i = 0; i < 400 && !ready(); i++) await wait(25); await wait(60); };
+  const classes = () => [...document.body.classList].join(" ");
+  const shrink = Number(/scale\(([\d.]+)\)/.exec(el("preview").style.transform)[1]);
+
+  r.start = { enabled: el("enabled").checked, showing: el("main-now").textContent, panels: panels(), parts: pressed(".parts button"), selected: selected(),
+    staleHidden: el("stale").hidden, undoOff: el("undo").disabled, redoOff: el("redo").disabled,
+    screen: el("screen").style.width + " x " + el("screen").style.height, shrink: shrink,
+    previewSidebar: box(page.querySelector(".dframe-sidebar")), previewPane: box(page.querySelector(".dframe-pane-primary")), previewColumn: box(page.querySelector('[data-cds="ChatComposer"]')),
+    zoneSidebarWidthInPreview: Math.round(parseFloat(el("zone-sidebar").style.width) / shrink), zoneLeftWidthInPreview: Math.round(parseFloat(el("zone-left").style.width) / shrink),
+    tiles: { presets: el("presets").children.length, images: el("images").children.length, stickers: el("stickers").children.length },
+    previewWallpaper: page.documentElement.getAttribute("data-wallpaper"), previewLeftPicture: picture("left") ? box(picture("left")) : null, hint: el("hint").textContent.slice(0, 30) };
+
+  // ----- selecting parts of the screen -----
+  el("zone-sidebar").click();
+  r.sidebarSelected = { panels: panels(), parts: pressed(".parts button"), selected: selected(), browse: el("browse-for").textContent };
+  el("zone-left").click(); await wait(200);
+  const grip = el("grip-left"), gb = grip.getBoundingClientRect(), sb = el("screen").getBoundingClientRect(), pb = picture("left").getBoundingClientRect();
+  r.leftSelected = { panels: panels(), title: el("side-title").textContent, selected: selected(), gripShown: !grip.hidden, gripRightHidden: el("grip-right").hidden,
+    gripOverPicture: [gb.left - sb.left - pb.left * shrink, gb.top - sb.top - pb.top * shrink, gb.width - pb.width * shrink, gb.height - pb.height * shrink].map((n) => Math.round(n)).join(","), sideChoices: pressed("#side-choices .tile") };
+  el("part-main").click();
+  r.backToMain = { panels: panels(), selected: selected(), gripShown: !grip.hidden };
+
+  // ----- clicking a picture in the library puts it on the selected part -----
+  tileFor("preset", "ocean").click(); await wait(40);
+  r.presetOnMain = { preset: store.preset, sidebarMode: store.sidebarMode ?? "(joined)", showing: el("main-now").textContent, library: pressed("#presets .tile") };
+  el("zone-sidebar").click(); tileFor("preset", "ember").click(); await wait(80);
+  r.presetOnSidebar = { sidebarMode: store.sidebarMode, sidebarPreset: store.sidebarPreset, mainStill: store.preset, showing: el("side-now").textContent, library: pressed("#presets .tile"), preview: page.documentElement.getAttribute("data-sidebar-image") };
+  tileFor("preset", "none").click(); await wait(40);
+  r.claudeOwnSidebar = { sidebarMode: store.sidebarMode, mainStill: store.preset };
+  el("zone-main").click(); tileFor("image", "a").click(); await wait(40);
+  r.imageOnMain = { preset: store.preset, imageId: store.imageId, showing: el("main-now").textContent, images: pressed("#images .tile") };
+  tileFor("sticker", "s2").click(); await wait(200);
+  r.stickerGoesToTheSideLastSelected = { left: store.stickerLeft, right: store.stickerRight ?? null, selected: selected(), panels: panels(), previewRight: !!picture("right") };
+
+  // ----- undo and redo -----
+  r.historyOn = { undoOff: el("undo").disabled, redoOff: el("redo").disabled };
+  el("undo").click(); await wait(30);
+  r.undone = { left: store.stickerLeft, redoOff: el("redo").disabled };
+  el("redo").click(); await wait(30);
+  r.redone = { left: store.stickerLeft };
+  el("part-main").click(); const opacityBefore = store.opacity ?? 0.5;
+  set("opacity", 30); set("opacity", 40); set("opacity", 62); await wait(30);
+  r.sliderMoved = { opacity: store.opacity, label: el("opacity-value").textContent };
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "z", metaKey: true, bubbles: true })); await wait(30);
+  r.sliderUndoneInOneStep = { opacity: store.opacity ?? "(default)", was: opacityBefore, slider: el("opacity").value };
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "z", metaKey: true, shiftKey: true, bubbles: true })); await wait(30);
+  r.sliderRedone = { opacity: store.opacity };
+
+  // ----- dropping files from the computer -----
+  const gifBytes = Uint8Array.from(atob(GIF1.split(",")[1]), (c) => c.charCodeAt(0));
+  const canvas = document.createElement("canvas"); canvas.width = 3000; canvas.height = 1500; canvas.getContext("2d").fillRect(0, 0, 3000, 1500);
+  const png = new File([await new Promise((ok) => canvas.toBlob(ok, "image/png"))], "wide.png", { type: "image/png" });
+  const gif = () => new File([gifBytes], "wave.gif", { type: "image/gif" });
+  const carry = (files) => { const dt = new DataTransfer(); for (const f of files) dt.items.add(f); return dt; };
+  const fire = (target, type, dt) => { const e = new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: dt }); target.dispatchEvent(e); return e.defaultPrevented; };
+  const dropOn = (target, files) => { const dt = carry(files); fire(document.body, "dragenter", dt); const during = classes(); fire(target, "dragover", dt); const taken = target.classList.contains("over"); fire(target, "drop", dt); return { during, taken }; };
+
+  let n = store.images.length;
+  const held = dropOn(el("zone-main"), [png]); await until(() => store.images.length > n);
+  const last = store.images[store.images.length - 1];
+  const stored = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i.naturalWidth + "x" + i.naturalHeight); i.src = store["image-" + last.id]; });
+  r.dropStillOnMain = { ...held, after: classes(), images: store.images.length, stored: store["image-" + last.id].slice(0, 15), storedSize: stored, animated: last.animated, thumb: last.thumb.slice(0, 15),
+    preset: store.preset, usesIt: store.imageId === last.id, selected: selected(), tiles: el("images").children.length, emptyNoteHidden: el("images-empty").hidden, said: el("toast").textContent };
+
+  n = store.images.length; dropOn(el("zone-sidebar"), [gif()]); await until(() => store.images.length > n);
+  const moving = store.images[store.images.length - 1];
+  r.dropGifOnSidebar = { images: store.images.length, identicalFile: store["image-" + moving.id] === GIF1, animated: moving.animated, sidebarMode: store.sidebarMode, sidebarPreset: store.sidebarPreset, usesIt: store.sidebarImageId === moving.id, mainStill: store.imageId === last.id, selected: selected() };
+
+  n = store.stickers.length; dropOn(el("zone-right"), [gif()]); await until(() => store.stickers.length > n);
+  const beside = store.stickers[store.stickers.length - 1];
+  r.dropBesideChat = { stickers: store.stickers.length, identicalFile: store["sticker-" + beside.id] === GIF1, thumb: beside.thumb.slice(0, 14), right: store.stickerRight === beside.id, left: store.stickerLeft, selected: selected(), tiles: el("stickers").children.length, said: el("toast").textContent };
+
+  n = store.stickers.length; dropOn(el("zone-left"), [gif(), gif()]); await until(() => store.stickers.length > n + 1);
+  r.dropTwoOnLeft = { stickers: store.stickers.length, firstUsed: store.stickerLeft === store.stickers[n].id, said: el("toast").textContent };
+
+  n = store.images.length; dropOn(el("zone-main"), [new File(["hello"], "notes.txt", { type: "text/plain" })]); await wait(150);
+  r.dropNotAPicture = { images: store.images.length === n, said: el("toast").textContent, after: classes() };
+
+  dropOn(el("zone-main"), [new File(["nope"], "broken.png", { type: "image/png" })]); await until(() => /opened/.test(el("toast").textContent));
+  r.dropBrokenPicture = { images: store.images.length === n, said: el("toast").textContent };
+
+  const usedBefore = store.imageId; dropOn(el("images"), [gif()]); await until(() => store.images.length > n);
+  r.dropOnLibraryShelf = { images: store.images.length - n, mainStill: store.imageId === usedBefore, sidebarStill: store.sidebarImageId === moving.id };
+
+  const missed = dropOn(el("bar"), [gif()]); await wait(150);
+  r.dropOutsideTheScreen = { taken: missed.taken, images: store.images.length - n, said: el("toast").textContent, after: classes() };
+
+  // ----- dragging a picture from the library -----
+  const dragTile = (tile, target) => { const dt = new DataTransfer(); fire(tile, "dragstart", dt); const during = classes(); fire(target, "dragover", dt); const taken = target.classList.contains("over"); fire(target, "drop", dt); fire(tile, "dragend", dt); return { during, taken }; };
+  const toSidebar = dragTile(tileFor("preset", "forest"), el("zone-sidebar")); await wait(60);
+  r.dragPresetToSidebar = { ...toSidebar, sidebarMode: store.sidebarMode, sidebarPreset: store.sidebarPreset, after: classes() };
+  const toSide = dragTile(tileFor("preset", "aurora"), el("zone-left")); await wait(60);
+  r.dragPresetBesideChatIsRefused = { ...toSide, left: store.stickerLeft === store.stickers[n] || store.stickerLeft, preset: store.preset };
+  const besideChat = dragTile(tileFor("sticker", "s1"), el("zone-left")); await wait(200);
+  r.dragSidePictureToLeft = { ...besideChat, left: store.stickerLeft, selected: selected() };
+  const wrong = dragTile(tileFor("sticker", "s2"), el("zone-main")); await wait(60);
+  r.dragSidePictureOntoMainIsRefused = { taken: wrong.taken, imageId: store.imageId === usedBefore, right: store.stickerRight === beside.id };
+
+  // ----- moving and resizing a side picture on the screen -----
+  await chrome.storage.local.set({ stickerSize: 120, stickerPosition: 50 }); el("part-left").click(); await wait(300);
+  const point = (target, type, x, y) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, clientX: x, clientY: y }));
+  const g = () => el("grip-left").getBoundingClientRect();
+  let at = g(); const placeBefore = store.stickerPosition; const topBefore = picture("left").getBoundingClientRect().top;
+  point(el("grip-left"), "pointerdown", at.left + 10, at.top + 10); point(el("grip-left"), "pointermove", at.left + 10, at.top + 10 - 60); point(el("grip-left"), "pointerup", at.left + 10, at.top - 50); await wait(250);
+  r.dragPictureUp = { position: placeBefore + " to " + store.stickerPosition, movedUpInPreview: Math.round(topBefore - picture("left").getBoundingClientRect().top), expected: Math.round(60 / shrink), slider: el("sticker-position").value, gripFollowed: Math.round(g().top - at.top) };
+  at = g(); const handle = el("grip-left").querySelector(".handle"); const widthBefore = picture("left").getBoundingClientRect().width;
+  point(handle, "pointerdown", at.right, at.bottom); point(handle, "pointermove", at.right + 30, at.bottom); point(handle, "pointerup", at.right + 30, at.bottom); await wait(250);
+  r.dragCorner = { size: "120 to " + store.stickerSize, widthInPreview: Math.round(widthBefore) + " to " + Math.round(picture("left").getBoundingClientRect().width), slider: el("sticker-size").value };
+  el("undo").click(); await wait(60); el("undo").click(); await wait(60);
+  r.bothDragsUndone = { size: store.stickerSize, position: store.stickerPosition };
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Backspace", bubbles: true })); await wait(200);
+  r.deleteKeyTakesItOff = { left: store.stickerLeft, stillInLibrary: store.stickers.some((s) => s.id === "s1"), gripShown: !el("grip-left").hidden, sideChoices: pressed("#side-choices .tile").slice(0, 3) };
+
+  // ----- the rest of the settings -----
+  el("part-main").click(); document.querySelectorAll("#text-swatches .swatch")[1].click(); await wait(80);
+  r.textColour = { textColor: store.textColor, sidebarTextColor: store.sidebarTextColor ?? null, reply: getComputedStyle(page.querySelector(".standard-markdown p")).color, smallPrint: getComputedStyle(page.querySelector(".small")).color, messageBox: getComputedStyle(page.querySelector(".placeholder")).color, codeBlock: getComputedStyle(page.querySelector("pre")).color, sidebar: getComputedStyle(page.querySelector(".row.strong")).color };
+  document.querySelector('#frames-main .frame-choice[data-frame="key"]').click(); set("frame-width", 22); await wait(80);
+  r.frame = { frameMain: store.frameMain, width: store.frameWidth, preview: page.documentElement.getAttribute("data-frame-main"), drawn: getComputedStyle(page.querySelector(".dframe-pane-primary"), "::after").borderTopWidth, pressed: pressed("#frames-main .frame-choice") };
+  el("layout-combined").click(); await wait(60);
+  r.wholeWindow = { layout: store.frameLayout, rows: (el("separate").hidden ? "" : "separate") + (el("combined").hidden ? "" : "combined") };
+  el("part-sidebar").click(); el("side-joined").click(); set("panel", 35); await wait(60);
+  r.sidebarJoined = { mode: store.sidebarMode, panelOpacity: store.panelOpacity, blocks: ["joined", "own", "plain"].filter((b) => !el(b).hidden).join(","), noteAboutWholeWindow: !el("side-combined").hidden };
+  el("side-font").value = "mono"; el("side-font").dispatchEvent(new Event("change")); await wait(60);
+  r.sidebarFont = { sidebarFont: store.sidebarFont, font: store.font ?? "default", preview: getComputedStyle(page.querySelector(".row.strong")).fontFamily.slice(0, 14), reply: getComputedStyle(page.querySelector(".standard-markdown p")).fontFamily.slice(0, 8) };
+  el("mode-dark").click();
+  r.darkPreview = { dark: page.documentElement.classList.contains("dark"), pressed: pressed("#mode-light, #mode-dark"), boxColour: getComputedStyle(page.querySelector(".box")).backgroundColor };
+  el("mode-light").click();
+  el("enabled").click(); await wait(80);
+  r.switchedOff = { enabled: store.enabled, previewWallpaper: page.documentElement.getAttribute("data-wallpaper"), previewFrame: page.documentElement.getAttribute("data-frame-all"), hint: el("hint").textContent.slice(0, 27) };
+  el("enabled").click(); await wait(80);
+
+  // ----- removing a saved picture -----
+  const before = store.images.length; el("images").querySelector(".remove").click(); await wait(120);
+  r.removeImage = { images: before + " to " + store.images.length, fileGone: !("image-a" in store), tiles: el("images").children.length, undoOff: el("undo").disabled };
+
+  // ----- the toolbar icon -----
+  await new Promise((ok) => { const s = document.createElement("script"); s.src = "background.js"; s.onload = ok; document.head.appendChild(s); });
+  window.openedTab = null; await iconClicked(); await wait(30);
+  r.iconWithEditorOpen = { newTab: window.openedTab, broughtToFront: window.frontedTab === true };
+  messageListeners.length = 0; await iconClicked(); await wait(30);
+  r.iconWithNoEditor = { newTab: window.openedTab };
+  el("crop-side").click();
+  r.cropLink = window.openedTab;
+
+  r.errors = window.errors;
+  document.getElementById("out").textContent = "RESULT" + JSON.stringify(r, null, 1) + "END";
+})().catch((e) => { document.getElementById("out").textContent = "RESULT" + JSON.stringify("error " + e.stack + " | " + JSON.stringify(window.errors)) + "END"; });
+</script>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Claude Themes preview</title>
+    <!-- A stand-in for a claude.ai chat, shown in the middle of the editor. It uses
+         claude.ai's own class names, so theme.css and content.js style it exactly as
+         they style the real page. Nothing in it can be clicked. -->
+    <link rel="stylesheet" href="preview.css">
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+    <div class="dframe-root cds-root" data-variant="web">
+        <nav class="dframe-sidebar">
+            <div class="brand">
+                <span>Claude</span>
+                <i class="icon panel"></i>
+            </div>
+
+            <div class="row strong"><i class="icon plus"></i>New chat</div>
+            <div class="row"><i class="icon search"></i>Search</div>
+            <div class="row"><i class="icon bubble"></i>Chats</div>
+            <div class="row"><i class="icon folder"></i>Projects</div>
+            <div class="row"><i class="icon grid"></i>Artifacts</div>
+
+            <div class="heading">Recents</div>
+            <div class="row current">Weekend in Lisbon</div>
+            <div class="row">Sourdough starter schedule</div>
+            <div class="row">Explain binary search simply</div>
+            <div class="row">Gift ideas for a new gardener</div>
+            <div class="row">Rewrite my cover letter opening</div>
+            <div class="row">Spanish verbs to practise</div>
+            <div class="row">Budget for a used bike</div>
+            <div class="row">Names for a small bakery</div>
+
+            <div class="person">
+                <span class="face">Y</span>
+                <span>You</span>
+            </div>
+        </nav>
+
+        <main class="dframe-content">
+            <div class="dframe-pane-primary">
+                <header class="dframe-header">
+                    <div class="df-header-backdrop"></div>
+                    <span class="title">Weekend in Lisbon <i class="icon down"></i></span>
+                    <span class="share">Share</span>
+                </header>
+
+                <div class="scroller">
+                    <div class="column">
+                        <div class="yours">
+                            <div class="bubble">
+                                <div data-testid="user-message">
+                                    I have two days in Lisbon in May. What should I not miss?
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="standard-markdown" data-testid="assistant-message">
+                            <p>
+                                Two days is enough for the old centre and one trip out. Start in
+                                Alfama early, before the trams fill up, then walk downhill to the
+                                river for lunch.
+                            </p>
+                            <ul>
+                                <li>Tram <code>28</code> from Martim Moniz, first thing in the morning</li>
+                                <li>The view from Miradouro da Senhora do Monte at sunset</li>
+                                <li>Custard tarts in Belém, eaten warm</li>
+                            </ul>
+                            <p>
+                                For the second day, the train to <code>Sintra</code> takes about
+                                forty minutes. A rough plan for the two days:
+                            </p>
+                            <div class="code">
+                                <div class="code-name">plan</div>
+                                <div><pre><code>day 1  Alfama, Baixa, sunset viewpoint
+day 2  Sintra by train, Belém on the way back</code></pre></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dock" data-chat-input-container>
+                        <div data-cds="ChatComposer">
+                            <div class="bg-surface-3 box">
+                                <div class="cds-root">
+                                    <span class="placeholder">Reply to Claude</span>
+                                    <span class="buttons">
+                                        <i class="icon plus"></i>
+                                        <span class="model">Opus <i class="icon down"></i></span>
+                                        <i class="send"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="bg-page small">Claude is AI and can make mistakes. Please double-check responses.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="settings.js"></script>
+    <script src="content.js"></script>
+</body>
+</html>

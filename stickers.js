@@ -41,7 +41,7 @@ stickerPreview.addEventListener("error", () => {
     stickerStatus.textContent = "That file could not be opened as an image.";
 });
 
-// A small still copy of the picture, for the buttons in the popup.
+// A small still copy of the picture, for the editor's library.
 function stickerThumbnail() {
     const small = document.createElement("canvas");
     const shrink = 96 / Math.max(stickerPreview.naturalWidth, stickerPreview.naturalHeight);
@@ -67,7 +67,7 @@ async function saveSticker(key, sideName) {
         await chrome.storage.local.set(change);
         stickerId = change[key];
         stickerStatus.textContent = "Saved, and showing on the " + sideName +
-            ". Change its size and height from the toolbar icon, under Sides.";
+            ". Move and resize it in the editor, which the toolbar icon opens.";
     } catch (error) {
         stickerStatus.textContent = "Could not save: " + error.message;
     }
@@ -81,7 +81,7 @@ document.getElementById("sticker-right").addEventListener("click", () => {
     saveSticker("stickerRight", "right");
 });
 
-// The popup opens this page with #sides to come straight to this part.
+// A link to this page ending in #sides comes straight to this part.
 if (location.hash === "#sides") {
     document.getElementById("sides").scrollIntoView();
 }

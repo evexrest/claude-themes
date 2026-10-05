@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Claude Themes",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "description": "Backgrounds, frames, side pictures, text colour and fonts for claude.ai. Unofficial, not made by Anthropic.",
     "permissions": ["storage", "unlimitedStorage"],
     "content_scripts": [
@@ -12,9 +12,11 @@
             "run_at": "document_start"
         }
     ],
+    "background": {
+        "service_worker": "background.js"
+    },
     "action": {
-        "default_title": "Claude Themes",
-        "default_popup": "popup.html"
+        "default_title": "Open the Claude Themes editor"
     },
     "options_page": "options.html"
 }

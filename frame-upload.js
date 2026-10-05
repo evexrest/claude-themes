@@ -85,7 +85,7 @@ document.getElementById("border-save").addEventListener("click", async () => {
             frameImage: pending.url,
             frameSlice: pending.slice
         });
-        borderStatus.textContent = "Saved. Pick \"Your frame\" in the Borders tab to use it.";
+        borderStatus.textContent = "Saved. Pick \"Your frame\" under Border in the editor to use it.";
     } catch (error) {
         borderStatus.textContent = "Could not save: " + error.message;
     }

@@ -1,8 +1,8 @@
 # Made by build.py, dump.sh and shot.sh
-popup-test.html
-popup-logic.html
+preview-test.html
+editor-test.html
+editor-logic.html
 options-logic.html
-popups.html
 *.png
 *.dom
 .profile-*

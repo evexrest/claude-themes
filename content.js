@@ -144,6 +144,8 @@ async function loadSticker(side) {
         slot.element = document.createElement("img");
         slot.element.className = "claude-sticker";
         slot.element.alt = "";
+        // The editor finds each side's picture in its preview by this.
+        slot.element.dataset.side = side;
         // The picture's height is only known once it has loaded.
         slot.element.addEventListener("load", placeStickers);
     }

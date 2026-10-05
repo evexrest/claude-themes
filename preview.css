@@ -1,0 +1,425 @@
+/* The stand-in for a claude.ai chat that the editor shows. Sizes and colours were
+   read from claude.ai on 2026-10-05: a 288px sidebar, a 48px title bar, a 768px
+   column for the messages and the message box. It reads its text colours and fonts
+   from the same named values claude.ai uses, because those are what theme.css
+   changes. */
+:root {
+    --cds-page-bg: #fcfcfb;
+    --cds-surface-1: #fcfcfb;
+    --cds-surface-2: #ffffff;
+    --cds-surface-3: #ffffff;
+    --df-web-sidebar-bg: #fafaf9;
+    --cds-text-primary: #0b0b0b;
+    --cds-text-secondary: #52514e;
+    --cds-text-muted: #898781;
+    --line: rgba(11, 11, 11, 0.1);
+    --ring: rgba(11, 11, 11, 0.2);
+    --tint: rgba(11, 11, 11, 0.05);
+    --code-ink: #8e2626;
+    --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-user-message: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-claude-response: Georgia, "Times New Roman", Times, serif;
+}
+
+/* Claude's dark mode, for the editor's Light and Dark switch. */
+html.dark {
+    --cds-page-bg: #262624;
+    --cds-surface-1: #262624;
+    --cds-surface-2: #1f1e1d;
+    --cds-surface-3: #30302e;
+    --df-web-sidebar-bg: #1f1e1d;
+    --cds-text-primary: #faf9f5;
+    --cds-text-secondary: #c2c0b6;
+    --cds-text-muted: #9c9a92;
+    --line: rgba(250, 249, 245, 0.12);
+    --ring: rgba(250, 249, 245, 0.2);
+    --tint: rgba(250, 249, 245, 0.07);
+    --code-ink: #f4a9a9;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    overflow: hidden;
+    background: var(--cds-surface-1);
+    color: var(--cds-text-primary);
+    font: 14px/21px var(--font-ui);
+    cursor: default;
+    user-select: none;
+}
+
+.dframe-root {
+    position: relative;
+    display: flex;
+    height: 100vh;
+    color: var(--cds-text-primary);
+}
+
+/* The sidebar keeps its layers to itself, as claude.ai's does, so that a picture
+   of its own can sit behind its contents. */
+.dframe-sidebar {
+    position: relative;
+    z-index: 20;
+    isolation: isolate;
+    box-sizing: border-box;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: 1px;
+    width: 288px;
+    padding: 8px;
+    border-right: 0.5px solid var(--line);
+    background: var(--df-web-sidebar-bg);
+    color: var(--cds-text-primary);
+    font-family: var(--font-ui);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 36px;
+    padding: 0 8px 6px;
+    font: 600 19px Georgia, "Times New Roman", serif;
+}
+
+.row {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    height: 32px;
+    padding: 0 8px;
+    overflow: hidden;
+    border-radius: 8px;
+    color: var(--cds-text-secondary);
+    white-space: nowrap;
+}
+
+.row.strong,
+.row.current {
+    color: var(--cds-text-primary);
+}
+
+.row.current {
+    background: var(--tint);
+}
+
+.heading {
+    margin: 14px 8px 4px;
+    color: var(--cds-text-muted);
+    font-size: 12px;
+}
+
+.person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    margin-top: auto;
+    padding: 0 8px;
+}
+
+.face {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--cds-text-primary);
+    color: var(--cds-surface-1);
+    font-size: 13px;
+}
+
+/* The page area holds the chat window, and keeps its layers to itself. */
+.dframe-content {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    isolation: isolate;
+    padding-left: 8px;
+    background: var(--cds-surface-1);
+}
+
+.dframe-pane-primary {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    color: var(--cds-text-primary);
+}
+
+.dframe-header {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 10;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+    padding: 0 16px;
+}
+
+.df-header-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--cds-surface-1);
+}
+
+.title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.share {
+    padding: 4px 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px var(--ring);
+}
+
+.scroller {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    padding-top: 48px;
+    overflow: hidden;
+}
+
+.column {
+    box-sizing: border-box;
+    flex: 1;
+    width: 100%;
+    max-width: 768px;
+    min-height: 0;
+    margin: 0 auto;
+    padding: 24px 16px 0;
+    overflow: hidden;
+}
+
+/* Your message, in its bubble on the right. */
+.yours {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.bubble {
+    max-width: 612px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: var(--tint);
+}
+
+[data-testid="user-message"] {
+    color: var(--cds-text-primary);
+    font: 15px/22px var(--font-user-message);
+}
+
+/* Claude's reply. */
+.standard-markdown {
+    padding: 0 4px;
+    color: var(--cds-text-primary);
+    font: 15px/22px var(--font-claude-response);
+}
+
+.standard-markdown p {
+    margin: 0 0 12px;
+}
+
+.standard-markdown ul {
+    margin: 0 0 12px;
+    padding-left: 24px;
+}
+
+.standard-markdown li {
+    margin-bottom: 4px;
+}
+
+.standard-markdown code:not(pre code) {
+    padding: 1px 3.4px;
+    border: 0.5px solid var(--line);
+    border-radius: 5.4px;
+    background: var(--tint);
+    color: var(--cds-prose-code-color, var(--code-ink));
+    font: 13.5px ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* A code block: a solid panel that keeps Claude's own colours. */
+.code {
+    margin: 0 0 12px;
+    overflow: hidden;
+    border: 0.5px solid var(--line);
+    border-radius: 10px;
+    background: var(--cds-surface-2);
+    font-family: var(--font-ui);
+}
+
+.code-name {
+    padding: 8px 12px 0;
+    color: var(--cds-text-secondary);
+    font-size: 12px;
+}
+
+.code pre {
+    margin: 0;
+    padding: 6px 12px 12px;
+    color: var(--cds-text-primary);
+    font: 13px/20px ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* The message box, with the page-coloured patch claude.ai paints around it. */
+.dock {
+    flex: none;
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto;
+}
+
+[data-cds="ChatComposer"] {
+    background: var(--cds-page-bg);
+}
+
+.box {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    padding: 12px 12px 8px;
+    border-radius: 14px;
+    background: var(--cds-surface-3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.075), 0 0 0 1px var(--ring);
+}
+
+.box .cds-root {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 72px;
+    color: var(--cds-text-primary);
+}
+
+.placeholder {
+    color: var(--cds-text-muted);
+    font-size: 15px;
+}
+
+.buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--cds-text-secondary);
+    font-size: 13px;
+}
+
+.model {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.send {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #d97757;
+    opacity: 0.55;
+}
+
+.small {
+    padding: 10px 0 12px;
+    background: var(--cds-page-bg);
+    box-shadow: 0 0 0 8px var(--cds-page-bg);
+    color: var(--cds-text-muted);
+    font-size: 13px;
+    line-height: 17px;
+    text-align: center;
+}
+
+/* Small drawn icons. They are shapes, not a font, so a chosen font leaves them alone. */
+.icon {
+    position: relative;
+    display: inline-block;
+    box-sizing: border-box;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    opacity: 0.8;
+}
+
+.icon.plus,
+.icon.search {
+    border-radius: 50%;
+}
+
+.icon.plus::before,
+.icon.plus::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 7px;
+    height: 1.5px;
+    background: currentColor;
+    transform: translate(-50%, -50%);
+}
+
+.icon.plus::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.icon.search {
+    width: 13px;
+    height: 13px;
+    margin: 0 3px 3px 0;
+}
+
+.icon.search::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    bottom: -4px;
+    width: 6px;
+    height: 1.5px;
+    background: currentColor;
+    transform: rotate(45deg);
+}
+
+.icon.bubble {
+    height: 14px;
+    border-radius: 5px 5px 5px 1px;
+}
+
+.icon.folder {
+    height: 13px;
+    border-radius: 2px 4px 4px 4px;
+}
+
+.icon.grid {
+    border-style: dotted;
+    border-width: 3px;
+    border-radius: 2px;
+}
+
+.icon.panel {
+    border-left-width: 5px;
+}
+
+.icon.down {
+    width: 7px;
+    height: 7px;
+    margin: 0 2px 4px;
+    border-width: 0 1.5px 1.5px 0;
+    border-radius: 0;
+    transform: rotate(45deg);
+}

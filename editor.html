@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Claude Themes</title>
+    <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+    <header id="bar">
+        <div class="name"><span class="mark"></span>Claude Themes</div>
+
+        <div class="group">
+            <button id="undo" title="Undo (Cmd+Z or Ctrl+Z)" disabled>Undo</button>
+            <button id="redo" title="Redo (Shift+Cmd+Z or Ctrl+Y)" disabled>Redo</button>
+        </div>
+
+        <span class="space"></span>
+
+        <!-- Only changes the preview, to check a theme against Claude's dark mode. -->
+        <div class="pair" title="Preview Claude's light or dark mode">
+            <button id="mode-light">Light</button>
+            <button id="mode-dark">Dark</button>
+        </div>
+
+        <label class="toggle" title="Switch the whole theme on or off">
+            <input type="checkbox" id="enabled">
+            Theme on
+        </label>
+
+        <a class="go" id="open-claude" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a>
+    </header>
+
+    <p id="stale" hidden>
+        Chrome is running an older copy of this extension, so new features will not show.
+        Open <b>chrome://extensions</b>, press the reload arrow on Claude Themes, then
+        refresh claude.ai.
+    </p>
+
+    <div id="work">
+        <!-- Left: the pictures to choose from. -->
+        <aside id="library">
+            <div id="add">
+                <b>Add your own pictures</b>
+                <span>Drag pictures or GIFs from your computer onto the screen, or</span>
+                <button id="browse">Choose files</button>
+                <span id="browse-for"></span>
+                <input type="file" id="files" accept="image/*" multiple hidden>
+            </div>
+
+            <h2>Backgrounds</h2>
+            <div class="tiles" id="presets" data-takes="image"></div>
+
+            <h2>Your images</h2>
+            <div class="tiles" id="images" data-takes="image"></div>
+            <p class="empty" id="images-empty" data-takes="image">
+                Nothing yet. Drop a picture on the main page or the sidebar and it is kept here.
+            </p>
+
+            <h2>Side pictures</h2>
+            <div class="tiles small" id="stickers" data-takes="sticker"></div>
+            <p class="empty" id="stickers-empty" data-takes="sticker">
+                Nothing yet. Drop a picture or GIF beside the chat and it is kept here.
+            </p>
+
+            <p class="note">
+                Click a picture to use it on the part that is selected, or drag it onto the
+                screen. Your pictures are stored in Chrome on this computer and are not sent
+                anywhere.
+            </p>
+        </aside>
+
+        <!-- Middle: a stand-in for claude.ai, showing the theme as it is now. -->
+        <section id="stage">
+            <div id="screen">
+                <iframe id="preview" src="preview.html" title="Preview of claude.ai" tabindex="-1"></iframe>
+
+                <!-- Laid over the preview: the parts that can be selected and dropped on. -->
+                <div id="overlay">
+                    <div class="zone" id="zone-main" data-zone="main">
+                        <span class="tag">Main page</span>
+                        <span class="drop">Drop here for the background</span>
+                    </div>
+                    <div class="zone" id="zone-sidebar" data-zone="sidebar">
+                        <span class="tag">Sidebar</span>
+                        <span class="drop">Drop here for the sidebar</span>
+                    </div>
+                    <div class="zone" id="zone-left" data-zone="left">
+                        <span class="tag">Left side</span>
+                        <span class="drop">Drop here for the left side</span>
+                    </div>
+                    <div class="zone" id="zone-right" data-zone="right">
+                        <span class="tag">Right side</span>
+                        <span class="drop">Drop here for the right side</span>
+                    </div>
+
+                    <!-- Over a side picture when its side is selected: drag to move, corner to resize. -->
+                    <div class="grip" id="grip-left" data-side="left" hidden><i class="handle"></i></div>
+                    <div class="grip" id="grip-right" data-side="right" hidden><i class="handle"></i></div>
+                </div>
+            </div>
+
+            <p id="hint">Click a part of the screen to change it. Drag a picture onto a part to use it there.</p>
+            <p id="toast" hidden></p>
+        </section>
+
+        <!-- Right: the settings of the part that is selected. -->
+        <aside id="inspector">
+            <div class="pair parts">
+                <button id="part-main">Main page</button>
+                <button id="part-sidebar">Sidebar</button>
+                <button id="part-left">Left side</button>
+                <button id="part-right">Right side</button>
+            </div>
+
+            <!-- The main page -->
+
+            <div class="panel" id="panel-main">
+                <h2>Background</h2>
+                <p class="now">Showing <b id="main-now"></b></p>
+
+                <label class="slider" for="opacity">
+                    Image opacity
+                    <span id="opacity-value"></span>
+                </label>
+                <input type="range" id="opacity" min="0" max="100">
+
+                <button class="wide" id="crop-main">Upload with cropping</button>
+
+                <h2>Text</h2>
+                <h3>Text colour</h3>
+                <div class="swatches" id="text-swatches"></div>
+                <label class="line" for="text-color">
+                    Any other colour
+                    <input type="color" id="text-color">
+                </label>
+
+                <h3>Highlight colour</h3>
+                <div class="swatches" id="code-swatches"></div>
+                <label class="line" for="code-color">
+                    Any other colour
+                    <input type="color" id="code-color">
+                </label>
+
+                <h3>Font</h3>
+                <select id="font"></select>
+                <input type="text" id="font-custom" placeholder="Type the font's name, e.g. Futura" hidden>
+
+                <p class="note">
+                    The text colour is for everything written on the page, including the small
+                    print under the message box. The highlight colour is for the words Claude
+                    marks out, which are normally crimson. The font is for Claude's replies and
+                    your messages. The message box itself, code blocks and menus always keep
+                    Claude's own look.
+                </p>
+
+                <h2>Border</h2>
+                <div class="pair">
+                    <button id="layout-separate">Chat window</button>
+                    <button id="layout-combined">Whole window</button>
+                </div>
+
+                <div id="separate">
+                    <div class="frames" id="frames-main"></div>
+                </div>
+
+                <div id="combined">
+                    <div class="frames" id="frames-all"></div>
+                    <p class="note">One frame around everything, in place of the sidebar's own.</p>
+                </div>
+
+                <label class="slider" for="frame-width">
+                    Thickness
+                    <span id="frame-width-value"></span>
+                </label>
+                <input type="range" id="frame-width" min="4" max="40">
+
+                <button class="wide" id="choose-frame">Upload your own frame</button>
+            </div>
+
+            <!-- The sidebar -->
+
+            <div class="panel" id="panel-sidebar" hidden>
+                <h2>Background</h2>
+                <div class="pair three">
+                    <button id="side-joined">Joined</button>
+                    <button id="side-own">Its own</button>
+                    <button id="side-plain">Claude's own</button>
+                </div>
+
+                <div id="joined">
+                    <p class="note first">The main page's background carries on behind the sidebar.</p>
+
+                    <label class="slider" for="panel">
+                        Sidebar opacity
+                        <span id="panel-value"></span>
+                    </label>
+                    <input type="range" id="panel" min="0" max="100">
+                </div>
+
+                <div id="own">
+                    <p class="now">Showing <b id="side-now"></b></p>
+                    <p class="note first">Click a background or one of your images on the left to change it.</p>
+
+                    <label class="slider" for="side-opacity">
+                        Image opacity
+                        <span id="side-opacity-value"></span>
+                    </label>
+                    <input type="range" id="side-opacity" min="0" max="100">
+
+                    <button class="wide" id="crop-side">Upload with cropping</button>
+                </div>
+
+                <div id="plain">
+                    <p class="note first">The sidebar looks the way Claude draws it, whatever the main page has.</p>
+                </div>
+
+                <h2>Text</h2>
+                <h3>Text colour</h3>
+                <div class="swatches" id="side-text-swatches"></div>
+                <label class="line" for="side-text-color">
+                    Any other colour
+                    <input type="color" id="side-text-color">
+                </label>
+
+                <h3>Font</h3>
+                <select id="side-font"></select>
+                <input type="text" id="side-font-custom" placeholder="Type the font's name, e.g. Futura" hidden>
+
+                <p class="note">For everything written in the sidebar. Icons stay as they are.</p>
+
+                <h2>Border</h2>
+                <p class="note first" id="side-combined" hidden>
+                    The main page is set to one frame around the whole window, so the sidebar's
+                    own frame is not shown. Choose Chat window under Main page, Border, to
+                    bring it back.
+                </p>
+
+                <div class="frames" id="frames-sidebar"></div>
+
+                <label class="slider" for="frame-width-side">
+                    Thickness
+                    <span id="frame-width-side-value"></span>
+                </label>
+                <input type="range" id="frame-width-side" min="4" max="40">
+
+                <button class="wide" id="choose-frame-side">Upload your own frame</button>
+            </div>
+
+            <!-- A picture beside the chat, on the left or the right -->
+
+            <div class="panel" id="panel-side" hidden>
+                <h2 id="side-title"></h2>
+                <div class="tiles small" id="side-choices"></div>
+
+                <p class="note first">
+                    Drag the picture on the screen to move it up or down, and drag its corner
+                    to resize it. A picture bigger than the empty space carries on behind the
+                    chat, under the text and the message box.
+                </p>
+
+                <label class="slider" for="sticker-size">
+                    Size
+                    <span id="sticker-size-value"></span>
+                </label>
+                <input type="range" id="sticker-size" min="60" max="800">
+
+                <label class="slider" for="sticker-position">
+                    Height on the page
+                    <span id="sticker-position-value"></span>
+                </label>
+                <input type="range" id="sticker-position" min="0" max="100">
+
+                <label class="slider" for="sticker-opacity">
+                    Opacity
+                    <span id="sticker-opacity-value"></span>
+                </label>
+                <input type="range" id="sticker-opacity" min="10" max="100">
+
+                <p class="note">Size, height and opacity are shared by the left and the right picture.</p>
+            </div>
+        </aside>
+    </div>
+
+    <script src="settings.js"></script>
+    <script src="editor.js"></script>
+</body>
+</html>

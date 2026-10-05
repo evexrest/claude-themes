@@ -1,8 +1,8 @@
-// Shared by content.js, popup.js and options.js.
+// Shared by content.js, editor.js and options.js.
 
-// Keep this the same as "version" in manifest.json. The popup compares the two to
+// Keep this the same as "version" in manifest.json. The editor compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.8.0";
+const filesVersion = "0.9.0";
 
 const defaults = {
     enabled: true,
@@ -11,7 +11,7 @@ const defaults = {
     preset: "dusk",
     imageId: null,
     // The saved images, as a list of { id, thumb, animated }. `thumb` is a small still
-    // copy for the popup and `animated` is true for a GIF. Each full-size picture is
+    // copy for the editor and `animated` is true for a GIF. Each full-size picture is
     // stored separately, under imageKey(id).
     images: [],
     opacity: 0.5,

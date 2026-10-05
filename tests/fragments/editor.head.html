@@ -1,0 +1,21 @@
+<base href="../">
+<script>window.errors = []; addEventListener("error", (e) => errors.push(e.message + " @" + e.lineno)); addEventListener("unhandledrejection", (e) => errors.push(String(e.reason && e.reason.stack || e.reason).slice(0, 300)));</script>
+<script src="tests/stub.js"></script>
+<script>
+  // The preview is drawn at the screen's size; a headless Chrome has no real screen.
+  Object.defineProperty(screen, "availWidth", { get: () => 1512 }); Object.defineProperty(screen, "availHeight", { get: () => 950 });
+</script>
+<script src="tests/gifs.js"></script>
+<script>
+  const q = new URLSearchParams(location.search);
+  store.images = [{ id: "a", thumb: colourImage("#c0392b", 240, 150) }, { id: "b", thumb: GIF1, animated: true }];
+  store["image-a"] = colourImage("#c0392b", 240, 150); store["image-b"] = GIF1;
+  store.preset = q.get("preset") || "dusk";
+  store.stickers = [{ id: "s1", thumb: GIF1 }, { id: "s2", thumb: GIF2 }]; store["sticker-s1"] = GIF1; store["sticker-s2"] = GIF2;
+  store.stickerLeft = q.get("left") === "none" ? null : "s1"; store.stickerSize = Number(q.get("size") || 180);
+  if (q.get("frame")) store.frameMain = q.get("frame");
+  if (q.get("text")) store.textColor = q.get("text");
+  if (q.get("side")) store.sidebarMode = q.get("side");
+  window.confirm = () => true;
+  addEventListener("load", () => setTimeout(() => { if (q.get("part")) document.getElementById("part-" + q.get("part")).click(); if (q.get("dark")) document.getElementById("mode-dark").click(); if (q.get("drag")) startDragging({ kind: q.get("drag") }); }, 300));
+</script>

@@ -3,8 +3,15 @@
 A Chrome extension that puts a background behind claude.ai, on the chat, cowork and code
 screens, with frames and your own text colour and font.
 
+The toolbar icon opens a full-page editor. In the middle is a stand-in for the Claude page
+that shows your theme as you build it. Click a part of it (the main page, the sidebar, or
+the space on either side of the chat) to change that part, and drag pictures onto it from
+your computer or from the library on the left. A side picture can be dragged up and down
+and resized by its corner. Undo and redo work as in any editor.
+
 - Six built-in gradient presets
-- Upload your own images, then drag and zoom to crop each one to the shape of your screen
+- Drop your own images onto the editor, or upload one with cropping: drag and zoom to
+  choose the part that shows
 - Every image you save is kept, so you can switch between them without uploading again
 - A GIF can be a background too, for the page or the sidebar, and keeps moving. GIFs are
   saved whole, not cropped
@@ -40,7 +47,7 @@ wrong, turn it off with the **On** switch and open an issue.
 3. Turn on **Developer mode** (top right).
 4. Click **Load unpacked** and choose the unzipped folder.
 5. Open claude.ai. The Dusk preset shows straight away.
-6. Click the puzzle-piece icon in the toolbar, then **Claude Themes**, to change it.
+6. Click the puzzle-piece icon in the toolbar, then **Claude Themes**, to open the editor.
 
 It also works in other Chromium browsers such as Edge, Brave and Arc.
 
@@ -52,8 +59,10 @@ It also works in other Chromium browsers such as Edge, Brave and Arc.
 | `settings.js` | The default settings and the lists of backgrounds, frames and fonts |
 | `content.js` | Runs on claude.ai, reads the saved settings, shows the background, the sidebar's picture, the side pictures, frames and text style |
 | `theme.css` | Styles the picture layers, makes the page see-through, draws the frames, recolours the text |
-| `popup.html`, `popup.js`, `popup.css` | The panel behind the toolbar icon: backgrounds, saved images, sidebar, side pictures, borders, text, on/off |
-| `options.html`, `options.js`, `options.css` | The upload page: crop an image for the screen or the sidebar and add it to your saved images |
+| `background.js` | Opens the editor when the toolbar icon is clicked |
+| `editor.html`, `editor.js`, `editor.css` | The editor: the library of pictures, the screen you click and drop onto, and the settings of the selected part |
+| `preview.html`, `preview.css` | The stand-in for the Claude page that the editor shows. It uses claude.ai's class names, so `theme.css` and `content.js` style it exactly as they style the real page |
+| `options.html`, `options.js`, `options.css` | The upload page, opened from the editor: crop an image for the screen or the sidebar and add it to your saved images |
 | `frame-upload.js` | The upload page: read and save your own frame picture |
 | `stickers.js` | The upload page: save a picture or GIF for beside the chat |
 | `tests/` | Checks that run the extension's code in a separate, throwaway Chrome. See `tests/README.md` |

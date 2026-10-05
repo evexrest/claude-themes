@@ -13,7 +13,7 @@ const maxMovingBytes = 25 * 1024 * 1024;
 let movingData = null;
 
 // What the image is for: "main" (the whole screen) or "sidebar". The crop box is
-// drawn in that shape. The popup opens this page with #sidebar for the second one.
+// drawn in that shape. The editor opens this page with #sidebar for the second one.
 let target = location.hash === "#sidebar" ? "sidebar" : "main";
 let frameWidth = 720;
 let frameHeight = 0;
@@ -181,7 +181,7 @@ frame.addEventListener("pointerup", () => {
     frame.classList.remove("dragging");
 });
 
-// A small still copy of a saved image, for the buttons in the popup. `picture` is
+// A small still copy of a saved image, for the editor's library. `picture` is
 // a canvas or an image, `width` and `height` its size.
 function thumbnail(picture, width, height) {
     const small = document.createElement("canvas");
@@ -236,7 +236,7 @@ document.getElementById("save").addEventListener("click", async () => {
         });
         status.textContent = "Saved to your images and set as the " +
             (target === "sidebar" ? "sidebar's picture" : "background") +
-            ". You now have " + (saved.images.length + 1) + ". Switch between them from the toolbar icon.";
+            ". You now have " + (saved.images.length + 1) + ". Switch between them in the editor, which the toolbar icon opens.";
     } catch (error) {
         status.textContent = "Could not save: " + error.message;
     }

@@ -1,6 +1,7 @@
 // A stand-in for Chrome's extension storage, for testing outside Chrome's extension system.
 window.store = Object.assign({}, window.seed || {});
 window.listeners = [];
+window.messageListeners = [];
 function clone(v) { return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
 window.chrome = {
   storage: {
@@ -25,8 +26,12 @@ window.chrome = {
     },
     onChanged: { addListener(l) { listeners.push(l); } }
   },
-  runtime: { getManifest: () => ({ version: new URLSearchParams(location.search).get("v") || (typeof filesVersion === "string" ? filesVersion : "0") }), openOptionsPage() { window.openedOptions = true; }, getURL: (p) => 'ext://' + p },
-  tabs: { create(o) { window.openedTab = o.url; } }
+  action: { onClicked: { addListener(l) { window.iconClicked = l; } } },
+  windows: { update() {} },
+  runtime: { onMessage: { addListener(l) { messageListeners.push(l); } },
+    sendMessage(message) { return new Promise((ok, no) => { if (!messageListeners.length) return no(new Error("no one listening")); let answered; messageListeners.forEach((l) => l(message, {}, (a) => { answered = a; })); ok(answered); }); },
+    getManifest: () => ({ version: new URLSearchParams(location.search).get("v") || (typeof filesVersion === "string" ? filesVersion : "0") }), openOptionsPage() { window.openedOptions = true; }, getURL: (p) => 'ext://' + p },
+  tabs: { create(o) { window.openedTab = o.url; }, getCurrent(done) { done({ id: 1, windowId: 1 }); }, update(id, change) { window.frontedTab = change.active === true; } }
 };
 window.colourImage = (colour, w = 4, h = 3) => { const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.fillStyle = colour; x.fillRect(0, 0, w, h); return c.toDataURL("image/png"); };
 window.wait = (ms) => new Promise((r) => setTimeout(r, ms));
