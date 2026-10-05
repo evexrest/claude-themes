@@ -104,7 +104,9 @@
     <section id="main-sides" hidden>
         <p class="note first">
             Pictures or GIFs in the empty space on either side of the chat. They work
-            with any background, including Claude's own.
+            with any background, including Claude's own. A picture is never wider
+            than that space, so on a narrow window the top of the Size slider
+            changes nothing.
         </p>
 
         <h2>Left side</h2>
@@ -118,7 +120,7 @@
             Size
             <span id="sticker-size-value"></span>
         </label>
-        <input type="range" id="sticker-size" min="60" max="400">
+        <input type="range" id="sticker-size" min="60" max="800">
 
         <label class="slider" for="sticker-position">
             Height on the page

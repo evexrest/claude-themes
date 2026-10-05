@@ -75,6 +75,9 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   results.stickerBlob = blobType;
   await chrome.storage.local.set({ stickerSize: 400, stickerPosition: 0, stickerOpacity: 0.5 }); await wait(60);
   results.clamped = { left: st(0), right: st(1) };
+  document.querySelector(".dframe-root").style.width = "3000px"; await chrome.storage.local.set({ stickerSize: 800 }); await wait(1200);
+  results.biggest = { box: box(), left: st(0), right: st(1) };
+  document.querySelector(".dframe-root").style.width = ""; await chrome.storage.local.set({ stickerSize: 400 }); await wait(1200);
   await chrome.storage.local.set({ preset: "none" }); await wait(60);
   results.claudeOwnBackground = { wall: R.getAttribute("data-wallpaper"), leftShown: st(0).shown };
   document.querySelector(".dframe-root").style.width = "820px"; await wait(1200);

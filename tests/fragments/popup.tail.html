@@ -52,6 +52,8 @@
   el("choose-side").click(); r.openSide = window.openedTab; el("choose-sticker").click(); r.openSticker = window.openedTab; el("choose-frame-side").click(); r.openFrame = window.openedOptions === true;
   el("tab-sides").click(); document.querySelectorAll("#stickers-right .sticker")[2].click(); set("sticker-position", 5); await wait(20);
   r.sides = { right: store.stickerRight, left: store.stickerLeft, position: store.stickerPosition, label: el("sticker-position-value").textContent };
+  set("sticker-size", 800); await wait(20);
+  r.sizeTop = { stored: store.stickerSize, label: el("sticker-size-value").textContent, max: el("sticker-size").max };
   document.getElementById("out").textContent = "RESULT" + JSON.stringify(r, null, 1) + "END";
 })().catch((e) => { document.getElementById("out").textContent = "RESULT" + JSON.stringify("error " + e.stack) + "END"; });
 </script>
