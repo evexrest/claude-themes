@@ -9,6 +9,7 @@
     --cds-surface-2: #ffffff;
     --cds-surface-3: #ffffff;
     --df-web-sidebar-bg: #fafaf9;
+    --df-selected: #edece8;
     --cds-text-primary: #0b0b0b;
     --cds-text-secondary: #52514e;
     --cds-text-muted: #898781;
@@ -28,6 +29,7 @@ html.dark {
     --cds-surface-2: #1f1e1d;
     --cds-surface-3: #30302e;
     --df-web-sidebar-bg: #1f1e1d;
+    --df-selected: rgba(250, 249, 245, 0.1);
     --cds-text-primary: #faf9f5;
     --cds-text-secondary: #c2c0b6;
     --cds-text-muted: #9c9a92;
@@ -105,8 +107,9 @@ body {
     color: var(--cds-text-primary);
 }
 
+/* The open chat's row, in the colour claude.ai gives it. */
 .row.current {
-    background: var(--tint);
+    background: var(--df-selected);
 }
 
 .heading {

@@ -33,6 +33,8 @@ Clicked on another tab, the icon goes to your Claude tab, or opens one.
   colour, font, frame and frame thickness
 - The sidebar can share the main background, have a picture of its own with its own
   opacity, or stay exactly as Claude draws it
+- On a sidebar with a background or text colour of its own, the chat that is open shows
+  as a see-through bubble in the sidebar's text colour, in place of Claude's pale block
 - Pictures or GIFs in the empty space on either side of the chat. Each side has its own
   size, height and opacity. They work with any background, including Claude's own. A picture
   bigger than the empty space carries on behind the chat, never on top of it
