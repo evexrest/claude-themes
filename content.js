@@ -9,10 +9,11 @@ let wallpaper = null;
 let frameUrl = null;
 
 // The two picture layers: the main background and the sidebar's own picture.
-// Each remembers its image's address and counts its loads.
+// Each remembers its image's address and counts its loads. `width` and `height`
+// are a saved image's own size, once it has been read; a preset has none.
 const layers = {
-    main: { url: null, loads: 0 },
-    sidebar: { url: null, loads: 0 }
+    main: { url: null, loads: 0, width: 0, height: 0 },
+    sidebar: { url: null, loads: 0, width: 0, height: 0 }
 };
 
 // The pictures beside the chat, one for each side. `setting` names the setting
@@ -69,7 +70,82 @@ async function loadPicture(layer, presetId, imageId, show) {
         URL.revokeObjectURL(layer.url);
     }
     layer.url = url;
+    layer.width = 0;
+    layer.height = 0;
     show(css);
+
+    // Zooming needs the picture's own size, which is only known once it has loaded.
+    if (url) {
+        const probe = new Image();
+        probe.addEventListener("load", () => {
+            if (layer.url === url) {
+                layer.width = probe.naturalWidth;
+                layer.height = probe.naturalHeight;
+                sizePictures();
+            }
+        });
+        probe.src = url;
+    }
+    sizePictures();
+}
+
+// Where and how big to draw a layer's picture, as CSS, or null to let it fill its
+// box the ordinary way. At a zoom of 1 the picture fills `box`. From there down
+// to 0 it shrinks, and moves, until the whole picture just fits inside `seen`,
+// the part of the box that nothing covers. Above 1 it is that many times the
+// filling size.
+function zoomedPicture(layer, zoom, box, seen) {
+    if (zoom === 1 || !layer.width || !layer.height || !box.width || !box.height || !seen.width || !seen.height) {
+        return null;
+    }
+    const fills = Math.max(box.width / layer.width, box.height / layer.height);
+    const whole = Math.min(seen.width / layer.width, seen.height / layer.height);
+    const part = Math.min(1, Math.max(0, zoom));
+    const scale = zoom > 1 ? fills * zoom : whole + (fills - whole) * part;
+    const width = layer.width * scale;
+    const height = layer.height * scale;
+    // The picture's middle, measured from the box's corner.
+    const across = seen.left - box.left + seen.width / 2;
+    const down = seen.top - box.top + seen.height / 2;
+    const middleX = across + (box.width / 2 - across) * part;
+    const middleY = down + (box.height / 2 - down) * part;
+    return {
+        size: Math.round(width) + "px " + Math.round(height) + "px",
+        position: Math.round(middleX - width / 2) + "px " + Math.round(middleY - height / 2) + "px"
+    };
+}
+
+// Give both pictures their zoom. This is worked out in pixels from the size of
+// the window and of the sidebar, so it is done again whenever those change.
+function sizePictures() {
+    if (wallpaper) {
+        // The main picture lies behind the whole window. A sidebar that is joined
+        // to it is see-through, so the whole window counts as seen; any other
+        // sidebar hides its strip, and the whole picture has to fit beside it.
+        const box = wallpaper.getBoundingClientRect();
+        const content = settings.sidebarMode === "joined" ? null : document.querySelector(".dframe-content");
+        const seen = content ? content.getBoundingClientRect() : box;
+        const drawn = zoomedPicture(layers.main, settings.zoom, box, seen) || { size: "", position: "" };
+        if (wallpaper.style.backgroundSize !== drawn.size) {
+            wallpaper.style.backgroundSize = drawn.size;
+        }
+        if (wallpaper.style.backgroundPosition !== drawn.position) {
+            wallpaper.style.backgroundPosition = drawn.position;
+        }
+    }
+
+    const sidebar = settings.sidebarMode === "own" && settings.sidebarZoom !== 1
+        ? document.querySelector(".dframe-sidebar")
+        : null;
+    const box = sidebar ? sidebar.getBoundingClientRect() : null;
+    const drawn = box ? zoomedPicture(layers.sidebar, settings.sidebarZoom, box, box) : null;
+    if (drawn === null) {
+        if (root.style.getPropertyValue("--sidebar-image-size")) {
+            root.style.removeProperty("--sidebar-image-size");
+        }
+    } else if (root.style.getPropertyValue("--sidebar-image-size") !== drawn.size) {
+        root.style.setProperty("--sidebar-image-size", drawn.size);
+    }
 }
 
 function applyBackground(sourceChanged) {
@@ -97,6 +173,7 @@ function applyBackground(sourceChanged) {
     wallpaper.style.opacity = settings.opacity;
     root.style.setProperty("--panel-opacity", settings.panelOpacity * 100 + "%");
     setAttribute("data-wallpaper", true);
+    sizePictures();
 }
 
 // The sidebar's background: joined to the main one (nothing to do here), a
@@ -114,6 +191,7 @@ function applySidebar(sourceChanged) {
     }
     setAttribute("data-sidebar-image", own);
     setAttribute("data-sidebar-plain", settings.enabled && settings.sidebarMode === "plain");
+    sizePictures();
 }
 
 // Fetch one side's picture from storage and put it in that side's <img>.
@@ -444,9 +522,13 @@ async function start() {
     // The empty space beside the chat changes when the window is resized, the
     // sidebar opens or closes, or another chat is opened. claude.ai swaps pages
     // without reloading, so a slow timer catches the changes nothing announces.
-    const watcher = new ResizeObserver(placeStickers);
+    const watcher = new ResizeObserver(() => {
+        placeStickers();
+        sizePictures();
+    });
     let watched = null;
     window.addEventListener("resize", placeStickers);
+    window.addEventListener("resize", sizePictures);
     setInterval(() => {
         const pane = document.querySelector(".dframe-pane-primary");
         if (pane !== watched) {
@@ -459,6 +541,7 @@ async function start() {
             watched = pane;
         }
         placeStickers();
+        sizePictures();
     }, 1000);
 
     // Not inside the editor's own preview, which is one of the extension's pages.

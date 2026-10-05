@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The editor compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.12.1";
+const filesVersion = "0.13.0";
 
 const defaults = {
     enabled: true,
@@ -15,6 +15,11 @@ const defaults = {
     // stored separately, under imageKey(id).
     images: [],
     opacity: 0.5,
+    // How big a saved image is drawn. 1 fills the page with it, cutting off whatever
+    // does not fit, as before there was a setting. Below 1 it shrinks towards 0,
+    // which shows the whole picture; above 1 it is that many times bigger. The
+    // presets are plain colour washes and are not affected.
+    zoom: 1,
     panelOpacity: 0.6,
     // The sidebar is "joined" to the main background, has a picture of its "own"
     // (a preset, or one of the saved images when `sidebarPreset` is null), or is
@@ -23,6 +28,8 @@ const defaults = {
     sidebarPreset: "graphite",
     sidebarImageId: null,
     sidebarOpacity: 0.8,
+    // The same as `zoom`, for the sidebar's own picture.
+    sidebarZoom: 1,
     frameLayout: "separate",
     frameSidebar: "none",
     frameMain: "none",

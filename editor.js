@@ -190,6 +190,10 @@ const fraction = (number) => number / 100;
 const hundredths = (number) => Math.round(number * 100);
 const same = (number) => number;
 const place = (number) => number < 20 ? "Top" : number > 80 ? "Bottom" : "Middle";
+// A zoom slider runs from 0 (the whole picture) through 100 (the picture fills its
+// part of the screen) to 400. Near 100 it settles on 100, which is hard to hit.
+const zoomed = (number) => number === 0 ? "Whole picture" : number === 100 ? "Fills" : number + "%";
+const zoomStored = (number) => Math.abs(number - 100) <= 4 ? 1 : number / 100;
 
 // A row of colour buttons and its colour picker, for one colour setting. A null
 // colour means Claude's own.
@@ -1096,6 +1100,9 @@ function sync() {
 
     byId("main-now").textContent = backgroundName(state.preset, state.imageId);
     byId("side-now").textContent = backgroundName(state.sidebarPreset, state.sidebarImageId);
+    // Zoom is for a saved image. A preset is a wash of colour with no size of its own.
+    byId("zoom-main").hidden = state.preset !== null;
+    byId("zoom-side").hidden = state.sidebarPreset !== null;
 
     // The main page's frame goes around the chat window ("separate", which leaves
     // the sidebar free to have its own) or around the whole window ("combined").
@@ -1148,6 +1155,7 @@ async function start() {
 
     // The main page.
     slider("opacity", "opacity", percent, fraction, hundredths);
+    slider("zoom", "zoom", zoomed, zoomStored, hundredths);
     colours("text-swatches", "text-color", "textColor", textSwatches, "#ffffff");
     colours("code-swatches", "code-color", "codeColor", codeSwatches, "#8e2626");
     fontChoice("font", "font-custom", "font", "fontCustom");
@@ -1158,6 +1166,7 @@ async function start() {
     oneOf("sidebarMode", { joined: "side-joined", own: "side-own", plain: "side-plain" });
     slider("panel", "panelOpacity", percent, fraction, hundredths);
     slider("side-opacity", "sidebarOpacity", percent, fraction, hundredths);
+    slider("side-zoom", "sidebarZoom", zoomed, zoomStored, hundredths);
     colours("side-text-swatches", "side-text-color", "sidebarTextColor", textSwatches, "#ffffff");
     fontChoice("side-font", "side-font-custom", "sidebarFont", "sidebarFontCustom");
     slider("frame-width-side", "frameSidebarWidth", pixels, same, same);

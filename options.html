@@ -31,7 +31,11 @@
                 <p class="hint">Drag the image to move it. <span id="shape-hint"></span></p>
 
                 <label for="zoom">Zoom</label>
-                <input type="range" id="zoom" min="1" max="4" step="0.01" value="1">
+                <input type="range" id="zoom" min="0" max="4" step="0.01" value="1">
+                <p class="hint">
+                    All the way left fits the whole picture in the box. The empty part of
+                    the box is left see-through, so Claude's own colour shows there.
+                </p>
             </div>
 
             <div id="whole" hidden>

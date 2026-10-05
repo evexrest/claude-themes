@@ -28,10 +28,34 @@ function coverScale() {
     return Math.max(frameWidth / image.width, frameHeight / image.height);
 }
 
-// Stop the image from being dragged so far that the frame shows a gap.
+// The scale at which the whole image just fits inside the frame.
+function wholeScale() {
+    return Math.min(frameWidth / image.width, frameHeight / image.height);
+}
+
+// The scale for a place on the Zoom slider: 1 fills the frame, 0 fits the whole
+// image in it, and above 1 is that many times the filling scale.
+function zoomScale(value) {
+    return value >= 1
+        ? coverScale() * value
+        : wholeScale() + (coverScale() - wholeScale()) * value;
+}
+
+// Keep the image where it belongs along one direction: `size` is the image's and
+// `room` the frame's. An image bigger than the frame cannot be dragged so far that
+// a gap shows; a smaller one stays in the middle.
+function held(position, size, room) {
+    return size <= room ? (room - size) / 2 : Math.min(0, Math.max(room - size, position));
+}
+
 function keepInside() {
-    x = Math.min(0, Math.max(frameWidth - image.width * scale, x));
-    y = Math.min(0, Math.max(frameHeight - image.height * scale, y));
+    x = held(x, image.width * scale, frameWidth);
+    y = held(y, image.height * scale, frameHeight);
+}
+
+// True when the image is zoomed out far enough to leave part of the frame empty.
+function hasGap() {
+    return image.width * scale < frameWidth - 0.5 || image.height * scale < frameHeight - 0.5;
 }
 
 function draw() {
@@ -149,7 +173,7 @@ moving.addEventListener("error", () => {
 zoom.addEventListener("input", () => {
     const centreX = (frameWidth / 2 - x) / scale;
     const centreY = (frameHeight / 2 - y) / scale;
-    scale = coverScale() * zoom.value;
+    scale = zoomScale(Number(zoom.value));
     x = frameWidth / 2 - centreX * scale;
     y = frameHeight / 2 - centreY * scale;
     keepInside();
@@ -187,7 +211,11 @@ function thumbnail(picture, width, height) {
     const small = document.createElement("canvas");
     small.width = 240;
     small.height = Math.round(small.width * height / width);
-    small.getContext("2d").drawImage(picture, 0, 0, small.width, small.height);
+    const drawing = small.getContext("2d");
+    // White underneath, for a picture with see-through parts.
+    drawing.fillStyle = "#ffffff";
+    drawing.fillRect(0, 0, small.width, small.height);
+    drawing.drawImage(picture, 0, 0, small.width, small.height);
     return small.toDataURL("image/jpeg", 0.7);
 }
 
@@ -202,6 +230,21 @@ function croppedPicture() {
     const output = document.createElement("canvas");
     output.width = Math.min(maxSavedWidth, Math.round(cropWidth));
     output.height = Math.round(output.width * frameHeight / frameWidth);
+
+    // Zoomed out past filling the frame: the saved picture is the whole frame, with
+    // the image where it sits in it and the rest see-through. A JPEG cannot be
+    // see-through, so this one is saved as WebP.
+    if (hasGap()) {
+        const each = output.width / frameWidth;
+        output.getContext("2d").drawImage(
+            image, x * each, y * each, image.width * scale * each, image.height * scale * each
+        );
+        return {
+            data: output.toDataURL("image/webp", 0.9),
+            thumb: thumbnail(output, output.width, output.height)
+        };
+    }
+
     output.getContext("2d").drawImage(
         image, cropX, cropY, cropWidth, cropHeight,
         0, 0, output.width, output.height

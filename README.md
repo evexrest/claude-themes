@@ -33,6 +33,9 @@ Clicked on another tab, the icon goes to your Claude tab, or opens one.
   colour, font, frame and frame thickness
 - The sidebar can share the main background, have a picture of its own with its own
   opacity, or stay exactly as Claude draws it
+- A Zoom slider for the background image and for the sidebar's picture: from the whole
+  picture, with nothing cut off, through filling the space, up to four times that. The
+  crop tool on the upload page zooms out to the whole picture as well
 - On a sidebar with a background or text colour of its own, the chat that is open shows
   as a see-through bubble in the sidebar's text colour, in place of Claude's pale block
 - Pictures or GIFs in the empty space on either side of the chat. Each side has its own

@@ -150,6 +150,15 @@
                 </label>
                 <input type="range" id="opacity" min="0" max="100">
 
+                <div id="zoom-main">
+                    <label class="slider" for="zoom">
+                        Zoom
+                        <span id="zoom-value"></span>
+                    </label>
+                    <input type="range" id="zoom" min="0" max="400">
+                    <p class="note">All the way left shows the whole picture.</p>
+                </div>
+
                 <button class="wide" id="crop-main">Upload with cropping</button>
 
                 <h2>Text</h2>
@@ -232,6 +241,15 @@
                         <span id="side-opacity-value"></span>
                     </label>
                     <input type="range" id="side-opacity" min="0" max="100">
+
+                    <div id="zoom-side">
+                        <label class="slider" for="side-zoom">
+                            Zoom
+                            <span id="side-zoom-value"></span>
+                        </label>
+                        <input type="range" id="side-zoom" min="0" max="400">
+                        <p class="note">All the way left shows the whole picture.</p>
+                    </div>
 
                     <button class="wide" id="crop-side">Upload with cropping</button>
                 </div>

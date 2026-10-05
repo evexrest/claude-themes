@@ -6,6 +6,7 @@
     pointer-events: none;
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
 }
 
 /* The page colour stays underneath, so a lower opacity fades the image into it. */
@@ -104,8 +105,9 @@ html[data-sidebar-image] .dframe-root[data-variant="web"]:not([data-collapsed]) 
     z-index: -1;
     pointer-events: none;
     background-image: var(--sidebar-image);
-    background-size: cover;
+    background-size: var(--sidebar-image-size, cover);
     background-position: center;
+    background-repeat: no-repeat;
     opacity: var(--sidebar-image-opacity);
 }
 

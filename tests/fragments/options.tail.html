@@ -23,6 +23,18 @@
   document.getElementById("save").click(); await wait(300);
   const last = store.images[store.images.length - 1];
   r.stillSaved = { n: store.images.length, type: store[imageKey(store.imageId)].slice(0, 15), animated: last.animated, isLast: last.id === store.imageId };
+  // zoomed all the way out: the whole picture in the box, the rest see-through
+  zoom.value = 0; zoom.dispatchEvent(new Event("input"));
+  const drawn = () => ({ image: Math.round(image.width * scale) + "x" + Math.round(image.height * scale), box: frameWidth + "x" + frameHeight, at: Math.round(x) + "," + Math.round(y), gap: hasGap() });
+  r.zoomedOut = drawn();
+  document.getElementById("save").click(); await wait(300);
+  const outData = store[imageKey(store.imageId)];
+  const outImg = new Image(); await new Promise((ok) => { outImg.onload = ok; outImg.src = outData; });
+  const oc = document.createElement("canvas"); oc.width = outImg.naturalWidth; oc.height = outImg.naturalHeight; const ox = oc.getContext("2d"); ox.drawImage(outImg, 0, 0);
+  r.zoomedOutSaved = { n: store.images.length, type: outData.slice(0, 15), size: oc.width + "x" + oc.height, topEdge: [...ox.getImageData(oc.width / 2, 2, 1, 1).data].join(","), middle: [...ox.getImageData(oc.width / 2, oc.height / 2, 1, 1).data].join(","), thumb: store.images[store.images.length - 1].thumb.slice(0, 15) };
+  zoom.value = 0.5; zoom.dispatchEvent(new Event("input")); r.zoomedHalfway = drawn();
+  zoom.value = 1; zoom.dispatchEvent(new Event("input")); r.zoomedToFill = drawn();
+  zoom.value = 2; zoom.dispatchEvent(new Event("input")); r.zoomedIn = drawn();
   give(new File([new Uint8Array(26 * 1024 * 1024)], "huge.gif", { type: "image/gif" })); await wait(100);
   r.tooBig = status.textContent;
   give(new File(["nope"], "bad.gif", { type: "image/gif" })); await until(() => status.textContent !== "");
