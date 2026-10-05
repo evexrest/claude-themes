@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Claude Themes</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <header>
+        <h1>Claude Themes</h1>
+        <label class="toggle">
+            <input type="checkbox" id="enabled">
+            On
+        </label>
+    </header>
+
+    <h2>Background</h2>
+    <div id="choices"></div>
+    <button id="choose">Upload your own image</button>
+
+    <label class="slider" for="opacity">
+        Image opacity
+        <span id="opacity-value"></span>
+    </label>
+    <input type="range" id="opacity" min="0" max="100">
+
+    <label class="slider" for="panel">
+        Sidebar opacity
+        <span id="panel-value"></span>
+    </label>
+    <input type="range" id="panel" min="0" max="100">
+
+    <script src="settings.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

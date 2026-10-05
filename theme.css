@@ -1,0 +1,63 @@
+/* The image layer. content.js creates this element and sets its image and opacity. */
+#claude-wallpaper {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-size: cover;
+    background-position: center;
+}
+
+/* The page colour stays underneath, so a lower opacity fades the image into it. */
+html[data-wallpaper="on"] {
+    background-color: var(--cds-surface-1) !important;
+}
+
+/* Full-page layers that would otherwise cover the image.
+   Checked on claude.ai on 2026-10-04: sign-in page, chat, cowork and code. */
+html[data-wallpaper="on"] body,
+html[data-wallpaper="on"] div.min-h-screen.bg-surface-1,
+html[data-wallpaper="on"] [data-sim-native-ground],
+html[data-wallpaper="on"] .dframe-content {
+    background-color: transparent !important;
+}
+
+/* Sidebar: its own colour, made partly see-through. */
+html[data-wallpaper="on"] .dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar {
+    background-color: color-mix(in srgb, var(--df-web-sidebar-bg) var(--panel-opacity, 60%), transparent) !important;
+}
+
+/* Chat: the strip behind the title becomes frosted glass. */
+html[data-wallpaper="on"] .df-header-backdrop {
+    background-color: transparent !important;
+    backdrop-filter: blur(16px);
+}
+
+/* Chat: the area around the message box. Blurred so messages scrolling
+   underneath do not show through as readable text. */
+html[data-wallpaper="on"] [data-testid="transcript-bottom-fade"] {
+    display: none;
+}
+
+html[data-wallpaper="on"] [data-chat-input-container] .bg-page,
+html[data-wallpaper="on"] [data-composer-card-holder] {
+    background-color: transparent !important;
+    backdrop-filter: blur(24px);
+}
+
+html[data-wallpaper="on"] [data-cds="ChatComposer"] {
+    background-color: transparent !important;
+}
+
+/* Code: the session card, and the transcript surface inside it. */
+html[data-wallpaper="on"] .epitaxy-chat-panel > .bg-surface-2 {
+    background-color: color-mix(in srgb, var(--cds-surface-2) var(--panel-opacity, 60%), transparent) !important;
+}
+
+html[data-wallpaper="on"] .epitaxy-chat-panel [class*="bg-[var(--epitaxy-transcript-surface"] {
+    background-color: transparent !important;
+}
+
+html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-color"] {
+    --cds-scroll-fade-strip-color: transparent;
+}

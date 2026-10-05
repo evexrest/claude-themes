@@ -1,0 +1,95 @@
+body {
+    width: 280px;
+    margin: 0;
+    padding: 16px;
+    background: #151515;
+    color: #e8e6e1;
+    font-family: system-ui, sans-serif;
+    font-size: 14px;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+h1 {
+    font-size: 16px;
+    margin: 0;
+}
+
+h2 {
+    font-size: 12px;
+    font-weight: 600;
+    color: #a5a49a;
+    margin: 0 0 8px;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+#choices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.choice {
+    height: 52px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+}
+
+.choice[aria-pressed="true"] {
+    border-color: #d97757;
+}
+
+.choice span {
+    display: block;
+    margin-top: 30px;
+    font-size: 11px;
+    color: #fff;
+    text-shadow: 0 1px 2px #000;
+}
+
+#choose {
+    width: 100%;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #20201f;
+    color: #e8e6e1;
+    font: inherit;
+    cursor: pointer;
+}
+
+.slider {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.slider span {
+    color: #a5a49a;
+}
+
+input[type="range"] {
+    width: 100%;
+    margin: 8px 0 0;
+    accent-color: #d97757;
+}
+
+input[type="checkbox"] {
+    accent-color: #d97757;
+}
