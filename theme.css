@@ -146,21 +146,20 @@ html[data-frame-all] .dframe-root::after {
     box-shadow: var(--frame-all-shadow);
 }
 
-/* Text colour for the chat. claude.ai takes its text colours from a few shared
-   values. These rules replace them in Claude's replies and your messages only.
-   The message box, buttons, menus and pop-ups have solid backgrounds of their own,
-   so they keep Claude's colours and stay readable. Links keep theirs too.
-   Checked on claude.ai on 2026-10-05. */
-html[data-ct-text] .dframe-pane-primary .standard-markdown,
-html[data-ct-text] .dframe-pane-primary [data-testid="user-message"] {
+/* Text colour for the main page. claude.ai takes its text colours from a few
+   shared values. These rules replace them across the chat window, so everything
+   written straight onto the page takes the colour: Claude's replies, your
+   messages, the title bar, the greeting, and the small print under the message
+   box. Links keep their own colour. Checked on claude.ai on 2026-10-05. */
+html[data-ct-text] .dframe-pane-primary {
     color: var(--ct-text) !important;
 }
 
-html[data-ct-text] .dframe-pane-primary .standard-markdown,
-html[data-ct-text] .dframe-pane-primary [data-testid="user-message"] {
+html[data-ct-text] .dframe-pane-primary,
+html[data-ct-text] .dframe-pane-primary .cds-root {
     --cds-text-primary: var(--ct-text) !important;
-    --cds-text-secondary: color-mix(in srgb, var(--ct-text) 80%, transparent) !important;
-    --cds-text-muted: color-mix(in srgb, var(--ct-text) 60%, transparent) !important;
+    --cds-text-secondary: color-mix(in srgb, var(--ct-text) 88%, transparent) !important;
+    --cds-text-muted: color-mix(in srgb, var(--ct-text) 74%, transparent) !important;
     --text-000: var(--ct-text-hsl) !important;
     --text-100: var(--ct-text-hsl) !important;
     --text-200: var(--ct-text-hsl) !important;
@@ -170,7 +169,7 @@ html[data-ct-text] .dframe-pane-primary [data-testid="user-message"] {
 }
 
 /* Claude's own text colours, remembered at the top of the page so that they can
-   be handed back to the code blocks below. */
+   be handed back below. */
 html[data-ct-text] {
     --ct-own-primary: var(--cds-text-primary);
     --ct-own-secondary: var(--cds-text-secondary);
@@ -183,9 +182,33 @@ html[data-ct-text] {
     --ct-own-500: var(--text-500);
 }
 
-/* Code blocks have a background of their own, so they and the box around them
-   keep Claude's own text colours. */
-html[data-ct-text] .dframe-pane-primary :is(.standard-markdown, [data-testid="user-message"]) :is(pre, div:has(> pre), div:has(> div > pre)) {
+/* Anything with a solid background of its own gets Claude's own text colours
+   back, so that it stays readable whatever colour is chosen: the message box,
+   code blocks, side panels, file chips, filled buttons, menus and form fields.
+   claude.ai marks its solid backgrounds with class names that start "bg-surface",
+   "bg-bg", "bg-fill" or "bg-" and a colour. */
+html[data-ct-text] .dframe-pane-primary :is(
+    pre, div:has(> pre), div:has(> div > pre), input, textarea, select,
+    [role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"],
+    [class^="bg-surface"], [class*=" bg-surface"], [class^="bg-bg"], [class*=" bg-bg"],
+    [class^="bg-fill"], [class*=" bg-fill"], [class^="bg-white"], [class*=" bg-white"],
+    [class^="bg-gray"], [class*=" bg-gray"], [class^="bg-accent"],
+    [class*=" bg-accent"], [class^="bg-red"], [class*=" bg-red"], [class^="bg-orange"],
+    [class*=" bg-orange"], [class^="bg-yellow"], [class*=" bg-yellow"],
+    [class^="bg-green"], [class*=" bg-green"], [class^="bg-blue"], [class*=" bg-blue"],
+    [class^="bg-violet"], [class*=" bg-violet"]
+),
+html[data-ct-text] .dframe-pane-primary :is(
+    pre, div:has(> pre), div:has(> div > pre), input, textarea, select,
+    [role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"],
+    [class^="bg-surface"], [class*=" bg-surface"], [class^="bg-bg"], [class*=" bg-bg"],
+    [class^="bg-fill"], [class*=" bg-fill"], [class^="bg-white"], [class*=" bg-white"],
+    [class^="bg-gray"], [class*=" bg-gray"], [class^="bg-accent"],
+    [class*=" bg-accent"], [class^="bg-red"], [class*=" bg-red"], [class^="bg-orange"],
+    [class*=" bg-orange"], [class^="bg-yellow"], [class*=" bg-yellow"],
+    [class^="bg-green"], [class*=" bg-green"], [class^="bg-blue"], [class*=" bg-blue"],
+    [class^="bg-violet"], [class*=" bg-violet"]
+) .cds-root {
     color: var(--ct-own-primary) !important;
     --cds-text-primary: var(--ct-own-primary) !important;
     --cds-text-secondary: var(--ct-own-secondary) !important;
@@ -229,8 +252,8 @@ html[data-ct-side-text] .dframe-sidebar {
 html[data-ct-side-text] .dframe-sidebar,
 html[data-ct-side-text] .dframe-sidebar .cds-root {
     --cds-text-primary: var(--ct-side-text) !important;
-    --cds-text-secondary: color-mix(in srgb, var(--ct-side-text) 80%, transparent) !important;
-    --cds-text-muted: color-mix(in srgb, var(--ct-side-text) 60%, transparent) !important;
+    --cds-text-secondary: color-mix(in srgb, var(--ct-side-text) 88%, transparent) !important;
+    --cds-text-muted: color-mix(in srgb, var(--ct-side-text) 74%, transparent) !important;
     --text-000: var(--ct-side-text-hsl) !important;
     --text-100: var(--ct-side-text-hsl) !important;
     --text-200: var(--ct-side-text-hsl) !important;
