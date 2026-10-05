@@ -50,6 +50,10 @@ button {
     background: #20201f;
 }
 
+.pair.three {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
 .pair button {
     padding: 6px 0;
     border: 0;
@@ -63,11 +67,41 @@ button {
     color: #e8e6e1;
 }
 
-#choices {
+/* The background buttons: presets, then saved images. */
+.grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     margin-bottom: 12px;
+}
+
+.cell {
+    position: relative;
+}
+
+.cell .choice {
+    width: 100%;
+}
+
+/* The small cross on a saved image. */
+.remove {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #151515;
+    color: #e8e6e1;
+    font-size: 13px;
+    line-height: 18px;
+}
+
+.remove:hover {
+    background: #d97757;
+    color: #151515;
 }
 
 .choice {
@@ -80,7 +114,8 @@ button {
 }
 
 .choice[aria-pressed="true"],
-.frame-choice[aria-pressed="true"] {
+.frame-choice[aria-pressed="true"],
+.swatch[aria-pressed="true"] {
     border-color: #d97757;
 }
 
@@ -94,13 +129,13 @@ button {
 
 .frames {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 6px;
 }
 
 /* Paper-coloured, so the black ink of the frames shows up. */
 .frame-choice {
-    height: 44px;
+    height: 40px;
     padding: 4px;
     border: 2px solid transparent;
     border-radius: 8px;
@@ -161,6 +196,61 @@ input[type="checkbox"] {
     border-radius: 8px;
     background: #4a2a1c;
     color: #ffd9c7;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.swatches {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 4px;
+}
+
+.swatch {
+    height: 26px;
+    padding: 0;
+    border: 2px solid #3a3a38;
+    border-radius: 6px;
+    background: #20201f;
+    color: #a5a49a;
+    font-size: 9px;
+}
+
+.line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+}
+
+input[type="color"] {
+    width: 44px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+
+select,
+input[type="text"] {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #3a3a38;
+    border-radius: 8px;
+    background: #20201f;
+    color: #e8e6e1;
+    font: inherit;
+}
+
+input[type="text"] {
+    margin-top: 8px;
+}
+
+.note {
+    margin: 14px 0 0;
+    color: #a5a49a;
     font-size: 12px;
     line-height: 1.4;
 }

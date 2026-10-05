@@ -1,9 +1,9 @@
 {
     "manifest_version": 3,
     "name": "Claude Themes",
-    "version": "0.2.0",
-    "description": "Backgrounds and ink frames for claude.ai: presets or your own image, with opacity control. Unofficial, not made by Anthropic.",
-    "permissions": ["storage"],
+    "version": "0.3.0",
+    "description": "Backgrounds, frames, text colour and fonts for claude.ai: presets or your own images. Unofficial, not made by Anthropic.",
+    "permissions": ["storage", "unlimitedStorage"],
     "content_scripts": [
         {
             "matches": ["https://claude.ai/*"],

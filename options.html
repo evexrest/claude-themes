@@ -11,7 +11,11 @@
         <h1>Claude Themes</h1>
 
         <h2>Background image</h2>
-        <p>Choose an image, then drag and zoom until the box shows the part you want.</p>
+        <p>
+            Choose an image, then drag and zoom until the box shows the part you want.
+            Every image you save is kept, so you can switch between them from the
+            toolbar icon without uploading again.
+        </p>
 
         <label class="button" for="file">Choose an image</label>
         <input type="file" id="file" accept="image/*" hidden>
@@ -24,8 +28,7 @@
             <input type="range" id="zoom" min="1" max="4" step="0.01" value="1">
 
             <div class="row">
-                <button id="save">Save wallpaper</button>
-                <button id="remove" class="quiet">Remove wallpaper</button>
+                <button id="save">Save to my images</button>
             </div>
         </div>
 

@@ -72,6 +72,7 @@ html[data-frame-sidebar] .dframe-root[data-variant="web"]:not([data-collapsed]) 
     border-image-repeat: var(--frame-sidebar-repeat) !important;
     border-radius: var(--frame-sidebar-radius) !important;
     box-shadow: var(--frame-sidebar-shadow) !important;
+    background-clip: var(--frame-sidebar-clip) !important;
 }
 
 html[data-frame-main] .dframe-pane-primary {
@@ -81,6 +82,7 @@ html[data-frame-main] .dframe-pane-primary {
     border-image-repeat: var(--frame-main-repeat) !important;
     border-radius: var(--frame-main-radius) !important;
     box-shadow: var(--frame-main-shadow) !important;
+    background-clip: var(--frame-main-clip) !important;
 }
 
 html[data-frame-all] .dframe-root {
@@ -90,5 +92,41 @@ html[data-frame-all] .dframe-root {
     border-image-repeat: var(--frame-all-repeat) !important;
     border-radius: var(--frame-all-radius) !important;
     box-shadow: var(--frame-all-shadow) !important;
+    background-clip: var(--frame-all-clip) !important;
     overflow: clip;
+}
+
+/* Text colour. claude.ai takes its text colours from a few shared values. These
+   rules replace them inside the sidebar and the chat window only, so menus and
+   pop-ups, which have solid backgrounds of their own, keep their normal colours.
+   Code and links keep theirs too. Checked on claude.ai on 2026-10-05. */
+html[data-ct-text] .dframe-sidebar,
+html[data-ct-text] .dframe-pane-primary {
+    color: var(--ct-text) !important;
+}
+
+html[data-ct-text] .dframe-sidebar,
+html[data-ct-text] .dframe-sidebar .cds-root,
+html[data-ct-text] .dframe-pane-primary,
+html[data-ct-text] .dframe-pane-primary .cds-root {
+    --cds-text-primary: var(--ct-text) !important;
+    --cds-text-secondary: color-mix(in srgb, var(--ct-text) 80%, transparent) !important;
+    --cds-text-muted: color-mix(in srgb, var(--ct-text) 60%, transparent) !important;
+    --text-000: var(--ct-text-hsl) !important;
+    --text-100: var(--ct-text-hsl) !important;
+    --text-200: var(--ct-text-hsl) !important;
+    --text-300: var(--ct-text-hsl) !important;
+    --text-400: var(--ct-text-hsl) !important;
+    --text-500: var(--ct-text-hsl) !important;
+}
+
+/* Font, for Claude's replies, your messages and the message box. */
+html[data-ct-font] {
+    --font-claude-response: var(--ct-font) !important;
+    --font-user-message: var(--ct-font) !important;
+}
+
+html[data-ct-font] [data-testid="user-message"],
+html[data-ct-font] [data-cds="ChatComposer"] .ProseMirror {
+    font-family: var(--ct-font) !important;
 }

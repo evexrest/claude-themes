@@ -96,6 +96,15 @@ frame.addEventListener("pointerup", () => {
     frame.classList.remove("dragging");
 });
 
+// A small copy of a saved image, for the buttons in the popup.
+function thumbnail(picture) {
+    const small = document.createElement("canvas");
+    small.width = 240;
+    small.height = Math.round(small.width * picture.height / picture.width);
+    small.getContext("2d").drawImage(picture, 0, 0, small.width, small.height);
+    return small.toDataURL("image/jpeg", 0.7);
+}
+
 document.getElementById("save").addEventListener("click", async () => {
     // The part of the original image that is inside the frame.
     const cropX = -x / scale;
@@ -111,29 +120,21 @@ document.getElementById("save").addEventListener("click", async () => {
         0, 0, output.width, output.height
     );
 
+    // Each saved image gets its own id, so earlier ones are kept.
+    const id = Date.now().toString(36);
+    const saved = await chrome.storage.local.get({ images: [] });
+
     try {
         await chrome.storage.local.set({
-            image: output.toDataURL("image/jpeg", 0.85),
+            [imageKey(id)]: output.toDataURL("image/jpeg", 0.85),
+            images: [...saved.images, { id: id, thumb: thumbnail(output) }],
             preset: null,
+            imageId: id,
             enabled: true
         });
-        status.textContent = "Saved. Open or reload claude.ai to see it.";
+        status.textContent = "Saved to your images and set as the background. " +
+            "You now have " + (saved.images.length + 1) + ". Switch between them from the toolbar icon.";
     } catch (error) {
         status.textContent = "Could not save: " + error.message;
     }
 });
-
-document.getElementById("remove").addEventListener("click", async () => {
-    await chrome.storage.local.set({ image: null, preset: defaults.preset });
-    editor.hidden = true;
-    status.textContent = "Your image was removed. The background is back to a preset.";
-});
-
-async function showSaved() {
-    const saved = await chrome.storage.local.get({ image: null });
-    if (saved.image) {
-        loadImage(saved.image);
-    }
-}
-
-showSaved();

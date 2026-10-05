@@ -1,10 +1,18 @@
-// `defaults`, `presets`, `frames` and `frameValues` come from settings.js.
+// `defaults`, `presets`, `frames`, `frameValues`, `fonts`, `imageKey` and
+// `filesVersion` come from settings.js.
 
 const choices = document.getElementById("choices");
+const images = document.getElementById("images");
 const enabled = document.getElementById("enabled");
 const opacity = document.getElementById("opacity");
 const panel = document.getElementById("panel");
 const frameWidth = document.getElementById("frame-width");
+const textColor = document.getElementById("text-color");
+const font = document.getElementById("font");
+const fontCustom = document.getElementById("font-custom");
+
+// A few text colours that are easy to read on most backgrounds.
+const swatches = ["#ffffff", "#f5f0e6", "#cfcfcf", "#ffe9a8", "#0b0b0b", "#2b2b2b", "#10254a", "#3d1010"];
 
 function save(change) {
     chrome.storage.local.set(change);
@@ -22,8 +30,9 @@ function showPercent(slider, id) {
 }
 
 function showTab(name) {
-    document.getElementById("background").hidden = name !== "background";
-    document.getElementById("borders").hidden = name !== "borders";
+    for (const other of ["background", "borders", "text"]) {
+        document.getElementById(other).hidden = other !== name;
+    }
     select(document.getElementById("tab-" + name));
 }
 
@@ -33,7 +42,9 @@ function showLayout(layout) {
     select(document.getElementById("layout-" + layout));
 }
 
-function addChoice(name, background, selected, change) {
+// One background button: a preset or a saved image. Only one of them is selected
+// at a time, across both grids.
+function backgroundChoice(name, background, selected, change) {
     const button = document.createElement("button");
     button.className = "choice";
     button.style.backgroundImage = background;
@@ -44,10 +55,53 @@ function addChoice(name, background, selected, change) {
     button.appendChild(label);
 
     button.addEventListener("click", () => {
-        select(button);
+        for (const other of document.querySelectorAll(".choice")) {
+            other.setAttribute("aria-pressed", other === button);
+        }
         save(change);
     });
-    choices.appendChild(button);
+    return button;
+}
+
+// A saved image: its button, plus a small cross to remove it.
+function addImage(image, selected) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+
+    const button = backgroundChoice("", `url("${image.thumb}")`, selected, { preset: null, imageId: image.id });
+    button.title = "Use this image";
+
+    const remove = document.createElement("button");
+    remove.className = "remove";
+    remove.textContent = "×";
+    remove.title = "Remove this image";
+    remove.addEventListener("click", () => {
+        removeImage(image.id, cell);
+    });
+
+    cell.append(button, remove);
+    images.appendChild(cell);
+    document.getElementById("images-title").hidden = false;
+}
+
+async function removeImage(id, cell) {
+    if (!confirm("Remove this image from your saved images?")) {
+        return;
+    }
+    const saved = await chrome.storage.local.get(defaults);
+    const change = { images: saved.images.filter((image) => image.id !== id) };
+
+    // If it was the background, go back to the first preset.
+    if (!saved.preset && saved.imageId === id) {
+        change.preset = defaults.preset;
+        change.imageId = null;
+        choices.firstElementChild.setAttribute("aria-pressed", true);
+    }
+    await chrome.storage.local.set(change);
+    await chrome.storage.local.remove(imageKey(id));
+
+    cell.remove();
+    document.getElementById("images-title").hidden = change.images.length === 0;
 }
 
 // One small button showing a frame. `key` is the setting it changes,
@@ -91,6 +145,30 @@ function addFrameRow(rowId, key, settings) {
     }
 }
 
+// One text colour button. A null colour means Claude's own.
+function addSwatch(colour, selected) {
+    const button = document.createElement("button");
+    button.className = "swatch";
+    button.setAttribute("aria-pressed", selected);
+
+    if (colour) {
+        button.style.backgroundColor = colour;
+        button.title = colour;
+    } else {
+        button.textContent = "Auto";
+        button.title = "Claude's own colour";
+    }
+
+    button.addEventListener("click", () => {
+        select(button);
+        save({ textColor: colour });
+        if (colour) {
+            textColor.value = colour;
+        }
+    });
+    document.getElementById("swatches").appendChild(button);
+}
+
 async function start() {
     const settings = await chrome.storage.local.get(defaults);
 
@@ -100,16 +178,31 @@ async function start() {
     document.getElementById("stale").hidden = chrome.runtime.getManifest().version === filesVersion;
 
     for (const preset of presets) {
-        addChoice(preset.name, preset.css, settings.preset === preset.id, { preset: preset.id });
+        choices.appendChild(
+            backgroundChoice(preset.name, preset.css, settings.preset === preset.id, { preset: preset.id })
+        );
     }
-    if (settings.image) {
-        addChoice("Your image", `url("${settings.image}")`, !settings.preset, { preset: null });
+    for (const image of settings.images) {
+        addImage(image, !settings.preset && settings.imageId === image.id);
     }
 
     addFrameRow("frames-sidebar", "frameSidebar", settings);
     addFrameRow("frames-main", "frameMain", settings);
     addFrameRow("frames-all", "frameAll", settings);
     showLayout(settings.frameLayout);
+
+    addSwatch(null, settings.textColor === null);
+    for (const colour of swatches) {
+        addSwatch(colour, settings.textColor === colour);
+    }
+    textColor.value = settings.textColor || "#ffffff";
+
+    for (const item of fonts) {
+        font.add(new Option(item.name, item.id));
+    }
+    font.value = settings.font;
+    fontCustom.value = settings.fontCustom;
+    fontCustom.hidden = settings.font !== "custom";
 
     enabled.checked = settings.enabled;
     opacity.value = Math.round(settings.opacity * 100);
@@ -138,7 +231,24 @@ async function start() {
         save({ frameWidth: Number(frameWidth.value) });
     });
 
-    for (const name of ["background", "borders"]) {
+    // The colour picker: any colour, so none of the ready-made buttons is selected.
+    textColor.addEventListener("input", () => {
+        for (const swatch of document.querySelectorAll(".swatch")) {
+            swatch.setAttribute("aria-pressed", false);
+        }
+        save({ textColor: textColor.value });
+    });
+
+    font.addEventListener("change", () => {
+        fontCustom.hidden = font.value !== "custom";
+        save({ font: font.value });
+    });
+
+    fontCustom.addEventListener("input", () => {
+        save({ fontCustom: fontCustom.value });
+    });
+
+    for (const name of ["background", "borders", "text"]) {
         document.getElementById("tab-" + name).addEventListener("click", () => {
             showTab(name);
         });

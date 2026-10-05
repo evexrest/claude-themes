@@ -20,14 +20,18 @@
         refresh claude.ai.
     </p>
 
-    <nav class="pair">
+    <nav class="pair three">
         <button id="tab-background" aria-pressed="true">Background</button>
         <button id="tab-borders" aria-pressed="false">Borders</button>
+        <button id="tab-text" aria-pressed="false">Text</button>
     </nav>
 
     <section id="background">
-        <div id="choices"></div>
-        <button id="choose" class="wide">Upload your own image</button>
+        <div class="grid" id="choices"></div>
+
+        <h2 id="images-title" hidden>Your images</h2>
+        <div class="grid" id="images"></div>
+        <button id="choose" class="wide">Add your own image</button>
 
         <label class="slider" for="opacity">
             Image opacity
@@ -67,6 +71,24 @@
         <input type="range" id="frame-width" min="4" max="40">
 
         <button id="choose-frame" class="wide">Upload your own frame</button>
+    </section>
+
+    <section id="text" hidden>
+        <h2>Colour</h2>
+        <div class="swatches" id="swatches"></div>
+        <label class="line" for="text-color">
+            Any other colour
+            <input type="color" id="text-color">
+        </label>
+
+        <h2>Font</h2>
+        <select id="font"></select>
+        <input type="text" id="font-custom" placeholder="Type the font's name, e.g. Futura" hidden>
+
+        <p class="note">
+            The colour changes the sidebar and the chat. The font changes Claude's replies,
+            your messages and the message box. Code and links keep their own look.
+        </p>
     </section>
 
     <script src="settings.js"></script>

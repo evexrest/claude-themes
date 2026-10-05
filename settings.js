@@ -2,12 +2,16 @@
 
 // Keep this the same as "version" in manifest.json. The popup compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.2.0";
+const filesVersion = "0.3.0";
 
 const defaults = {
     enabled: true,
-    image: null,
+    // The background is a preset, or one of the saved images when `preset` is null.
     preset: "dusk",
+    imageId: null,
+    // The saved images, as a list of { id, thumb }. `thumb` is a small copy for the
+    // popup. Each full-size picture is stored separately, under imageKey(id).
+    images: [],
     opacity: 0.5,
     panelOpacity: 0.6,
     frameLayout: "separate",
@@ -16,8 +20,62 @@ const defaults = {
     frameAll: "none",
     frameWidth: 14,
     frameImage: null,
-    frameSlice: null
+    frameSlice: null,
+    // Chat text. A null colour and the "default" font leave Claude's own alone.
+    textColor: null,
+    font: "default",
+    fontCustom: ""
 };
+
+// Where one saved image's full-size picture is kept.
+function imageKey(id) {
+    return "image-" + id;
+}
+
+// Fonts that are already on most computers, so nothing has to be downloaded.
+const fonts = [
+    { id: "default", name: "Claude's own", family: null },
+    { id: "sans", name: "Clean sans", family: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' },
+    { id: "serif", name: "Book serif", family: 'Georgia, "Times New Roman", serif' },
+    { id: "rounded", name: "Rounded", family: 'ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", system-ui, sans-serif' },
+    { id: "typewriter", name: "Typewriter", family: '"American Typewriter", "Courier New", Courier, monospace' },
+    { id: "mono", name: "Code", family: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace' },
+    { id: "hand", name: "Handwriting", family: '"Bradley Hand", "Segoe Print", "Comic Sans MS", cursive' },
+    { id: "custom", name: "Another font on this computer", family: null }
+];
+
+// The CSS font list for a font choice, or null to leave Claude's own font alone.
+function fontFamily(id, custom) {
+    if (id === "custom") {
+        // Keep only the name itself, so nothing typed here can break the page's CSS.
+        const name = custom.replace(/["\\;{}<>]/g, "").trim();
+        return name ? `"${name}", system-ui, sans-serif` : null;
+    }
+    const font = fonts.find((item) => item.id === id);
+    return font ? font.family : null;
+}
+
+// "#336699" as the three numbers claude.ai's older colour values use: "210 50% 40%".
+function hslParts(hex) {
+    const red = parseInt(hex.slice(1, 3), 16) / 255;
+    const green = parseInt(hex.slice(3, 5), 16) / 255;
+    const blue = parseInt(hex.slice(5, 7), 16) / 255;
+    const most = Math.max(red, green, blue);
+    const least = Math.min(red, green, blue);
+    const light = (most + least) / 2;
+    const spread = most - least;
+    let hue = 0;
+    let strength = 0;
+
+    if (spread > 0) {
+        strength = spread / (1 - Math.abs(2 * light - 1));
+        if (most === red) hue = ((green - blue) / spread) % 6;
+        else if (most === green) hue = (blue - red) / spread + 2;
+        else hue = (red - green) / spread + 4;
+    }
+    hue = Math.round(hue * 60 + 360) % 360;
+    return `${hue} ${Math.round(strength * 100)}% ${Math.round(light * 100)}%`;
+}
 
 // Presets are CSS gradients, so they need no image files.
 const presets = [
@@ -113,8 +171,26 @@ function keyPicture() {
         </g>` + turns.join(""));
 }
 
+// A raised slab, for a pop-out look: four sloping sides lit from the top left, with
+// a soft shadow underneath. The outer part of the band is left empty so the shadow
+// has room to fall on the background.
+function raisedPicture(top, left, right, bottom) {
+    return inkPicture(300,
+        `<filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter>
+        <rect x="47" y="53" width="220" height="220" fill="#000" fill-opacity="0.6" stroke="none" filter="url(#soft)"/>
+        <g stroke="none">
+            <path fill="${top}" d="M40,40 H260 L200,100 H100 Z"/>
+            <path fill="${right}" d="M260,40 V260 L200,200 V100 Z"/>
+            <path fill="${bottom}" d="M260,260 H40 L100,200 H200 Z"/>
+            <path fill="${left}" d="M40,260 V40 L100,100 V200 Z"/>
+        </g>
+        <rect x="41.5" y="41.5" width="217" height="217" stroke-width="3"/>
+        <rect x="98" y="98" width="104" height="104" stroke-width="3"/>`);
+}
+
 // A frame is either a picture cut into edge pieces (source, slice, repeat)
 // or a plain coloured border (color, radius). `scale` makes thin styles thin.
+// `clip: "padding-box"` keeps a panel's own colour out from under the frame.
 const frames = [
     {
         id: "fineliner",
@@ -193,6 +269,30 @@ const frames = [
         radius: "0px",
         shadow: "none",
         scale: 1.3
+    },
+    {
+        id: "raised",
+        name: "Pop-out",
+        source: raisedPicture("#8a8a8a", "#636363", "#262626", "#141414"),
+        slice: "100",
+        repeat: "stretch",
+        color: "transparent",
+        radius: "0px",
+        shadow: "none",
+        clip: "padding-box",
+        scale: 1.6
+    },
+    {
+        id: "raised-pale",
+        name: "Pop-out, pale",
+        source: raisedPicture("#ffffff", "#e9e5da", "#a39f94", "#7d7a71"),
+        slice: "100",
+        repeat: "stretch",
+        color: "transparent",
+        radius: "0px",
+        shadow: "none",
+        clip: "padding-box",
+        scale: 1.6
     }
 ];
 
@@ -223,6 +323,7 @@ function frameValues(id, width, customUrl, customSlice) {
         slice: frame.slice,
         repeat: frame.repeat,
         radius: frame.radius,
-        shadow: frame.shadow
+        shadow: frame.shadow,
+        clip: frame.clip || "border-box"
     };
 }
