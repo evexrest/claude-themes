@@ -283,3 +283,19 @@ html[data-ct-side-font] .dframe-sidebar .cds-root {
     --font-sans: var(--ct-side-font) !important;
     --cds-font-sans: var(--ct-side-font) !important;
 }
+
+
+/* The editor, laid over the page: one of the extension's own pages in a frame that
+   covers the window, above everything else. Its middle is see-through. A frame
+   only stays see-through while it and the page inside it agree on light or dark,
+   so it is pinned to light whichever mode claude.ai is in. */
+#claude-themes-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    width: 100vw;
+    height: 100vh;
+    border: 0;
+    background: transparent;
+    color-scheme: light;
+}

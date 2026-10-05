@@ -97,6 +97,20 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   await chrome.storage.local.set({ preset: "dusk" }); await wait(60);
   await chrome.storage.local.set({ sidebarMode: "own", enabled: false }); await wait(60);
   results.disabled = { ...state(), side: R.getAttribute("data-sidebar-image"), frame: R.getAttribute("data-frame-all"), sticker: st(0).shown };
+  // ----- the editor, laid over the page -----
+  const frame = () => document.getElementById("claude-themes-editor");
+  const icon = (type) => { let answered; messageListeners.forEach((l) => l({ type }, {}, (a) => { answered = a; })); return answered; };
+  const noEditorYet = !frame(); const firstAnswer = icon("toggle-editor"); await wait(60);
+  const fs = frame() ? getComputedStyle(frame()) : null;
+  results.editorOpened = { noEditorYet, answered: firstAnswer, src: frame().getAttribute("src"), parent: frame().parentElement.tagName, position: fs.position, onTop: fs.zIndex, covers: Math.round(frame().getBoundingClientRect().width) === innerWidth && Math.round(frame().getBoundingClientRect().height) === innerHeight, border: fs.borderTopWidth, background: fs.backgroundColor, colorScheme: fs.colorScheme, pageUnmoved: size() };
+  icon("open-editor"); await wait(30);
+  results.openTwiceIsOneEditor = document.querySelectorAll("#claude-themes-editor").length;
+  window.dispatchEvent(new MessageEvent("message", { source: window, data: { claudeThemes: "close" } })); await wait(30);
+  const ignoredStranger = !!frame();
+  window.dispatchEvent(new MessageEvent("message", { source: frame().contentWindow, data: { claudeThemes: "close" } })); await wait(30);
+  results.closedByTheEditorOnly = { strangerIgnored: ignoredStranger, closed: !frame() };
+  icon("toggle-editor"); await wait(30); const reopened = !!frame(); icon("toggle-editor"); await wait(30);
+  results.iconTogglesIt = { reopened, closedAgain: !frame() };
   document.getElementById("out").textContent = "RESULT" + JSON.stringify(results, null, 1) + "END"; 
 })().catch((e) => { document.getElementById("out").textContent = "RESULT error " + e.stack + "END"; });
 </script></body></html>

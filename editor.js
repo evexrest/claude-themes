@@ -1,7 +1,10 @@
-// The editor: one full page. In the middle is a stand-in for claude.ai (preview.html)
-// with the theme applied, on the left the pictures to choose from, on the right the
-// settings of the part that is selected. Every change is saved straight away; the
-// preview and any open claude.ai tab pick it up from storage. `defaults`, `presets`,
+// The editor. It runs in two places. Laid over the real claude.ai page
+// (editor.html?on=page, in a frame that content.js adds), its panels float over the
+// page and the page itself is what gets clicked and dropped on. In a tab of its
+// own, the middle shows a stand-in for claude.ai (preview.html) with the theme
+// applied. Either way: the pictures to choose from, the settings of the part that
+// is selected, and every change saved straight away, which the page picks up from
+// storage. `defaults`, `presets`,
 // `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey` and `filesVersion` come
 // from settings.js.
 
@@ -27,6 +30,8 @@ const sideKeys = { left: "stickerLeft", right: "stickerRight" };
 // The preview is drawn at the size of a real browser window, then shrunk to fit.
 // The address can ask for another size: editor.html?w=1512&h=860.
 const asked = new URLSearchParams(location.search);
+// Whether this editor lies over the real page.
+const onPage = asked.get("on") === "page";
 const screenWidth = Number(asked.get("w")) || Math.min(2200, Math.max(1200, screen.availWidth));
 const screenHeight = Number(asked.get("h")) || Math.min(1400, Math.max(700, screen.availHeight - 90));
 
@@ -35,6 +40,8 @@ let part = "main";
 // The side a side picture goes to when neither side is selected.
 let lastSide = "right";
 let scale = 1;
+// Over the real page: where its parts are, as content.js last measured them.
+let pageBoxes = null;
 // What is being dragged: { kind, id } for a picture from the library, or
 // { kind: "files" } for files from the computer.
 let dragged = null;
@@ -615,7 +622,7 @@ function watchDrops() {
     document.addEventListener("drop", (event) => {
         event.preventDefault();
         if (dragged) {
-            say("Drop it on the screen: on the main page, the sidebar, or beside the chat.");
+            say("Drop it on the main page, the sidebar, or beside the chat.");
         }
         stopDragging();
     });
@@ -684,52 +691,81 @@ function inPreview(selector) {
     return page ? page.querySelector(selector) : null;
 }
 
-// Lay an element of the editor over a box measured inside the preview.
-function cover(element, left, top, width, height) {
-    const style = element.style;
-    style.left = left * scale + "px";
-    style.top = top * scale + "px";
-    style.width = Math.max(0, width) * scale + "px";
-    style.height = Math.max(0, height) * scale + "px";
+// Where the parts of the page are: the sidebar, the chat window (`pane`), the
+// column the messages sit in, and each side's picture where one is showing. Each
+// is { left, top, width, height } or null. Over the real page, content.js measures
+// them and sends them here; in a tab, they are measured in the preview.
+function measure() {
+    if (onPage) {
+        return pageBoxes;
+    }
+    const box = (element) => {
+        if (!element || element.style.display === "none") {
+            return null;
+        }
+        const found = element.getBoundingClientRect();
+        return { left: found.left, top: found.top, width: found.width, height: found.height };
+    };
+    return {
+        sidebar: box(inPreview(".dframe-sidebar")),
+        pane: box(inPreview(".dframe-pane-primary")),
+        column: box(inPreview('[data-cds="ChatComposer"]')),
+        left: box(inPreview('.claude-sticker[data-side="left"]')),
+        right: box(inPreview('.claude-sticker[data-side="right"]'))
+    };
 }
 
-// Fit the preview into the space it has, and lay the selectable parts over it.
-// The side pictures move when a setting changes, so this runs on a timer too.
-function layout() {
-    scale = clamp(Math.min((stage.clientWidth - 48) / screenWidth, (stage.clientHeight - 96) / screenHeight), 0.2, 1);
-    preview.style.width = screenWidth + "px";
-    preview.style.height = screenHeight + "px";
-    preview.style.transform = `scale(${scale})`;
-    screenBox.style.width = screenWidth * scale + "px";
-    screenBox.style.height = screenHeight * scale + "px";
-
-    const pane = inPreview(".dframe-pane-primary");
-    const column = inPreview('[data-cds="ChatComposer"]');
-    const sidebar = inPreview(".dframe-sidebar");
-    if (!pane || !column || !sidebar) {
-        return;
+// Lay an element of the editor over one of those boxes, or hide it when there is none.
+function cover(element, box) {
+    element.hidden = !box || box.width <= 0 || box.height <= 0;
+    if (!element.hidden) {
+        const style = element.style;
+        style.left = box.left * scale + "px";
+        style.top = box.top * scale + "px";
+        style.width = box.width * scale + "px";
+        style.height = box.height * scale + "px";
     }
-    const paneBox = pane.getBoundingClientRect();
-    const columnBox = column.getBoundingClientRect();
-    const sidebarBox = sidebar.getBoundingClientRect();
+}
 
-    cover(byId("zone-sidebar"), sidebarBox.left, sidebarBox.top, sidebarBox.width, sidebarBox.height);
-    cover(byId("zone-main"), paneBox.left, paneBox.top, paneBox.width, paneBox.height);
+// Lay the selectable parts over the page. In a tab, the preview is first fitted
+// into the space it has. The side pictures move when a setting changes, so this
+// runs on a timer too.
+function layout() {
+    if (!onPage) {
+        scale = clamp(Math.min((stage.clientWidth - 48) / screenWidth, (stage.clientHeight - 96) / screenHeight), 0.2, 1);
+        preview.style.width = screenWidth + "px";
+        preview.style.height = screenHeight + "px";
+        preview.style.transform = `scale(${scale})`;
+        screenBox.style.width = screenWidth * scale + "px";
+        screenBox.style.height = screenHeight * scale + "px";
+    }
+
+    const boxes = measure() || {};
+    const pane = boxes.pane;
+    const column = boxes.column;
+
+    // Over the real page, the bar and the library sit over the middle of the
+    // chat, clear of the sidebar and of the space on either side.
+    if (onPage && column) {
+        document.body.style.setProperty("--middle", column.left + column.width / 2 + "px");
+        document.body.style.setProperty("--column", column.width + "px");
+    }
+
+    cover(byId("zone-sidebar"), boxes.sidebar);
+    cover(byId("zone-main"), pane);
     // The empty space on each side of the chat, below the title bar.
-    cover(byId("zone-left"), paneBox.left, paneBox.top + 48, columnBox.left - paneBox.left, paneBox.height - 48);
-    cover(byId("zone-right"), columnBox.right, paneBox.top + 48, paneBox.right - columnBox.right, paneBox.height - 48);
+    const beside = pane && column;
+    cover(byId("zone-left"), beside && {
+        left: pane.left, top: pane.top + 48, width: column.left - pane.left, height: pane.height - 48
+    });
+    cover(byId("zone-right"), beside && {
+        left: column.left + column.width, top: pane.top + 48,
+        width: pane.left + pane.width - column.left - column.width, height: pane.height - 48
+    });
 
     for (const side of Object.keys(sideKeys)) {
-        const picture = inPreview(`.claude-sticker[data-side="${side}"]`);
-        const grip = byId("grip-" + side);
-        const shown = part === side && state.enabled && state[sideKeys[side]] !== null &&
-            picture !== null && picture.style.display !== "none";
-
-        grip.hidden = !shown;
-        if (shown) {
-            const box = picture.getBoundingClientRect();
-            cover(grip, box.left, box.top, box.width, box.height);
-        }
+        const shown = part === side && state.enabled && state[sideKeys[side]] !== null;
+        cover(byId("grip-" + side), shown && boxes[side]);
     }
 }
 
@@ -740,15 +776,13 @@ function watchGrip(grip) {
     let start = null;
 
     grip.addEventListener("pointerdown", (event) => {
-        const picture = inPreview(`.claude-sticker[data-side="${side}"]`);
-        const pane = inPreview(".dframe-pane-primary");
-        const column = inPreview('[data-cds="ChatComposer"]');
-        if (!picture || !pane || !column) {
+        const boxes = measure() || {};
+        const box = boxes[side];
+        const pane = boxes.pane;
+        const column = boxes.column;
+        if (!box || !pane || !column) {
             return;
         }
-        const box = picture.getBoundingClientRect();
-        const paneBox = pane.getBoundingClientRect();
-        const columnBox = column.getBoundingClientRect();
 
         // These match placeStickers in content.js: the picture stays below the
         // 56px title bar and 12px clear of the edges.
@@ -758,9 +792,9 @@ function watchGrip(grip) {
             top: box.top,
             width: box.width,
             resizing: event.target.classList.contains("handle"),
-            highest: paneBox.top + 56,
-            spare: paneBox.height - 56 - 12 - box.height,
-            room: (side === "left" ? columnBox.left - paneBox.left : paneBox.right - columnBox.right) - 24
+            highest: pane.top + 56,
+            spare: pane.height - 56 - 12 - box.height,
+            room: (side === "left" ? column.left - pane.left : pane.left + pane.width - column.left - column.width) - 24
         };
         // Keeps the drag going when the pointer leaves the picture. A pointer
         // that cannot be captured still drags while it is over the picture.
@@ -795,6 +829,11 @@ function watchGrip(grip) {
             start = null;
         });
     }
+}
+
+// Over the real page: close the editor. content.js takes it away.
+function finish() {
+    window.parent.postMessage({ claudeThemes: "close" }, "*");
 }
 
 // The preview's own light or dark mode. It changes nothing on claude.ai.
@@ -836,6 +875,9 @@ function sync() {
     for (const side of Object.keys(sideKeys)) {
         byId("zone-" + side).classList.toggle("bare", state[sideKeys[side]] === null);
     }
+    // Over the real page the settings float; they move to the left when the
+    // right-hand side is selected, so they never cover the part being changed.
+    document.body.classList.toggle("dock-left", part === "right");
     byId("panel-main").hidden = part !== "main";
     byId("panel-sidebar").hidden = part !== "sidebar";
     byId("panel-side").hidden = !(part in sideKeys);
@@ -994,18 +1036,57 @@ async function start() {
         sync();
     });
 
-    // The toolbar icon was clicked while this editor was already open: come to the front.
-    chrome.runtime.onMessage.addListener((message, sender, answer) => {
-        if (message && message.type === "show-editor") {
-            chrome.tabs.getCurrent((tab) => {
-                if (tab) {
-                    chrome.tabs.update(tab.id, { active: true });
-                    chrome.windows.update(tab.windowId, { focused: true });
-                }
-            });
-            answer(true);
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && onPage) {
+            finish();
         }
     });
+
+    if (onPage) {
+        startOnPage();
+    } else {
+        startInTab();
+    }
+
+    window.addEventListener("resize", layout);
+    setInterval(layout, 150);
+
+    sync();
+    layout();
+}
+
+// Laid over the real page: there is no preview, the panels float, and the page
+// says where its parts are.
+function startOnPage() {
+    document.body.classList.add("on-page");
+    preview.remove();
+    for (const id of ["mode-light", "open-claude"]) {
+        byId(id).closest(".pair, a").hidden = true;
+    }
+    byId("done").hidden = false;
+    byId("bare").hidden = false;
+    byId("add-how").textContent = "Drag pictures or GIFs from your computer onto the page, or";
+
+    byId("done").addEventListener("click", finish);
+    byId("bare").addEventListener("click", () => {
+        const hidden = document.body.classList.toggle("bare");
+        byId("bare").textContent = hidden ? "Show panels" : "Hide panels";
+    });
+
+    window.addEventListener("message", (event) => {
+        if (event.source === window.parent && event.data && event.data.claudeThemes === "layout") {
+            pageBoxes = event.data.boxes;
+            layout();
+        }
+    });
+    // Tell the page this editor is ready for its measurements.
+    window.parent.postMessage({ claudeThemes: "ready" }, "*");
+}
+
+// In a tab of its own, with the preview in the middle.
+function startInTab() {
+    // The toolbar icon could not open the editor on the Claude tab itself.
+    byId("refresh").hidden = asked.get("why") !== "refresh";
 
     // The preview starts in the mode the computer is in.
     let dark = matchMedia("(prefers-color-scheme: dark)").matches;
@@ -1021,13 +1102,9 @@ async function start() {
         showMode(dark);
         layout();
     });
+    // Only fetched here: over the real page there is no preview.
+    preview.src = preview.dataset.src;
     showMode(dark);
-
-    window.addEventListener("resize", layout);
-    setInterval(layout, 150);
-
-    sync();
-    layout();
 }
 
 start();

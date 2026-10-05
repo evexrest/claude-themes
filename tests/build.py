@@ -21,14 +21,17 @@ def wrap(page, head, tail=""):
 # The editor shows preview.html in a frame. The test copy of the editor shows the
 # test copy of the preview, which borrows the editor's stand-in for Chrome.
 def editor(tail=""):
-    return wrap("editor.html", "editor.head.html", tail).replace('src="preview.html"', 'src="tests/preview-test.html"', 1)
+    return wrap("editor.html", "editor.head.html", tail).replace('data-src="preview.html"', 'data-src="tests/preview-test.html"', 1)
 
 
 editor_tail = (fragments / "editor.tail.html").read_text()
+editor_page_tail = (fragments / "editor-page.tail.html").read_text()
 options_tail = (fragments / "options.tail.html").read_text()
 
 (tests / "preview-test.html").write_text(wrap("preview.html", "preview.head.html"))
 (tests / "editor-test.html").write_text(editor())
 (tests / "editor-logic.html").write_text(editor(editor_tail))
+# Run this one as editor-page-logic.html?on=page: the editor as it is over the real page.
+(tests / "editor-page-logic.html").write_text(editor(editor_page_tail))
 (tests / "options-logic.html").write_text(wrap("options.html", "options.head.html", options_tail))
-print("made preview-test.html, editor-test.html, editor-logic.html, options-logic.html")
+print("made preview-test.html, editor-test.html, editor-logic.html, editor-page-logic.html, options-logic.html")

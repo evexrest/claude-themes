@@ -21,6 +21,11 @@ button {
     cursor: pointer;
 }
 
+/* Hidden means hidden, whatever else a rule below says about the element. */
+[hidden] {
+    display: none !important;
+}
+
 /* The bar along the top. */
 #bar {
     display: flex;
@@ -96,7 +101,8 @@ button {
     background: #e58a6b;
 }
 
-#stale {
+#stale,
+#refresh {
     flex: none;
     margin: 0;
     padding: 10px 16px;
@@ -110,6 +116,19 @@ button {
     display: flex;
     flex: 1;
     min-height: 0;
+}
+
+#bare {
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: #20201f;
+    color: #e8e6e1;
+}
+
+button.go {
+    border: 0;
+    font-size: inherit;
 }
 
 /* The two side panels. */
@@ -641,4 +660,170 @@ input[type="text"] {
 
 #side-choices {
     margin-bottom: 14px;
+}
+
+
+/* ---------- Laid over the real Claude page ----------
+   The page itself shows through the middle and is what gets clicked and dropped
+   on. The bar and the library float over the column of the chat, and the settings
+   float at one side. While something is being dragged they fade and let it
+   through, so that every part of the page can be dropped on. */
+:root {
+    color-scheme: light;
+}
+
+body.on-page {
+    background: transparent;
+}
+
+body.on-page #stage {
+    position: fixed;
+    inset: 0;
+    display: block;
+    background: none;
+}
+
+body.on-page #screen {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+body.on-page #hint {
+    display: none;
+}
+
+body.on-page #bar,
+body.on-page #library,
+body.on-page #inspector,
+body.on-page #stale {
+    position: fixed;
+    z-index: 2;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    background: rgba(21, 21, 21, 0.9);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    transition: opacity 0.15s;
+}
+
+body.on-page #bar {
+    top: 12px;
+    left: var(--middle, 50%);
+    width: max-content;
+    max-width: calc(100vw - 24px);
+    height: 48px;
+    padding: 0 12px;
+    transform: translateX(-50%);
+}
+
+body.on-page .space {
+    display: none;
+}
+
+body.on-page #stale {
+    top: 120px;
+    left: var(--middle, 50%);
+    width: min(520px, 100vw - 24px);
+    background: rgba(74, 42, 28, 0.94);
+    transform: translateX(-50%);
+}
+
+/* The library: a tray along the bottom, as wide as the chat's column. */
+body.on-page #library {
+    bottom: 12px;
+    left: var(--middle, 50%);
+    display: flex;
+    gap: 18px;
+    width: min(var(--column, 768px), 100vw - 24px);
+    max-height: 168px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    transform: translateX(-50%);
+}
+
+body.on-page #add {
+    box-sizing: border-box;
+    flex: none;
+    width: 172px;
+    padding: 10px;
+}
+
+body.on-page #browse-for {
+    display: none;
+}
+
+body.on-page .shelf {
+    flex: none;
+}
+
+body.on-page .shelf h2 {
+    margin: 0 0 8px;
+}
+
+body.on-page .shelf .tiles {
+    grid-template-rows: repeat(2, 48px);
+    grid-template-columns: none;
+    grid-auto-columns: 76px;
+    grid-auto-flow: column;
+}
+
+body.on-page .shelf .tiles.small {
+    grid-auto-columns: 56px;
+}
+
+/* An empty shelf shows its note where the pictures would be. */
+body.on-page .shelf .tiles:empty {
+    display: none;
+}
+
+body.on-page .shelf .tile {
+    height: 48px;
+}
+
+body.on-page .empty {
+    width: 190px;
+}
+
+body.on-page #library-note {
+    display: none;
+}
+
+/* The settings: at the right, or at the left while the right-hand side is selected. */
+body.on-page #inspector {
+    top: 72px;
+    right: 12px;
+    width: 312px;
+    max-height: calc(100vh - 84px);
+}
+
+body.on-page.dock-left #inspector {
+    right: auto;
+    left: 12px;
+}
+
+body.on-page #toast {
+    position: fixed;
+    top: 72px;
+    bottom: auto;
+    left: var(--middle, 50%);
+    z-index: 3;
+    margin: 0;
+    transform: translateX(-50%);
+}
+
+body.on-page.dragging #bar,
+body.on-page.dragging #library,
+body.on-page.dragging #inspector {
+    opacity: 0.12;
+    pointer-events: none;
+}
+
+/* "Hide panels": only the bar stays. */
+body.on-page.bare #library,
+body.on-page.bare #inspector {
+    display: none;
 }

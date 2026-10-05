@@ -29,6 +29,10 @@
         </label>
 
         <a class="go" id="open-claude" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a>
+
+        <!-- Only when the editor lies over the Claude page itself. -->
+        <button id="bare" title="Hide or show the panels, to see the whole page" hidden>Hide panels</button>
+        <button class="go" id="done" title="Close the editor (Esc)" hidden>Done</button>
     </header>
 
     <p id="stale" hidden>
@@ -37,33 +41,45 @@
         refresh claude.ai.
     </p>
 
+    <p id="refresh" hidden>
+        Your Claude tab was opened before the extension was last reloaded, so the editor
+        could not open on the page itself. Refresh that tab, then click the toolbar icon
+        there. Until then, this copy of the editor works the same way.
+    </p>
+
     <div id="work">
         <!-- Left: the pictures to choose from. -->
         <aside id="library">
             <div id="add">
                 <b>Add your own pictures</b>
-                <span>Drag pictures or GIFs from your computer onto the screen, or</span>
+                <span id="add-how">Drag pictures or GIFs from your computer onto the screen, or</span>
                 <button id="browse">Choose files</button>
                 <span id="browse-for"></span>
                 <input type="file" id="files" accept="image/*" multiple hidden>
             </div>
 
-            <h2>Backgrounds</h2>
-            <div class="tiles" id="presets" data-takes="image"></div>
+            <div class="shelf">
+                <h2>Backgrounds</h2>
+                <div class="tiles" id="presets" data-takes="image"></div>
+            </div>
 
-            <h2>Your images</h2>
-            <div class="tiles" id="images" data-takes="image"></div>
-            <p class="empty" id="images-empty" data-takes="image">
-                Nothing yet. Drop a picture on the main page or the sidebar and it is kept here.
-            </p>
+            <div class="shelf">
+                <h2>Your images</h2>
+                <div class="tiles" id="images" data-takes="image"></div>
+                <p class="empty" id="images-empty" data-takes="image">
+                    Nothing yet. Drop a picture on the main page or the sidebar and it is kept here.
+                </p>
+            </div>
 
-            <h2>Side pictures</h2>
-            <div class="tiles small" id="stickers" data-takes="sticker"></div>
-            <p class="empty" id="stickers-empty" data-takes="sticker">
-                Nothing yet. Drop a picture or GIF beside the chat and it is kept here.
-            </p>
+            <div class="shelf">
+                <h2>Side pictures</h2>
+                <div class="tiles small" id="stickers" data-takes="sticker"></div>
+                <p class="empty" id="stickers-empty" data-takes="sticker">
+                    Nothing yet. Drop a picture or GIF beside the chat and it is kept here.
+                </p>
+            </div>
 
-            <p class="note">
+            <p class="note" id="library-note">
                 Click a picture to use it on the part that is selected, or drag it onto the
                 screen. Your pictures are stored in Chrome on this computer and are not sent
                 anywhere.
@@ -73,7 +89,7 @@
         <!-- Middle: a stand-in for claude.ai, showing the theme as it is now. -->
         <section id="stage">
             <div id="screen">
-                <iframe id="preview" src="preview.html" title="Preview of claude.ai" tabindex="-1"></iframe>
+                <iframe id="preview" data-src="preview.html" title="Preview of claude.ai" tabindex="-1"></iframe>
 
                 <!-- Laid over the preview: the parts that can be selected and dropped on. -->
                 <div id="overlay">

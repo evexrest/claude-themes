@@ -1,0 +1,58 @@
+<pre id="out"></pre>
+<script>
+// The editor as it runs over the real page: editor-page-logic.html?on=page. Here it is its own parent, so the
+// page's messages are sent from this script.
+(async () => {
+  const r = {}; await wait(500);
+  const el = (id) => document.getElementById(id);
+  const at = (id) => { const e = el(id); return e.hidden ? "hidden" : [e.style.left, e.style.top, e.style.width, e.style.height].map((v) => Math.round(parseFloat(v))).join(","); };
+  const classes = () => [...document.body.classList].join(" ");
+  const heard = []; addEventListener("message", (e) => { if (e.data && e.data.claudeThemes !== "layout") heard.push(e.data.claudeThemes); });
+  const tell = async (boxes) => { postMessage({ claudeThemes: "layout", boxes }, "*"); await wait(60); };
+  const page = { sidebar: { left: 0, top: 0, width: 288, height: 900 }, pane: { left: 296, top: 0, width: 1216, height: 900 }, column: { left: 520, top: 812, width: 768, height: 88 }, left: { left: 318, top: 600, width: 180, height: 225 }, right: null };
+
+  r.start = { classes: classes(), previewGone: !el("preview"), done: !el("done").hidden, hidePanels: !el("bare").hidden, lightDarkSwitch: !el("mode-light").parentElement.hidden, openClaude: !el("open-claude").hidden,
+    zonesBeforeThePageSpeaks: ["main", "sidebar", "left", "right"].map((z) => at("zone-" + z)).join(" | "), enabled: el("enabled").checked, tiles: el("presets").children.length };
+  await tell(page);
+  r.zonesFollowThePage = { sidebar: at("zone-sidebar"), main: at("zone-main"), left: at("zone-left"), right: at("zone-right"), middle: document.body.style.getPropertyValue("--middle"), column: document.body.style.getPropertyValue("--column") };
+  const box = (id) => { const b = el(id).getBoundingClientRect(); return [b.left, b.top, b.width, b.height].map(Math.round).join(","); };
+  r.panels = { bar: box("bar"), library: box("library"), inspector: box("inspector"), window: innerWidth + "x" + innerHeight, pageBackground: getComputedStyle(document.body).backgroundColor, stageBackground: getComputedStyle(el("stage")).backgroundImage, panelBackground: getComputedStyle(el("library")).backgroundColor };
+
+  el("zone-left").click(); await wait(60);
+  r.leftSelected = { grip: at("grip-left"), panel: !el("panel-side").hidden, dock: classes() };
+  el("zone-right").click(); await wait(60);
+  r.rightSelected = { dock: classes(), inspector: box("inspector"), grip: at("grip-right") };
+  el("zone-left").click(); await wait(60);
+
+  // moving the real page's picture: the page says where it is, the editor saves the new height
+  const point = (target, type, x, y) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, clientX: x, clientY: y }));
+  const before = store.stickerPosition ?? 85;
+  point(el("grip-left"), "pointerdown", 400, 700); point(el("grip-left"), "pointermove", 400, 500); point(el("grip-left"), "pointerup", 400, 500); await wait(60);
+  r.dragOnThePage = { position: before + " to " + store.stickerPosition };
+
+  // dropping a file straight onto the page's sidebar
+  const canvas = document.createElement("canvas"); canvas.width = 400; canvas.height = 300; canvas.getContext("2d").fillRect(0, 0, 400, 300);
+  const file = new File([await new Promise((ok) => canvas.toBlob(ok, "image/png"))], "p.png", { type: "image/png" });
+  const dt = new DataTransfer(); dt.items.add(file);
+  const fire = (target, type) => target.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: dt }));
+  fire(document.body, "dragenter");
+  r.whileDragging = { classes: classes(), panelsLetItThrough: getComputedStyle(el("library")).pointerEvents + "/" + getComputedStyle(el("inspector")).pointerEvents + "/" + getComputedStyle(el("bar")).pointerEvents, zone: getComputedStyle(el("zone-sidebar")).borderTopStyle };
+  const n = store.images.length; fire(el("zone-sidebar"), "dragover"); fire(el("zone-sidebar"), "drop");
+  for (let i = 0; i < 400 && store.images.length === n; i++) await wait(25); await wait(80);
+  r.droppedOnTheSidebar = { images: store.images.length - n, sidebarMode: store.sidebarMode, usesIt: store.sidebarImageId === store.images[store.images.length - 1].id, classes: classes() };
+
+  // a page with no sidebar and no message box (a settings page, or the sidebar collapsed)
+  await tell({ sidebar: null, pane: page.pane, column: null, left: null, right: null });
+  r.pageWithoutParts = ["main", "sidebar", "left", "right"].map((z) => at("zone-" + z)).join(" | ") + " grip " + at("grip-left");
+  await tell(page);
+
+  el("bare").click();
+  r.panelsHidden = { library: getComputedStyle(el("library")).display, inspector: getComputedStyle(el("inspector")).display, bar: getComputedStyle(el("bar")).display, button: el("bare").textContent };
+  el("bare").click();
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); el("done").click(); await wait(60);
+  r.closing = heard.join(" ");
+
+  r.errors = window.errors;
+  document.getElementById("out").textContent = "RESULT" + JSON.stringify(r, null, 1) + "END";
+})().catch((e) => { document.getElementById("out").textContent = "RESULT" + JSON.stringify("error " + e.stack + " | " + JSON.stringify(window.errors)) + "END"; });
+</script>

@@ -298,6 +298,108 @@ function applyText() {
         on ? fontFamily(settings.sidebarFont, settings.sidebarFontCustom) : null);
 }
 
+// ---------- The editor, laid over the page ----------
+
+// The editor is one of the extension's own pages (editor.html), shown in a
+// see-through frame that covers the window. It cannot look into this page, so
+// this page tells it where the parts are.
+let editorFrame = null;
+let editorTimer = null;
+const editorOrigin = new URL(chrome.runtime.getURL("editor.html")).origin;
+
+// Where an element is, or null if it is not showing.
+function boxOf(element) {
+    if (!element || !element.isConnected || element.style.display === "none") {
+        return null;
+    }
+    const box = element.getBoundingClientRect();
+    return { left: box.left, top: box.top, width: box.width, height: box.height };
+}
+
+function tellEditor() {
+    if (!editorFrame || !editorFrame.contentWindow) {
+        return;
+    }
+    editorFrame.contentWindow.postMessage({
+        claudeThemes: "layout",
+        boxes: {
+            // Only an open sidebar: the theme leaves a collapsed one alone.
+            sidebar: boxOf(document.querySelector('.dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar')),
+            pane: boxOf(document.querySelector(".dframe-pane-primary")),
+            column: boxOf(document.querySelector('[data-cds="ChatComposer"]')),
+            left: boxOf(stickers.left.element),
+            right: boxOf(stickers.right.element)
+        }
+    }, editorOrigin);
+}
+
+function openEditor() {
+    if (editorFrame) {
+        return;
+    }
+    editorFrame = document.createElement("iframe");
+    editorFrame.id = "claude-themes-editor";
+    editorFrame.title = "Claude Themes editor";
+    editorFrame.src = chrome.runtime.getURL("editor.html?on=page");
+    root.appendChild(editorFrame);
+    // So that its keys (Esc, undo) work without a click first.
+    editorFrame.addEventListener("load", () => {
+        if (editorFrame) {
+            editorFrame.focus();
+        }
+    });
+    editorTimer = setInterval(tellEditor, 150);
+    window.addEventListener("resize", tellEditor);
+}
+
+function closeEditor() {
+    if (!editorFrame) {
+        return;
+    }
+    clearInterval(editorTimer);
+    window.removeEventListener("resize", tellEditor);
+    editorFrame.remove();
+    editorFrame = null;
+}
+
+function watchEditor() {
+    // The toolbar icon, by way of background.js.
+    chrome.runtime.onMessage.addListener((message, sender, answer) => {
+        if (message && message.type === "toggle-editor") {
+            if (editorFrame) {
+                closeEditor();
+            } else {
+                openEditor();
+            }
+            answer(true);
+        } else if (message && message.type === "open-editor") {
+            openEditor();
+            answer(true);
+        }
+    });
+
+    // The editor itself: ready for its measurements, or finished with.
+    window.addEventListener("message", (event) => {
+        if (!editorFrame || event.source !== editorFrame.contentWindow || !event.data) {
+            return;
+        }
+        if (event.data.claudeThemes === "ready") {
+            tellEditor();
+        } else if (event.data.claudeThemes === "close") {
+            closeEditor();
+        }
+    });
+
+    // If the toolbar icon opened this tab, it wants the editor shown.
+    chrome.runtime.sendMessage({ type: "page-ready" }).then((answer) => {
+        if (answer && answer.open) {
+            openEditor();
+        }
+    }).catch(() => {
+        // Nobody answered; nothing to do.
+    });
+}
+
 async function start() {
     settings = await chrome.storage.local.get(defaults);
     applyBackground(true);
@@ -358,6 +460,11 @@ async function start() {
         }
         placeStickers();
     }, 1000);
+
+    // Not inside the editor's own preview, which is one of the extension's pages.
+    if (location.origin !== editorOrigin) {
+        watchEditor();
+    }
 }
 
 start();

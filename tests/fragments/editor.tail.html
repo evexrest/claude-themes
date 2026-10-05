@@ -149,12 +149,15 @@
 
   // ----- the toolbar icon -----
   await new Promise((ok) => { const s = document.createElement("script"); s.src = "background.js"; s.onload = ok; document.head.appendChild(s); });
-  window.openedTab = null; await iconClicked(); await wait(30);
-  r.iconWithEditorOpen = { newTab: window.openedTab, broughtToFront: window.frontedTab === true };
-  messageListeners.length = 0; await iconClicked(); await wait(30);
-  r.iconWithNoEditor = { newTab: window.openedTab };
+  const icon = async (tab, answers, claudeTabs) => { window.asked = []; window.openedTab = null; window.frontedTab = null; window.tabAnswers = answers; window.claudeTabs = claudeTabs; await iconClicked(tab); await wait(30); return { asked: window.asked.join(" "), newTab: window.openedTab, broughtToFront: window.frontedTab }; };
+  r.iconOnAClaudeTab = await icon({ id: 5 }, { 5: true }, [5]);
+  r.iconOnAnotherTab = await icon({ id: 8 }, { 5: true }, [4, 5]);
+  r.iconWhenClaudeTabsNeedRefreshing = await icon({ id: 5 }, {}, [5]);
+  r.iconWithNoClaudeTab = await icon({ id: 8 }, {}, []);
+  r.newClaudeTabAsksOnce = [await chrome.runtime.sendMessage({ type: "page-ready" }, { tab: { id: 99 } }), await chrome.runtime.sendMessage({ type: "page-ready" }, { tab: { id: 99 } }), await chrome.runtime.sendMessage({ type: "page-ready" }, { tab: { id: 5 } })];
   el("crop-side").click();
   r.cropLink = window.openedTab;
+  r.inATab = { onPage: document.body.classList.contains("on-page"), done: el("done").hidden, openClaude: el("open-claude").hidden, refreshNote: el("refresh").hidden };
 
   r.errors = window.errors;
   document.getElementById("out").textContent = "RESULT" + JSON.stringify(r, null, 1) + "END";

@@ -2,6 +2,7 @@
 preview-test.html
 editor-test.html
 editor-logic.html
+editor-page-logic.html
 options-logic.html
 *.png
 *.dom
