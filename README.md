@@ -74,3 +74,7 @@ It also works in other Chromium browsers such as Edge, Brave and Arc.
 | `frame-upload.js` | The upload page: read and save your own frame picture |
 | `stickers.js` | The upload page: save a picture or GIF for beside the chat |
 | `tests/` | Checks that run the extension's code in a separate, throwaway Chrome. See `tests/README.md` |
+
+## Licence
+
+MIT. See `LICENSE`.
