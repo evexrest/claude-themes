@@ -67,7 +67,7 @@ function addFrameChoice(row, key, id, name, settings) {
             sample.style.setProperty("--sample-" + part, values[part]);
         }
         // Samples are small, so every frame is drawn at the same thin width.
-        sample.style.setProperty("--sample-width", "6px");
+        sample.style.setProperty("--sample-width", id === "fineliner" ? "2px" : "9px");
         button.appendChild(sample);
     } else {
         button.textContent = "Off";
@@ -93,6 +93,11 @@ function addFrameRow(rowId, key, settings) {
 
 async function start() {
     const settings = await chrome.storage.local.get(defaults);
+
+    // Chrome reads this popup fresh from the folder each time, but keeps the page
+    // script and the manifest it loaded earlier. A different version number means
+    // the folder has changed since then.
+    document.getElementById("stale").hidden = chrome.runtime.getManifest().version === filesVersion;
 
     for (const preset of presets) {
         addChoice(preset.name, preset.css, settings.preset === preset.id, { preset: preset.id });

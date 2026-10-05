@@ -7,8 +7,9 @@ screens.
 - Upload your own image, then drag and zoom to crop it to the shape of your screen
 - Image opacity slider, so a bright picture does not fight the text
 - Sidebar opacity slider
-- Borders: seven preset frames (bubbles, a rounded "pop" frame, neon, gold and more),
-  around the sidebar and the chat window separately or as one frame around everything
+- Borders: seven black ink frames (fineliner, double rule, draft lines, brush, sketch,
+  hatching, Greek key), around the sidebar and the chat window separately or as one
+  frame around everything
 - Upload your own frame picture; its thickness is measured for you
 - Works in light and dark mode
 
