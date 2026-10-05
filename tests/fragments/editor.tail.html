@@ -22,7 +22,7 @@
     previewSidebar: box(page.querySelector(".dframe-sidebar")), previewPane: box(page.querySelector(".dframe-pane-primary")), previewColumn: box(page.querySelector('[data-cds="ChatComposer"]')),
     zoneSidebarWidthInPreview: Math.round(parseFloat(el("zone-sidebar").style.width) / shrink), zoneLeftWidthInPreview: Math.round(parseFloat(el("zone-left").style.width) / shrink),
     tiles: { presets: el("presets").children.length, images: el("images").children.length, stickers: el("stickers").children.length },
-    previewWallpaper: page.documentElement.getAttribute("data-wallpaper"), previewLeftPicture: picture("left") ? box(picture("left")) : null, hint: el("hint").textContent.slice(0, 30) };
+    previewWallpaper: page.documentElement.getAttribute("data-wallpaper"), previewLeftPicture: picture("left") ? box(picture("left")) : null, windows: ["bar", "library", "inspector"].map((w) => w + " " + getComputedStyle(el(w)).position + (el(w).querySelector(".titlebar") ? " titled" : "")).join(", ") };
 
   // ----- selecting parts of the screen -----
   el("zone-sidebar").click();
@@ -140,7 +140,7 @@
   r.darkPreview = { dark: page.documentElement.classList.contains("dark"), pressed: pressed("#mode-light, #mode-dark"), boxColour: getComputedStyle(page.querySelector(".box")).backgroundColor };
   el("mode-light").click();
   el("enabled").click(); await wait(80);
-  r.switchedOff = { enabled: store.enabled, previewWallpaper: page.documentElement.getAttribute("data-wallpaper"), previewFrame: page.documentElement.getAttribute("data-frame-all"), hint: el("hint").textContent.slice(0, 27) };
+  r.switchedOff = { enabled: store.enabled, previewWallpaper: page.documentElement.getAttribute("data-wallpaper"), previewFrame: page.documentElement.getAttribute("data-frame-all") };
   el("enabled").click(); await wait(80);
 
   // ----- removing a saved picture -----

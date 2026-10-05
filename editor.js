@@ -1,9 +1,10 @@
 // The editor. It runs in two places. Laid over the real claude.ai page
-// (editor.html?on=page, in a frame that content.js adds), its panels float over the
-// page and the page itself is what gets clicked and dropped on. In a tab of its
-// own, the middle shows a stand-in for claude.ai (preview.html) with the theme
-// applied. Either way: the pictures to choose from, the settings of the part that
-// is selected, and every change saved straight away, which the page picks up from
+// (editor.html?on=page, in a frame that content.js adds), the page itself is what
+// gets clicked and dropped on. In a tab of its own, a stand-in for claude.ai
+// (preview.html) takes the page's place. Either way, three small windows float
+// over it: a bar, the library of pictures, and the settings of the part that is
+// selected. They can be moved, resized, folded away and closed like any window.
+// Every change to the theme is saved straight away, and the page picks it up from
 // storage. `defaults`, `presets`,
 // `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey` and `filesVersion` come
 // from settings.js.
@@ -732,7 +733,7 @@ function cover(element, box) {
 // runs on a timer too.
 function layout() {
     if (!onPage) {
-        scale = clamp(Math.min((stage.clientWidth - 48) / screenWidth, (stage.clientHeight - 96) / screenHeight), 0.2, 1);
+        scale = clamp(Math.min((stage.clientWidth - 24) / screenWidth, (stage.clientHeight - 24) / screenHeight), 0.2, 1);
         preview.style.width = screenWidth + "px";
         preview.style.height = screenHeight + "px";
         preview.style.transform = `scale(${scale})`;
@@ -744,11 +745,12 @@ function layout() {
     const pane = boxes.pane;
     const column = boxes.column;
 
-    // Over the real page, the bar and the library sit over the middle of the
+    // Until they are moved, the bar and the library sit over the middle of the
     // chat, clear of the sidebar and of the space on either side.
-    if (onPage && column) {
-        document.body.style.setProperty("--middle", column.left + column.width / 2 + "px");
-        document.body.style.setProperty("--column", column.width + "px");
+    if (column) {
+        const edge = onPage ? 0 : screenBox.getBoundingClientRect().left;
+        document.body.style.setProperty("--middle", edge + (column.left + column.width / 2) * scale + "px");
+        document.body.style.setProperty("--column", column.width * scale + "px");
     }
 
     cover(byId("zone-sidebar"), boxes.sidebar);
@@ -829,6 +831,197 @@ function watchGrip(grip) {
             start = null;
         });
     }
+}
+
+// ---------- The windows ----------
+
+// The bar, the library and the settings are small windows over the page. Each is
+// moved by its title bar and, apart from the bar, resized by its edges and
+// corners; the three dots in a title bar close it, fold it away to its title bar,
+// and put it back where it started. `windows` holds what has been done to each:
+// { left, top, width, height, folded, closed }. A window that has never been moved
+// has no `left`, and sits where the stylesheet puts it.
+const windowIds = ["bar", "library", "inspector"];
+const smallest = { width: 220, height: 120 };
+let windows = {};
+let front = 2;
+
+function keepWindows() {
+    chrome.storage.local.set({ editorWindows: windows });
+}
+
+// Show a window the way `windows` says: its place, its size, folded or closed.
+function placeWindow(id) {
+    const element = byId(id);
+    const kept = windows[id] || {};
+    const style = element.style;
+    const moved = kept.left !== undefined;
+    const sized = kept.width !== undefined && !kept.folded;
+
+    element.hidden = kept.closed === true;
+    element.classList.toggle("folded", kept.folded === true);
+    element.classList.toggle("moved", moved);
+
+    if (moved) {
+        // Never so far off the edge that its title bar cannot be reached.
+        const width = sized ? kept.width : element.offsetWidth;
+        style.left = clamp(kept.left, 80 - width, innerWidth - 80) + "px";
+        style.top = clamp(kept.top, 0, innerHeight - 36) + "px";
+        style.right = "auto";
+        style.bottom = "auto";
+        style.transform = "none";
+    } else {
+        style.left = style.top = style.right = style.bottom = style.transform = "";
+    }
+    if (sized) {
+        style.width = kept.width + "px";
+        style.height = kept.height + "px";
+        style.maxHeight = "none";
+    } else {
+        style.width = style.height = "";
+        // A moved window that has not been given a size is as tall as its
+        // contents, down to the bottom of the browser window at most.
+        style.maxHeight = moved && !kept.folded ? Math.max(smallest.height, innerHeight - parseFloat(style.top) - 12) + "px" : "";
+    }
+}
+
+function placeWindows() {
+    for (const id of windowIds) {
+        placeWindow(id);
+    }
+    for (const id of ["library", "inspector"]) {
+        press(byId("show-" + id), !(windows[id] && windows[id].closed));
+    }
+}
+
+// Change what is kept about one window, and show it.
+function changeWindow(id, change) {
+    windows[id] = { ...windows[id], ...change };
+    placeWindows();
+}
+
+// Follow the pointer from a press on `handle` until it is let go. `moved` is told
+// how far it has gone each time, and `done` when it stops.
+function followPointer(handle, begin, moved, done) {
+    let start = null;
+
+    handle.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0 || begin(event) === false) {
+            return;
+        }
+        start = { x: event.clientX, y: event.clientY };
+        // Keeps the drag going when the pointer leaves the handle.
+        try {
+            handle.setPointerCapture(event.pointerId);
+        } catch (error) {
+            // Nothing to do.
+        }
+        event.preventDefault();
+    });
+    handle.addEventListener("pointermove", (event) => {
+        if (start) {
+            moved(event.clientX - start.x, event.clientY - start.y);
+        }
+    });
+    for (const ending of ["pointerup", "pointercancel"]) {
+        handle.addEventListener(ending, () => {
+            if (start) {
+                start = null;
+                done();
+            }
+        });
+    }
+}
+
+// Give a window its title bar and its edges, and make them work. The bar has
+// neither: it is moved by any part of it that is not a button.
+function makeWindow(id) {
+    const element = byId(id);
+    let box = null;
+
+    // A press anywhere on a window brings it in front of the others.
+    element.addEventListener("pointerdown", () => {
+        element.style.zIndex = ++front;
+    }, true);
+
+    let grab = element;
+    if (id !== "bar") {
+        grab = document.createElement("div");
+        grab.className = "titlebar";
+        grab.title = "Drag to move";
+
+        const lights = document.createElement("span");
+        lights.className = "lights";
+        const light = (name, title, act) => {
+            const button = document.createElement("button");
+            button.className = name;
+            button.title = title;
+            button.setAttribute("aria-label", title);
+            button.addEventListener("click", act);
+            lights.appendChild(button);
+        };
+        light("shut", "Close this window. The bar at the top brings it back", () => {
+            changeWindow(id, { closed: true });
+            keepWindows();
+        });
+        light("fold", "Fold away to the title bar, or unfold", () => {
+            changeWindow(id, { folded: !(windows[id] && windows[id].folded) });
+            keepWindows();
+        });
+        light("home", "Put back where it started, at its first size", () => {
+            windows[id] = {};
+            placeWindows();
+            keepWindows();
+        });
+
+        const name = document.createElement("b");
+        name.textContent = element.dataset.name;
+        grab.append(lights, name);
+        element.prepend(grab);
+
+        // Eight places to resize from: four edges and four corners.
+        for (const side of ["n", "e", "s", "w", "ne", "se", "sw", "nw"]) {
+            const edge = document.createElement("i");
+            edge.className = "edge " + side;
+            followPointer(edge, () => {
+                box = element.getBoundingClientRect();
+            }, (across, down) => {
+                let { left, top, width, height } = box;
+                // An edge stops when the window is as small, or as big, as it may be.
+                if (side.includes("e")) {
+                    width = clamp(box.width + across, smallest.width, innerWidth);
+                }
+                if (side.includes("s")) {
+                    height = clamp(box.height + down, smallest.height, innerHeight);
+                }
+                if (side.includes("w")) {
+                    width = clamp(box.width - across, smallest.width, innerWidth);
+                    left = box.right - width;
+                }
+                if (side.includes("n")) {
+                    height = clamp(box.height - down, smallest.height, innerHeight);
+                    top = box.bottom - height;
+                }
+                changeWindow(id, { left: left, top: top, width: Math.round(width), height: Math.round(height) });
+            }, keepWindows);
+            element.appendChild(edge);
+        }
+    }
+
+    followPointer(grab, (event) => {
+        // Buttons and other controls in a title bar are for pressing, not dragging.
+        if (event.target.closest("button, input, select, a, label")) {
+            return false;
+        }
+        box = element.getBoundingClientRect();
+        document.body.classList.add("moving");
+        return true;
+    }, (across, down) => {
+        changeWindow(id, { left: box.left + across, top: box.top + down });
+    }, () => {
+        document.body.classList.remove("moving");
+        keepWindows();
+    });
 }
 
 // Over the real page: close the editor. content.js takes it away.
@@ -922,16 +1115,13 @@ function sync() {
         right: "the picture on the right"
     };
     byId("browse-for").textContent = "The first one becomes " + goes[part] + ".";
-    byId("hint").textContent = state.enabled
-        ? "Click a part of the screen to change it. Drag a picture onto a part to use it there."
-        : "The theme is switched off, so claude.ai looks the way it normally does. Tick Theme on to see it.";
-
     byId("undo").disabled = steps.length === 0;
     byId("redo").disabled = undoneSteps.length === 0;
 }
 
 async function start() {
     state = await chrome.storage.local.get(defaults);
+    windows = (await chrome.storage.local.get({ editorWindows: {} })).editorWindows;
 
     // Chrome reads this page fresh from the folder each time, but keeps the page
     // script and the manifest it loaded earlier. A different version number means
@@ -1020,6 +1210,19 @@ async function start() {
     watchGrip(byId("grip-left"));
     watchGrip(byId("grip-right"));
 
+    for (const id of windowIds) {
+        makeWindow(id);
+    }
+    for (const id of ["library", "inspector"]) {
+        byId("show-" + id).addEventListener("click", () => {
+            changeWindow(id, { closed: !(windows[id] && windows[id].closed) });
+            keepWindows();
+        });
+    }
+    placeWindows();
+    // A smaller browser window may leave a window out of reach: bring it back in.
+    window.addEventListener("resize", placeWindows);
+
     chrome.storage.onChanged.addListener((changes) => {
         for (const key of Object.keys(changes)) {
             // Full-size pictures are stored under their own keys; skip those.
@@ -1064,15 +1267,9 @@ function startOnPage() {
         byId(id).closest(".pair, a").hidden = true;
     }
     byId("done").hidden = false;
-    byId("bare").hidden = false;
     byId("add-how").textContent = "Drag pictures or GIFs from your computer onto the page, or";
 
     byId("done").addEventListener("click", finish);
-    byId("bare").addEventListener("click", () => {
-        const hidden = document.body.classList.toggle("bare");
-        byId("bare").textContent = hidden ? "Show panels" : "Hide panels";
-    });
-
     window.addEventListener("message", (event) => {
         if (event.source === window.parent && event.data && event.data.claudeThemes === "layout") {
             pageBoxes = event.data.boxes;

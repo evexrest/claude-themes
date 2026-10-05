@@ -30,8 +30,13 @@
 
         <a class="go" id="open-claude" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a>
 
+        <!-- Show or hide each of the two windows. -->
+        <div class="pair" title="Show or hide a window">
+            <button id="show-library">Library</button>
+            <button id="show-inspector">Settings</button>
+        </div>
+
         <!-- Only when the editor lies over the Claude page itself. -->
-        <button id="bare" title="Hide or show the panels, to see the whole page" hidden>Hide panels</button>
         <button class="go" id="done" title="Close the editor (Esc)" hidden>Done</button>
     </header>
 
@@ -48,8 +53,10 @@
     </p>
 
     <div id="work">
-        <!-- Left: the pictures to choose from. -->
-        <aside id="library">
+        <!-- The pictures to choose from. Like the settings below, this is a small window:
+             it is moved by its title bar and resized by its edges (editor.js). -->
+        <aside id="library" class="window" data-name="Library">
+            <div class="content">
             <div id="add">
                 <b>Add your own pictures</b>
                 <span id="add-how">Drag pictures or GIFs from your computer onto the screen, or</span>
@@ -84,9 +91,11 @@
                 screen. Your pictures are stored in Chrome on this computer and are not sent
                 anywhere.
             </p>
+            </div>
         </aside>
 
-        <!-- Middle: a stand-in for claude.ai, showing the theme as it is now. -->
+        <!-- Behind the windows: a stand-in for claude.ai, showing the theme as it is now.
+             Over the real Claude page there is no stand-in; the page itself shows. -->
         <section id="stage">
             <div id="screen">
                 <iframe id="preview" data-src="preview.html" title="Preview of claude.ai" tabindex="-1"></iframe>
@@ -116,12 +125,12 @@
                 </div>
             </div>
 
-            <p id="hint">Click a part of the screen to change it. Drag a picture onto a part to use it there.</p>
             <p id="toast" hidden></p>
         </section>
 
-        <!-- Right: the settings of the part that is selected. -->
-        <aside id="inspector">
+        <!-- The settings of the part that is selected. -->
+        <aside id="inspector" class="window" data-name="Settings">
+            <div class="content">
             <div class="pair parts">
                 <button id="part-main">Main page</button>
                 <button id="part-sidebar">Sidebar</button>
@@ -294,6 +303,7 @@
                 <input type="range" id="sticker-opacity" min="10" max="100">
 
                 <p class="note">Size, height and opacity are shared by the left and the right picture.</p>
+            </div>
             </div>
         </aside>
     </div>

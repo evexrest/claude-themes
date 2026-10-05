@@ -116,6 +116,20 @@ try {
     found.pageShowsThePicture = await run(page, `(() => { const p = document.querySelector('.claude-sticker[data-side="right"]'); if (!p) return "no picture on the page"; const b = p.getBoundingClientRect(); return { shown: p.style.display, at: [b.left, b.top, b.width, b.height].map(Math.round).join(",") }; })()`);
     await picture(page, "real-page.png");
 
+    // Move and resize a window with the mouse itself, as a person would.
+    const boxOf = (what) => run(editor, `(() => { const b = document.querySelector(${JSON.stringify(what)}).getBoundingClientRect(); return { left: b.left, top: b.top, width: b.width, height: b.height }; })()`);
+    const round = (b) => [b.left, b.top, b.width, b.height].map(Math.round).join(",");
+    const mouse = (type, x, y) => send("Input.dispatchMouseEvent", { type, x, y, button: "left", buttons: type === "mouseReleased" ? 0 : 1, clickCount: 1 }, page);
+    const dragWithMouse = async (from, across, down) => { const x = from.left + from.width / 2, y = from.top + from.height / 2; await mouse("mouseMoved", x, y); await mouse("mousePressed", x, y); for (let step = 1; step <= 8; step++) { await mouse("mouseMoved", x + across * step / 8, y + down * step / 8); await sleep(20); } await mouse("mouseReleased", x + across, y + down); await sleep(250); };
+    const first = round(await boxOf("#library"));
+    await dragWithMouse(await boxOf("#library .titlebar b"), -220, -260);
+    const moved = round(await boxOf("#library"));
+    await dragWithMouse(await boxOf("#library .edge.se"), 140, 110);
+    const resized = round(await boxOf("#library"));
+    await dragWithMouse(await boxOf("#library .edge.w"), -90, 0);
+    found.windowsWithARealMouse = { libraryFirst: first, afterDraggingTitleBar: moved, afterDraggingCorner: resized, afterDraggingLeftEdge: round(await boxOf("#library")), remembered: await run(editor, `chrome.storage.local.get("editorWindows").then((k) => JSON.stringify(k.editorWindows.library))`), pageUnderneathUnmoved: await run(page, `document.querySelector(".dframe-sidebar").getBoundingClientRect().width + "/" + document.querySelector(".dframe-pane-primary").getBoundingClientRect().left`) };
+    await picture(page, "real-page-windows.png");
+
     // Claude's dark mode: the frame must stay see-through.
     await run(page, `document.documentElement.classList.add("dark"); document.documentElement.style.colorScheme = "dark"; document.documentElement.setAttribute("data-mode", "dark")`);
     await run(editor, `document.querySelector('.tile[data-id="none"]').click()`); await sleep(700);
@@ -123,6 +137,10 @@ try {
     await run(page, `document.documentElement.classList.remove("dark"); document.documentElement.style.colorScheme = ""`);
 
     found.done = await run(editor, `document.getElementById("done").click(), "clicked"`); await sleep(600);
+    // Open it again: the windows are where they were left.
+    await clickIconOn("claude"); await sleep(2000);
+    const again = (await targets()).find((t) => t.url.startsWith(base + "editor.html?on=page"));
+    if (again) { const second = await attach(again.targetId); await sleep(500); found.windowsRememberedNextTime = await run(second, `(() => { const b = document.getElementById("library").getBoundingClientRect(); return [b.left, b.top, b.width, b.height].map(Math.round).join(","); })()`); await run(second, `document.getElementById("done").click()`); await sleep(500); }
     found.afterDone = await run(page, `({ editor: !!document.getElementById("claude-themes-editor"), stillThemed: !!document.querySelector('.claude-sticker[data-side="right"]') })`);
   }
 

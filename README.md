@@ -3,10 +3,13 @@
 A Chrome extension that puts a background behind claude.ai, on the chat, cowork and code
 screens, with frames and your own text colour and font.
 
-The toolbar icon opens an editor right on top of the Claude page. Its panels float over
-the page and the page itself is the canvas: click a part of it (the main page, the
+The toolbar icon opens an editor right on top of the Claude page. Its three windows (a
+bar, the library and the settings) float over the page like windows on a desktop: drag one
+by its title bar to move it, drag an edge or a corner to resize it, and use the three dots
+to close it, fold it away or put it back. They stay where you leave them. The page itself
+is the canvas: click a part of it (the main page, the
 sidebar, or the space on either side of the chat) to change that part, and drag pictures
-onto it from your computer or from the library along the bottom. Every change shows on
+onto it from your computer or from the library. Every change shows on
 the real page as you make it. A side picture can be dragged up and down and resized by its
 corner. Undo and redo work as in any editor. **Done**, Esc, or the toolbar icon again
 closes it.

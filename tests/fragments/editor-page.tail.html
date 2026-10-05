@@ -11,7 +11,7 @@
   const tell = async (boxes) => { postMessage({ claudeThemes: "layout", boxes }, "*"); await wait(60); };
   const page = { sidebar: { left: 0, top: 0, width: 288, height: 900 }, pane: { left: 296, top: 0, width: 1216, height: 900 }, column: { left: 520, top: 812, width: 768, height: 88 }, left: { left: 318, top: 600, width: 180, height: 225 }, right: null };
 
-  r.start = { classes: classes(), previewGone: !el("preview"), done: !el("done").hidden, hidePanels: !el("bare").hidden, lightDarkSwitch: !el("mode-light").parentElement.hidden, openClaude: !el("open-claude").hidden,
+  r.start = { classes: classes(), previewGone: !el("preview"), done: !el("done").hidden, lightDarkSwitch: !el("mode-light").parentElement.hidden, openClaude: !el("open-claude").hidden,
     zonesBeforeThePageSpeaks: ["main", "sidebar", "left", "right"].map((z) => at("zone-" + z)).join(" | "), enabled: el("enabled").checked, tiles: el("presets").children.length };
   await tell(page);
   r.zonesFollowThePage = { sidebar: at("zone-sidebar"), main: at("zone-main"), left: at("zone-left"), right: at("zone-right"), middle: document.body.style.getPropertyValue("--middle"), column: document.body.style.getPropertyValue("--column") };
@@ -46,9 +46,51 @@
   r.pageWithoutParts = ["main", "sidebar", "left", "right"].map((z) => at("zone-" + z)).join(" | ") + " grip " + at("grip-left");
   await tell(page);
 
-  el("bare").click();
-  r.panelsHidden = { library: getComputedStyle(el("library")).display, inspector: getComputedStyle(el("inspector")).display, bar: getComputedStyle(el("bar")).display, button: el("bare").textContent };
-  el("bare").click();
+  // ----- the windows: moved by the title bar, resized by the edges, like any window -----
+  el("zone-main").click(); await wait(60);
+  const drag = async (handle, across, down) => { const h = handle.getBoundingClientRect(), x = h.left + Math.min(h.width / 2, 120), y = h.top + h.height / 2; point(handle, "pointerdown", x, y); point(handle, "pointermove", x + across / 2, y + down / 2); point(handle, "pointermove", x + across, y + down); point(handle, "pointerup", x + across, y + down); await wait(40); };
+  const title = (id) => el(id).querySelector(".titlebar"), edge = (id, side) => el(id).querySelector(".edge." + side);
+  r.windowsAtFirst = { library: box("library"), inspector: box("inspector"), bar: box("bar"), kept: JSON.stringify(store.editorWindows ?? null), titles: [...document.querySelectorAll(".titlebar b")].map((b) => b.textContent).join(","), edges: document.querySelectorAll("#library .edge").length + "+" + document.querySelectorAll("#inspector .edge").length + "+" + document.querySelectorAll("#bar .edge").length };
+  await drag(title("library"), -150, -200);
+  r.libraryMoved = { box: box("library"), kept: JSON.stringify(store.editorWindows.library), othersStayed: box("inspector") === r.windowsAtFirst.inspector && box("bar") === r.windowsAtFirst.bar };
+  await drag(edge("library", "se"), 120, 90);
+  r.libraryResizedFromCorner = { box: box("library"), kept: JSON.stringify(store.editorWindows.library) };
+  await drag(edge("library", "w"), 60, 0);
+  r.leftEdgeMovesOnlyTheLeft = box("library");
+  await drag(edge("library", "n"), 0, -40);
+  r.topEdgeMovesOnlyTheTop = box("library");
+  await drag(edge("library", "nw"), 2000, 2000);
+  r.neverSmallerThan = box("library");
+  await drag(edge("library", "se"), 300, 160);
+  const shelves = () => [...document.querySelectorAll(".shelf")].map((sh) => Math.round(sh.getBoundingClientRect().top - el("library").getBoundingClientRect().top)).join(",");
+  r.contentFollowsTheSize = { box: box("library"), shelfTops: shelves(), contentScrolls: getComputedStyle(el("library").querySelector(".content")).overflowY };
+  await drag(title("inspector"), -400, 100);
+  r.inspectorMoved = { box: box("inspector"), staysPutWhenRightIsSelected: (el("zone-right").click(), await wait(40), box("inspector")), classes: classes() };
+  el("zone-main").click();
+  await drag(el("bar"), 100, 300);
+  r.barMoved = box("bar");
+  await drag(title("library"), -5000, 5000);
+  r.cannotBeLostOffTheEdge = { box: box("library"), window: innerWidth + "x" + innerHeight };
+  point(title("library"), "pointerdown", 10, 10); point(title("library"), "pointerup", 10, 10); const libraryFront = Number(el("library").style.zIndex);
+  point(el("inspector"), "pointerdown", 10, 10); point(el("inspector"), "pointerup", 10, 10);
+  r.pressedWindowComesToFront = Number(el("inspector").style.zIndex) > libraryFront && libraryFront > 2;
+  el("inspector").querySelector(".fold").click(); await wait(30);
+  r.folded = { box: box("inspector"), content: getComputedStyle(el("inspector").querySelector(".content")).display, kept: store.editorWindows.inspector.folded };
+  el("inspector").querySelector(".fold").click(); await wait(30);
+  r.unfolded = box("inspector");
+  el("library").querySelector(".shut").click(); await wait(30);
+  r.closed = { library: getComputedStyle(el("library")).display, button: el("show-library").getAttribute("aria-pressed"), kept: store.editorWindows.library.closed };
+  el("show-library").click(); await wait(30);
+  r.broughtBackFromTheBar = { library: getComputedStyle(el("library")).display, button: el("show-library").getAttribute("aria-pressed"), sameBox: box("library") === r.cannotBeLostOffTheEdge.box };
+  el("show-inspector").click(); await wait(30); const hiddenByBar = getComputedStyle(el("inspector")).display; el("show-inspector").click(); await wait(30);
+  r.barButtonTogglesSettings = hiddenByBar + " then " + getComputedStyle(el("inspector")).display;
+  el("library").querySelector(".home").click(); el("inspector").querySelector(".home").click(); await wait(40);
+  r.putBack = { library: box("library") === r.windowsAtFirst.library, inspector: box("inspector") === r.windowsAtFirst.inspector, kept: JSON.stringify(store.editorWindows.library) + JSON.stringify(store.editorWindows.inspector) };
+  el("zone-right").click(); await wait(40);
+  r.unmovedSettingsStillDodge = { classes: classes(), box: box("inspector") };
+  el("zone-main").click();
+  const titleButton = el("library").querySelector(".fold").getBoundingClientRect(); point(el("library").querySelector(".fold"), "pointerdown", titleButton.left + 3, titleButton.top + 3); point(el("library").querySelector(".fold"), "pointermove", titleButton.left + 80, titleButton.top + 80); point(el("library").querySelector(".fold"), "pointerup", titleButton.left + 80, titleButton.top + 80);
+  r.dotsDoNotDrag = box("library") === r.windowsAtFirst.library;
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); el("done").click(); await wait(60);
   r.closing = heard.join(" ");
 

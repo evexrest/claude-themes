@@ -1,5 +1,10 @@
-/* The editor: a bar along the top, the library on the left, the screen in the
-   middle and the selected part's settings on the right. */
+/* The editor: three small windows (a bar, the library, the settings) floating
+   over the page. Over the real Claude page the page shows through; in a tab of the
+   editor's own, a stand-in for it sits behind them. */
+:root {
+    color-scheme: light;
+}
+
 html,
 body {
     height: 100%;
@@ -7,13 +12,16 @@ body {
 }
 
 body {
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
     background: #0e0e0d;
     color: #e8e6e1;
     font-family: system-ui, sans-serif;
     font-size: 14px;
+}
+
+/* Over the real page, everything that is not a window is see-through. */
+body.on-page {
+    background: transparent;
 }
 
 button {
@@ -26,319 +34,15 @@ button {
     display: none !important;
 }
 
-/* The bar along the top. */
-#bar {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: 14px;
-    height: 52px;
-    padding: 0 16px;
-    border-bottom: 1px solid #2a2a29;
-    background: #151515;
-}
+/* ---------- Behind the windows ---------- */
 
-.name {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.mark {
-    width: 18px;
-    height: 18px;
-    border-radius: 5px;
-    background: linear-gradient(135deg, #1f3a5f, #7b3f61 55%, #d97757);
-}
-
-.space {
-    flex: 1;
-}
-
-.group {
-    display: flex;
-    gap: 4px;
-    margin-left: 12px;
-}
-
-.group button {
-    padding: 6px 12px;
-    border: 0;
-    border-radius: 7px;
-    background: #20201f;
-    color: #e8e6e1;
-}
-
-.group button:disabled {
-    color: #55534c;
-    cursor: default;
-}
-
-.group button:not(:disabled):hover,
-.wide:hover {
-    background: #2c2c2a;
-}
-
-.toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
-
-.go {
-    padding: 7px 14px;
-    border-radius: 8px;
-    background: #d97757;
-    color: #151515;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.go:hover {
-    background: #e58a6b;
-}
-
-#stale,
-#refresh {
-    flex: none;
-    margin: 0;
-    padding: 10px 16px;
-    background: #4a2a1c;
-    color: #ffd9c7;
-    font-size: 13px;
-    line-height: 1.4;
-}
-
-#work {
-    display: flex;
-    flex: 1;
-    min-height: 0;
-}
-
-#bare {
-    padding: 6px 12px;
-    border: 0;
-    border-radius: 7px;
-    background: #20201f;
-    color: #e8e6e1;
-}
-
-button.go {
-    border: 0;
-    font-size: inherit;
-}
-
-/* The two side panels. */
-#library,
-#inspector {
-    box-sizing: border-box;
-    flex: none;
-    padding: 16px;
-    overflow-y: auto;
-    background: #151515;
-}
-
-#library {
-    width: 272px;
-    border-right: 1px solid #2a2a29;
-}
-
-#inspector {
-    width: 320px;
-    border-left: 1px solid #2a2a29;
-}
-
-h2 {
-    margin: 22px 0 10px;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.panel h2:first-child,
-#panel-side h2 {
-    margin-top: 4px;
-}
-
-h3 {
-    margin: 12px 0 6px;
-    color: #a5a49a;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.note,
-.empty,
-.now {
-    margin: 14px 0 0;
-    color: #a5a49a;
-    font-size: 12px;
-    line-height: 1.4;
-}
-
-.note.first,
-.empty,
-.now {
-    margin-top: 0;
-}
-
-.now {
-    margin-bottom: 4px;
-}
-
-.now b {
-    color: #e8e6e1;
-    font-weight: 600;
-}
-
-/* The box at the top of the library, for adding files. */
-#add {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px;
-    border: 1px dashed #55534c;
-    border-radius: 10px;
-    color: #a5a49a;
-    font-size: 12px;
-    line-height: 1.4;
-}
-
-#add b {
-    color: #e8e6e1;
-    font-size: 13px;
-}
-
-#add button {
-    padding: 8px;
-    border: 0;
-    border-radius: 8px;
-    background: #d97757;
-    color: #151515;
-    font-weight: 600;
-}
-
-#add button:hover {
-    background: #e58a6b;
-}
-
-/* The pictures: presets, saved images and side pictures. */
-.tiles {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-}
-
-.tiles.small {
-    grid-template-columns: repeat(4, 1fr);
-}
-
-.cell {
-    position: relative;
-}
-
-.tile {
-    position: relative;
-    width: 100%;
-    height: 52px;
-    padding: 0;
-    border: 2px solid transparent;
-    border-radius: 8px;
-    background-color: #20201f;
-    background-position: center;
-    background-size: cover;
-    color: #a5a49a;
-    font-size: 11px;
-}
-
-.tile[draggable="true"] {
-    cursor: grab;
-}
-
-.tile:hover {
-    border-color: #55534c;
-}
-
-.tile[aria-pressed="true"],
-.frame-choice[aria-pressed="true"],
-.swatch[aria-pressed="true"] {
-    border-color: #d97757;
-}
-
-.tile span {
-    position: absolute;
-    right: 0;
-    bottom: 3px;
-    left: 0;
-    color: #fff;
-    font-size: 11px;
-    text-shadow: 0 1px 2px #000;
-}
-
-/* Side pictures are shown whole, whatever their shape. */
-.tiles.small .tile {
-    height: 54px;
-    background-repeat: no-repeat;
-    background-size: contain;
-}
-
-/* "Claude's own": no background picture. */
-.tile.plain {
-    border-style: dashed;
-    border-color: #55534c;
-    background: #2a2a29;
-}
-
-.tile.plain[aria-pressed="true"] {
-    border-style: solid;
-    border-color: #d97757;
-}
-
-/* The small cross on a saved picture. */
-.remove {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    width: 18px;
-    height: 18px;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: #151515;
-    color: #e8e6e1;
-    font-size: 13px;
-    line-height: 18px;
-    opacity: 0;
-}
-
-.cell:hover .remove,
-.remove:focus-visible {
-    opacity: 1;
-}
-
-.remove:hover {
-    background: #d97757;
-    color: #151515;
-}
-
-/* A shelf of the library while files are held over it. */
-[data-takes].over {
-    border-radius: 8px;
-    outline: 2px dashed #d97757;
-    outline-offset: 4px;
-}
-
-/* The middle: the screen on a dotted surface. */
+/* In a tab: the stand-in page, on a dotted surface. */
 #stage {
-    position: relative;
+    position: fixed;
+    inset: 0;
     display: flex;
-    flex: 1;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 0;
     background: #0e0e0d radial-gradient(#262624 1px, transparent 1px) 0 0 / 22px 22px;
 }
 
@@ -358,32 +62,27 @@ h3 {
     transform-origin: 0 0;
 }
 
+/* Over the real page: nothing of the editor's own, only the parts laid over it. */
+body.on-page #stage {
+    display: block;
+    background: none;
+}
+
+body.on-page #screen {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
 #overlay {
     position: absolute;
     inset: 0;
 }
 
-#hint,
-#toast {
-    flex: none;
-    max-width: 80%;
-    margin: 16px 0 0;
-    color: #a5a49a;
-    font-size: 13px;
-    text-align: center;
-}
-
-#toast {
-    position: absolute;
-    bottom: 52px;
-    padding: 9px 14px;
-    border-radius: 8px;
-    background: #e8e6e1;
-    color: #151515;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
-}
-
-/* A part of the screen that can be selected, or dropped on. */
+/* A part of the page that can be selected, or dropped on. */
 .zone {
     position: absolute;
     box-sizing: border-box;
@@ -509,7 +208,547 @@ body.dragging .grip {
     cursor: nesw-resize;
 }
 
-/* The settings on the right. */
+/* ---------- The windows ----------
+   Each is moved by its title bar and resized by its edges and corners; editor.js
+   does the moving and remembers where each was put. The places given here are
+   where a window sits until it is moved: the bar and the library over the chat's
+   column, the settings at one side. */
+#bar,
+.window {
+    position: fixed;
+    z-index: 2;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    background: rgba(21, 21, 21, 0.9);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    transition: opacity 0.15s;
+}
+
+/* While something is being dragged onto the page they fade and let it through,
+   so that every part of the page can be dropped on. */
+body.dragging #bar,
+body.dragging .window {
+    opacity: 0.12;
+    pointer-events: none;
+}
+
+/* While a window is being moved or resized, nothing gets selected by accident. */
+body.moving {
+    user-select: none;
+}
+
+.window {
+    display: flex;
+    flex-direction: column;
+}
+
+.titlebar {
+    position: relative;
+    display: flex;
+    flex: none;
+    align-items: center;
+    height: 30px;
+    padding: 0 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.titlebar:active,
+#bar:active {
+    cursor: grabbing;
+}
+
+.titlebar b {
+    position: absolute;
+    right: 70px;
+    left: 70px;
+    overflow: hidden;
+    color: #a5a49a;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* The three dots: close, fold away, put back. */
+.lights {
+    display: flex;
+    gap: 7px;
+}
+
+.lights button {
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+}
+
+.lights .shut {
+    background: #ff5f57;
+}
+
+.lights .fold {
+    background: #febc2e;
+}
+
+.lights .home {
+    background: #28c840;
+}
+
+.lights button:hover {
+    filter: brightness(1.25);
+}
+
+.content {
+    flex: 1;
+    min-height: 0;
+    padding: 16px;
+    overflow: auto;
+}
+
+/* Folded away: only the title bar. */
+.window.folded .content,
+.window.folded .edge {
+    display: none;
+}
+
+.window.folded .titlebar {
+    border-bottom: 0;
+}
+
+/* The places to resize from: a strip along each edge and a square at each corner,
+   lying half outside the window. */
+.edge {
+    position: absolute;
+    z-index: 1;
+    touch-action: none;
+}
+
+.edge.n,
+.edge.s {
+    right: 10px;
+    left: 10px;
+    height: 10px;
+    cursor: ns-resize;
+}
+
+.edge.e,
+.edge.w {
+    top: 10px;
+    bottom: 10px;
+    width: 10px;
+    cursor: ew-resize;
+}
+
+.edge.n {
+    top: -5px;
+}
+
+.edge.s {
+    bottom: -5px;
+}
+
+.edge.e {
+    right: -5px;
+}
+
+.edge.w {
+    left: -5px;
+}
+
+.edge.ne,
+.edge.se,
+.edge.sw,
+.edge.nw {
+    width: 16px;
+    height: 16px;
+}
+
+.edge.ne {
+    top: -5px;
+    right: -5px;
+    cursor: nesw-resize;
+}
+
+.edge.se {
+    right: -5px;
+    bottom: -5px;
+    cursor: nwse-resize;
+}
+
+.edge.sw {
+    bottom: -5px;
+    left: -5px;
+    cursor: nesw-resize;
+}
+
+.edge.nw {
+    top: -5px;
+    left: -5px;
+    cursor: nwse-resize;
+}
+
+/* The bar. */
+#bar {
+    top: 12px;
+    left: var(--middle, 50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: max-content;
+    max-width: calc(100vw - 24px);
+    height: 48px;
+    padding: 0 12px;
+    cursor: grab;
+    touch-action: none;
+    transform: translateX(-50%);
+    user-select: none;
+}
+
+.name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.mark {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, #1f3a5f, #7b3f61 55%, #d97757);
+}
+
+.space {
+    display: none;
+}
+
+.group {
+    display: flex;
+    gap: 4px;
+}
+
+.group button {
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: #20201f;
+    color: #e8e6e1;
+}
+
+.group button:disabled {
+    color: #55534c;
+    cursor: default;
+}
+
+.group button:not(:disabled):hover,
+.wide:hover {
+    background: #2c2c2a;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.go {
+    padding: 7px 14px;
+    border: 0;
+    border-radius: 8px;
+    background: #d97757;
+    color: #151515;
+    font-size: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.go:hover {
+    background: #e58a6b;
+}
+
+/* Notes that sit under the bar. */
+#stale,
+#refresh,
+#toast {
+    position: fixed;
+    top: 72px;
+    left: var(--middle, 50%);
+    box-sizing: border-box;
+    margin: 0;
+    transform: translateX(-50%);
+}
+
+#stale,
+#refresh {
+    z-index: 1000;
+    width: min(520px, 100vw - 24px);
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #4a2a1c;
+    color: #ffd9c7;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+#toast {
+    z-index: 1001;
+    max-width: min(520px, 100vw - 24px);
+    padding: 9px 14px;
+    border-radius: 8px;
+    background: #e8e6e1;
+    color: #151515;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* The library: along the bottom, as wide as the chat's column. Its shelves sit
+   side by side and wrap when the window is made narrower. */
+#library {
+    bottom: 12px;
+    left: var(--middle, 50%);
+    width: min(var(--column, 768px), 100vw - 24px);
+    height: 204px;
+    transform: translateX(-50%);
+}
+
+#library .content {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 14px 18px;
+    padding: 12px 14px;
+}
+
+/* The settings: at the right, or at the left while the right-hand side is
+   selected, so that they never start out over the part being changed. */
+#inspector {
+    top: 72px;
+    right: 12px;
+    width: 312px;
+    max-height: calc(100vh - 84px);
+}
+
+body.dock-left #inspector:not(.moved) {
+    right: auto;
+    left: 12px;
+}
+
+/* ---------- Inside the windows ---------- */
+h2 {
+    margin: 22px 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.panel h2:first-child,
+#panel-side h2,
+.shelf h2 {
+    margin-top: 0;
+}
+
+.shelf h2 {
+    margin-bottom: 8px;
+}
+
+h3 {
+    margin: 12px 0 6px;
+    color: #a5a49a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.note,
+.empty,
+.now {
+    margin: 14px 0 0;
+    color: #a5a49a;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.note.first,
+.empty,
+.now {
+    margin-top: 0;
+}
+
+.now {
+    margin-bottom: 4px;
+}
+
+.now b {
+    color: #e8e6e1;
+    font-weight: 600;
+}
+
+/* The box in the library for adding files. */
+#add {
+    box-sizing: border-box;
+    display: flex;
+    flex: 0 0 160px;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border: 1px dashed #55534c;
+    border-radius: 10px;
+    color: #a5a49a;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+#add b {
+    color: #e8e6e1;
+    font-size: 13px;
+}
+
+#add button {
+    padding: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: #d97757;
+    color: #151515;
+    font-weight: 600;
+}
+
+#add button:hover {
+    background: #e58a6b;
+}
+
+/* The shelves share the width, the backgrounds taking the most. */
+.shelf {
+    flex: 1 1 100px;
+    min-width: 0;
+}
+
+#add + .shelf {
+    flex: 3 1 300px;
+}
+
+#library-note {
+    flex: 1 1 100%;
+    margin: 0;
+}
+
+/* The pictures: presets, saved images and side pictures. */
+.tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+    gap: 8px;
+}
+
+.tiles.small {
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+}
+
+/* An empty shelf shows its note where the pictures would be. */
+.tiles:empty {
+    display: none;
+}
+
+.cell {
+    position: relative;
+}
+
+.tile {
+    position: relative;
+    width: 100%;
+    height: 44px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background-color: #20201f;
+    background-position: center;
+    background-size: cover;
+    color: #a5a49a;
+    font-size: 11px;
+}
+
+.tile[draggable="true"] {
+    cursor: grab;
+}
+
+.tile:hover {
+    border-color: #55534c;
+}
+
+.tile[aria-pressed="true"],
+.frame-choice[aria-pressed="true"],
+.swatch[aria-pressed="true"] {
+    border-color: #d97757;
+}
+
+.tile span {
+    position: absolute;
+    right: 0;
+    bottom: 2px;
+    left: 0;
+    color: #fff;
+    font-size: 11px;
+    text-shadow: 0 1px 2px #000;
+}
+
+/* Side pictures are shown whole, whatever their shape. */
+.tiles.small .tile {
+    height: 48px;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+/* "Claude's own": no background picture. */
+.tile.plain {
+    border-style: dashed;
+    border-color: #55534c;
+    background: #2a2a29;
+}
+
+.tile.plain[aria-pressed="true"] {
+    border-style: solid;
+    border-color: #d97757;
+}
+
+/* The small cross on a saved picture. */
+.remove {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #151515;
+    color: #e8e6e1;
+    font-size: 13px;
+    line-height: 18px;
+    opacity: 0;
+}
+
+.cell:hover .remove,
+.remove:focus-visible {
+    opacity: 1;
+}
+
+.remove:hover {
+    background: #d97757;
+    color: #151515;
+}
+
+/* A shelf of the library while files are held over it. */
+[data-takes].over {
+    border-radius: 8px;
+    outline: 2px dashed #d97757;
+    outline-offset: 4px;
+}
 
 /* A row of buttons, one of them selected. */
 .pair {
@@ -552,7 +791,7 @@ body.dragging .grip {
 
 .frames {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
     gap: 6px;
 }
 
@@ -612,7 +851,7 @@ input[type="checkbox"] {
 
 .swatches {
     display: grid;
-    grid-template-columns: repeat(9, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(26px, 1fr));
     gap: 4px;
 }
 
@@ -660,170 +899,4 @@ input[type="text"] {
 
 #side-choices {
     margin-bottom: 14px;
-}
-
-
-/* ---------- Laid over the real Claude page ----------
-   The page itself shows through the middle and is what gets clicked and dropped
-   on. The bar and the library float over the column of the chat, and the settings
-   float at one side. While something is being dragged they fade and let it
-   through, so that every part of the page can be dropped on. */
-:root {
-    color-scheme: light;
-}
-
-body.on-page {
-    background: transparent;
-}
-
-body.on-page #stage {
-    position: fixed;
-    inset: 0;
-    display: block;
-    background: none;
-}
-
-body.on-page #screen {
-    position: absolute;
-    inset: 0;
-    overflow: visible;
-    border-radius: 0;
-    background: none;
-    box-shadow: none;
-}
-
-body.on-page #hint {
-    display: none;
-}
-
-body.on-page #bar,
-body.on-page #library,
-body.on-page #inspector,
-body.on-page #stale {
-    position: fixed;
-    z-index: 2;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 14px;
-    background: rgba(21, 21, 21, 0.9);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-    transition: opacity 0.15s;
-}
-
-body.on-page #bar {
-    top: 12px;
-    left: var(--middle, 50%);
-    width: max-content;
-    max-width: calc(100vw - 24px);
-    height: 48px;
-    padding: 0 12px;
-    transform: translateX(-50%);
-}
-
-body.on-page .space {
-    display: none;
-}
-
-body.on-page #stale {
-    top: 120px;
-    left: var(--middle, 50%);
-    width: min(520px, 100vw - 24px);
-    background: rgba(74, 42, 28, 0.94);
-    transform: translateX(-50%);
-}
-
-/* The library: a tray along the bottom, as wide as the chat's column. */
-body.on-page #library {
-    bottom: 12px;
-    left: var(--middle, 50%);
-    display: flex;
-    gap: 18px;
-    width: min(var(--column, 768px), 100vw - 24px);
-    max-height: 168px;
-    padding: 12px 14px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    transform: translateX(-50%);
-}
-
-body.on-page #add {
-    box-sizing: border-box;
-    flex: none;
-    width: 172px;
-    padding: 10px;
-}
-
-body.on-page #browse-for {
-    display: none;
-}
-
-body.on-page .shelf {
-    flex: none;
-}
-
-body.on-page .shelf h2 {
-    margin: 0 0 8px;
-}
-
-body.on-page .shelf .tiles {
-    grid-template-rows: repeat(2, 48px);
-    grid-template-columns: none;
-    grid-auto-columns: 76px;
-    grid-auto-flow: column;
-}
-
-body.on-page .shelf .tiles.small {
-    grid-auto-columns: 56px;
-}
-
-/* An empty shelf shows its note where the pictures would be. */
-body.on-page .shelf .tiles:empty {
-    display: none;
-}
-
-body.on-page .shelf .tile {
-    height: 48px;
-}
-
-body.on-page .empty {
-    width: 190px;
-}
-
-body.on-page #library-note {
-    display: none;
-}
-
-/* The settings: at the right, or at the left while the right-hand side is selected. */
-body.on-page #inspector {
-    top: 72px;
-    right: 12px;
-    width: 312px;
-    max-height: calc(100vh - 84px);
-}
-
-body.on-page.dock-left #inspector {
-    right: auto;
-    left: 12px;
-}
-
-body.on-page #toast {
-    position: fixed;
-    top: 72px;
-    bottom: auto;
-    left: var(--middle, 50%);
-    z-index: 3;
-    margin: 0;
-    transform: translateX(-50%);
-}
-
-body.on-page.dragging #bar,
-body.on-page.dragging #library,
-body.on-page.dragging #inspector {
-    opacity: 0.12;
-    pointer-events: none;
-}
-
-/* "Hide panels": only the bar stays. */
-body.on-page.bare #library,
-body.on-page.bare #inspector {
-    display: none;
 }
