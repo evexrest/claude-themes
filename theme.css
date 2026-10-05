@@ -33,18 +33,16 @@ html[data-wallpaper="on"] .df-header-backdrop {
     backdrop-filter: blur(16px);
 }
 
-/* Chat: the area around the message box. Blurred so messages scrolling
-   underneath do not show through as readable text. */
+/* Chat: the message box is left exactly as Claude draws it. Nothing is added to
+   it. Claude paints a page-coloured patch behind and around the box so that it
+   blends into the page; over a background picture that patch would show as a
+   plain rectangle, so the patch alone is made see-through. */
 html[data-wallpaper="on"] [data-testid="transcript-bottom-fade"] {
     display: none;
 }
 
 html[data-wallpaper="on"] [data-chat-input-container] .bg-page,
-html[data-wallpaper="on"] [data-composer-card-holder] {
-    background-color: transparent !important;
-    backdrop-filter: blur(24px);
-}
-
+html[data-wallpaper="on"] [data-composer-card-holder],
 html[data-wallpaper="on"] [data-cds="ChatComposer"] {
     background-color: transparent !important;
 }
@@ -138,18 +136,20 @@ html[data-frame-all] .dframe-root::after {
 }
 
 /* Text colour. claude.ai takes its text colours from a few shared values. These
-   rules replace them inside the sidebar and the chat window only, so menus and
-   pop-ups, which have solid backgrounds of their own, keep their normal colours.
-   Code and links keep theirs too. Checked on claude.ai on 2026-10-05. */
+   rules replace them in three places only: the sidebar, Claude's replies and your
+   messages. The message box, buttons, menus and pop-ups have solid backgrounds
+   of their own, so they keep Claude's colours and stay readable. Links keep
+   theirs too. Checked on claude.ai on 2026-10-05. */
 html[data-ct-text] .dframe-sidebar,
-html[data-ct-text] .dframe-pane-primary {
+html[data-ct-text] .dframe-pane-primary .standard-markdown,
+html[data-ct-text] .dframe-pane-primary [data-testid="user-message"] {
     color: var(--ct-text) !important;
 }
 
 html[data-ct-text] .dframe-sidebar,
 html[data-ct-text] .dframe-sidebar .cds-root,
-html[data-ct-text] .dframe-pane-primary,
-html[data-ct-text] .dframe-pane-primary .cds-root {
+html[data-ct-text] .dframe-pane-primary .standard-markdown,
+html[data-ct-text] .dframe-pane-primary [data-testid="user-message"] {
     --cds-text-primary: var(--ct-text) !important;
     --cds-text-secondary: color-mix(in srgb, var(--ct-text) 80%, transparent) !important;
     --cds-text-muted: color-mix(in srgb, var(--ct-text) 60%, transparent) !important;
@@ -161,24 +161,54 @@ html[data-ct-text] .dframe-pane-primary .cds-root {
     --text-500: var(--ct-text-hsl) !important;
 }
 
-/* Font, for Claude's replies, your messages and the message box. */
-html[data-ct-font] {
+/* Claude's own text colours, remembered at the top of the page so that they can
+   be handed back to the code blocks below. */
+html[data-ct-text] {
+    --ct-own-primary: var(--cds-text-primary);
+    --ct-own-secondary: var(--cds-text-secondary);
+    --ct-own-muted: var(--cds-text-muted);
+    --ct-own-000: var(--text-000);
+    --ct-own-100: var(--text-100);
+    --ct-own-200: var(--text-200);
+    --ct-own-300: var(--text-300);
+    --ct-own-400: var(--text-400);
+    --ct-own-500: var(--text-500);
+}
+
+/* Code blocks have a background of their own, so they and the box around them
+   keep Claude's own text colours. */
+html[data-ct-text] .dframe-pane-primary :is(.standard-markdown, [data-testid="user-message"]) :is(pre, div:has(> pre), div:has(> div > pre)) {
+    color: var(--ct-own-primary) !important;
+    --cds-text-primary: var(--ct-own-primary) !important;
+    --cds-text-secondary: var(--ct-own-secondary) !important;
+    --cds-text-muted: var(--ct-own-muted) !important;
+    --text-000: var(--ct-own-000) !important;
+    --text-100: var(--ct-own-100) !important;
+    --text-200: var(--ct-own-200) !important;
+    --text-300: var(--ct-own-300) !important;
+    --text-400: var(--ct-own-400) !important;
+    --text-500: var(--ct-own-500) !important;
+}
+
+/* Font, for Claude's replies and your messages only. claude.ai reads the font of
+   a message from these two values, so they are replaced on the messages
+   themselves and nowhere else. */
+html[data-ct-font] .dframe-pane-primary :is([data-testid="assistant-message"], .standard-markdown, [data-testid="user-message"]) {
     --font-claude-response: var(--ct-font) !important;
     --font-user-message: var(--ct-font) !important;
 }
 
-html[data-ct-font] [data-testid="user-message"],
-html[data-ct-font] [data-cds="ChatComposer"] .ProseMirror {
+html[data-ct-font] .dframe-pane-primary [data-testid="user-message"] {
     font-family: var(--ct-font) !important;
 }
 
 /* The words Claude marks like `this`, normally crimson. claude.ai reads their
-   colour from these two values when they are set. Code blocks are left alone. */
-html[data-ct-code] .dframe-pane-primary {
+   colour from this value when it is set. Code blocks and the message box are
+   left alone. */
+html[data-ct-code] .dframe-pane-primary :is(.standard-markdown, [data-testid="user-message"]) {
     --cds-prose-code-color: var(--ct-code) !important;
-    --cds-editor-code-ink: var(--ct-code) !important;
 }
 
-html[data-ct-code] .dframe-pane-primary code:not(pre code) {
+html[data-ct-code] .dframe-pane-primary :is(.standard-markdown, [data-testid="user-message"]) code:not(pre code) {
     color: var(--ct-code) !important;
 }
