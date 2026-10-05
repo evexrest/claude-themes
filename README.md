@@ -35,9 +35,10 @@ Clicked on another tab, the icon goes to your Claude tab, or opens one.
   opacity, or stay exactly as Claude draws it
 - A Zoom slider for the background image and for the sidebar's picture: from the whole
   picture, with nothing cut off, through filling the space, up to four times that. The
+  picture grows and shrinks around its middle and never slides. Left alone, a landscape
+  background is shown whole beside the sidebar and an upright one fills the page. The
   crop tool on the upload page zooms out to the whole picture as well
-- On a sidebar with a background or text colour of its own, the chat that is open shows
-  as a see-through bubble in the sidebar's text colour, in place of Claude's pale block
+- Nothing on the page is blurred. Messages fade out as they reach the title bar
 - Pictures or GIFs in the empty space on either side of the chat. Each side has its own
   size, height and opacity. They work with any background, including Claude's own. A picture
   bigger than the empty space carries on behind the chat, never on top of it

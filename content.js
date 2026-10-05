@@ -72,60 +72,82 @@ async function loadPicture(layer, presetId, imageId, show) {
     layer.url = url;
     layer.width = 0;
     layer.height = 0;
-    show(css);
 
-    // Zooming needs the picture's own size, which is only known once it has loaded.
+    // A saved image is laid out from its own size, so it is not shown until that
+    // has been read. Otherwise it would appear at one size and jump to another.
     if (url) {
         const probe = new Image();
-        probe.addEventListener("load", () => {
-            if (layer.url === url) {
-                layer.width = probe.naturalWidth;
-                layer.height = probe.naturalHeight;
-                sizePictures();
-            }
+        await new Promise((done) => {
+            probe.addEventListener("load", done);
+            probe.addEventListener("error", done);
+            probe.src = url;
         });
-        probe.src = url;
+        if (layer.url !== url) {
+            return;
+        }
+        layer.width = probe.naturalWidth;
+        layer.height = probe.naturalHeight;
     }
+    show(css);
     sizePictures();
 }
 
 // Where and how big to draw a layer's picture, as CSS, or null to let it fill its
-// box the ordinary way. At a zoom of 1 the picture fills `box`. From there down
-// to 0 it shrinks, and moves, until the whole picture just fits inside `seen`,
-// the part of the box that nothing covers. Above 1 it is that many times the
-// filling size.
+// box the ordinary way (a preset, or a picture whose size is not known).
+//
+// The picture's middle is always the middle of `seen`, the part of the box that
+// nothing covers, whatever the zoom: zooming makes the picture bigger or smaller
+// around that point and never slides it. At a zoom of 0 the whole picture just
+// fits inside `seen`. At 1 it is the smallest size that still covers all of
+// `box`. Between the two it is in between, and above 1 it is that many times the
+// covering size.
 function zoomedPicture(layer, zoom, box, seen) {
-    if (zoom === 1 || !layer.width || !layer.height || !box.width || !box.height || !seen.width || !seen.height) {
+    if (!layer.width || !layer.height || !box.width || !box.height || !seen.width || !seen.height) {
         return null;
     }
-    const fills = Math.max(box.width / layer.width, box.height / layer.height);
+    const middleX = seen.left - box.left + seen.width / 2;
+    const middleY = seen.top - box.top + seen.height / 2;
+    const fills = Math.max(
+        2 * Math.max(middleX, box.width - middleX) / layer.width,
+        2 * Math.max(middleY, box.height - middleY) / layer.height
+    );
     const whole = Math.min(seen.width / layer.width, seen.height / layer.height);
-    const part = Math.min(1, Math.max(0, zoom));
-    const scale = zoom > 1 ? fills * zoom : whole + (fills - whole) * part;
+    const scale = zoom > 1 ? fills * zoom : whole + (fills - whole) * Math.max(0, zoom);
     const width = layer.width * scale;
     const height = layer.height * scale;
-    // The picture's middle, measured from the box's corner.
-    const across = seen.left - box.left + seen.width / 2;
-    const down = seen.top - box.top + seen.height / 2;
-    const middleX = across + (box.width / 2 - across) * part;
-    const middleY = down + (box.height / 2 - down) * part;
     return {
         size: Math.round(width) + "px " + Math.round(height) + "px",
         position: Math.round(middleX - width / 2) + "px " + Math.round(middleY - height / 2) + "px"
     };
 }
 
-// Give both pictures their zoom. This is worked out in pixels from the size of
-// the window and of the sidebar, so it is done again whenever those change.
+// The part of the window in which the main picture can be seen. The picture lies
+// behind the whole window. A sidebar that is joined to it is see-through, so the
+// whole window counts; any other sidebar hides the strip it stands on, and what
+// is left is the part to its right. (On claude.ai the page area itself runs
+// underneath the sidebar, so it is the sidebar that has to be measured.)
+function seenBeside(box) {
+    const sidebar = settings.sidebarMode === "joined"
+        ? null
+        : document.querySelector('.dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar');
+    const edge = sidebar ? sidebar.getBoundingClientRect() : null;
+    // Only a sidebar standing on the left, with room left beside it.
+    if (!edge || edge.width === 0 || edge.left + edge.width / 2 > box.left + box.width / 2 || edge.right >= box.right) {
+        return box;
+    }
+    return { left: edge.right, top: box.top, width: box.right - edge.right, height: box.height };
+}
+
+// Lay out both pictures. This is worked out in pixels from the size of the
+// window and of the sidebar, so it is done again whenever those change.
 function sizePictures() {
     if (wallpaper) {
-        // The main picture lies behind the whole window. A sidebar that is joined
-        // to it is see-through, so the whole window counts as seen; any other
-        // sidebar hides its strip, and the whole picture has to fit beside it.
         const box = wallpaper.getBoundingClientRect();
-        const content = settings.sidebarMode === "joined" ? null : document.querySelector(".dframe-content");
-        const seen = content ? content.getBoundingClientRect() : box;
-        const drawn = zoomedPicture(layers.main, settings.zoom, box, seen) || { size: "", position: "" };
+        const seen = seenBeside(box);
+        const zoom = settings.imageZoom === null
+            ? autoZoom(layers.main.width, layers.main.height)
+            : settings.imageZoom;
+        const drawn = zoomedPicture(layers.main, zoom, box, seen) || { size: "", position: "" };
         if (wallpaper.style.backgroundSize !== drawn.size) {
             wallpaper.style.backgroundSize = drawn.size;
         }

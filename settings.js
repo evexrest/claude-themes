@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The editor compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.13.0";
+const filesVersion = "0.14.0";
 
 const defaults = {
     enabled: true,
@@ -15,11 +15,12 @@ const defaults = {
     // stored separately, under imageKey(id).
     images: [],
     opacity: 0.5,
-    // How big a saved image is drawn. 1 fills the page with it, cutting off whatever
-    // does not fit, as before there was a setting. Below 1 it shrinks towards 0,
-    // which shows the whole picture; above 1 it is that many times bigger. The
-    // presets are plain colour washes and are not affected.
-    zoom: 1,
+    // How big a saved image is drawn on the main page. Null is automatic: a picture
+    // that is wider than it is tall is shown whole, and any other fills the page
+    // (see autoZoom). A number sets it by hand: 0 shows the whole picture, 1 fills
+    // the page with it, cutting off what does not fit, and above 1 it is that many
+    // times bigger. The presets are plain colour washes and are not affected.
+    imageZoom: null,
     panelOpacity: 0.6,
     // The sidebar is "joined" to the main background, has a picture of its "own"
     // (a preset, or one of the saved images when `sidebarPreset` is null), or is
@@ -28,7 +29,7 @@ const defaults = {
     sidebarPreset: "graphite",
     sidebarImageId: null,
     sidebarOpacity: 0.8,
-    // The same as `zoom`, for the sidebar's own picture.
+    // The same for the sidebar's own picture, which fills the sidebar unless it is set.
     sidebarZoom: 1,
     frameLayout: "separate",
     frameSidebar: "none",
@@ -69,6 +70,12 @@ const defaults = {
     sidebarFont: "default",
     sidebarFontCustom: ""
 };
+
+// The zoom a main-page picture gets when none has been set: a landscape picture is
+// shown whole, and an upright or square one fills the page.
+function autoZoom(width, height) {
+    return width > height ? 0 : 1;
+}
 
 // Where one saved image's full-size picture is kept.
 function imageKey(id) {

@@ -58,20 +58,28 @@
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "z", metaKey: true, shiftKey: true, bubbles: true })); await wait(30);
   r.sliderRedone = { opacity: store.opacity };
 
-  // ----- zoom: for a saved image only; near 100 it settles on "Fills" -----
-  const zoomKept = await chrome.storage.local.get({ preset: null, imageId: null, sidebarMode: null, sidebarPreset: null });
+  // ----- zoom: for a saved image only; automatic until moved; near 100 it settles on "Fills" -----
+  const zoomKept = await chrome.storage.local.get({ preset: null, imageId: null, sidebarMode: null, sidebarPreset: null, images: [], sidebarImageId: null });
+  const shaped = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; c.getContext("2d").fillRect(0, 0, w, h); return c.toDataURL("image/jpeg", 0.5); };
+  await chrome.storage.local.set({ "image-zw": shaped(40, 20), "image-zt": shaped(20, 40), images: [...zoomKept.images, { id: "zw", thumb: shaped(40, 20) }, { id: "zt", thumb: shaped(20, 40) }] }); await wait(80);
   await chrome.storage.local.set({ preset: "ocean", sidebarMode: "own", sidebarPreset: "forest" }); await wait(80);
   r.zoomHiddenForPresets = { main: el("zoom-main").hidden, sidebar: el("zoom-side").hidden };
-  await chrome.storage.local.set({ preset: null, sidebarPreset: null }); await wait(80);
-  const zoomNow = (id, key) => ({ saved: store[key], label: el(id + "-value").textContent, slider: el(id).value });
-  r.zoomShownForImages = { main: !el("zoom-main").hidden, sidebar: !el("zoom-side").hidden, start: zoomNow("zoom", "zoom") };
-  set("zoom", 0); await wait(40); r.zoomAllTheWayOut = zoomNow("zoom", "zoom");
-  set("zoom", 250); await wait(40); r.zoomIn = zoomNow("zoom", "zoom");
-  set("zoom", 97); await wait(40); r.zoomNearFill = zoomNow("zoom", "zoom");
-  set("side-zoom", 0); await wait(40); r.zoomSidebarOut = { ...zoomNow("side-zoom", "sidebarZoom"), mainUntouched: store.zoom };
+  await chrome.storage.local.set({ preset: null, imageId: "zw", imageZoom: null, sidebarPreset: null, sidebarImageId: "zt" }); await wait(200);
+  const zoomNow = (id, key) => ({ saved: store[key] === undefined ? "(not set)" : store[key], label: el(id + "-value").textContent, slider: el(id).value });
+  r.zoomShownForImages = { main: !el("zoom-main").hidden, sidebar: !el("zoom-side").hidden };
+  r.zoomAutomaticLandscape = { ...zoomNow("zoom", "imageZoom"), resetButtonHidden: el("zoom-auto").hidden };
+  await chrome.storage.local.set({ imageId: "zt" }); await wait(200);
+  r.zoomAutomaticUpright = zoomNow("zoom", "imageZoom");
+  set("zoom", 0); await wait(40); r.zoomAllTheWayOut = { ...zoomNow("zoom", "imageZoom"), resetButtonHidden: el("zoom-auto").hidden };
+  set("zoom", 250); await wait(40); r.zoomIn = zoomNow("zoom", "imageZoom");
+  set("zoom", 97); await wait(40); r.zoomNearFill = zoomNow("zoom", "imageZoom");
+  el("zoom-auto").click(); await wait(60); r.zoomBackToAutomatic = zoomNow("zoom", "imageZoom");
+  set("zoom", 300); await wait(40);
+  usePicture("image", "zt", "main"); await wait(200); r.zoomKeptForTheSamePicture = zoomNow("zoom", "imageZoom");
+  usePicture("image", "zw", "main"); await wait(200); r.zoomAutomaticAgainForAnotherPicture = zoomNow("zoom", "imageZoom");
+  set("side-zoom", 0); await wait(40); r.zoomSidebarOut = { ...zoomNow("side-zoom", "sidebarZoom"), mainUntouched: store.imageZoom };
   set("side-zoom", 100); await wait(40);
-  await chrome.storage.local.set(zoomKept); await wait(80);
-
+  await chrome.storage.local.set({ ...zoomKept, imageZoom: null }); await wait(80);
   // ----- dropping files from the computer -----
   const gifBytes = Uint8Array.from(atob(GIF1.split(",")[1]), (c) => c.charCodeAt(0));
   const canvas = document.createElement("canvas"); canvas.width = 3000; canvas.height = 1500; canvas.getContext("2d").fillRect(0, 0, 3000, 1500);

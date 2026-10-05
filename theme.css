@@ -28,10 +28,16 @@ html[data-wallpaper="on"] .dframe-root[data-variant="web"]:not([data-collapsed])
     background-color: color-mix(in srgb, var(--df-web-sidebar-bg) var(--panel-opacity, 60%), transparent) !important;
 }
 
-/* Chat: the strip behind the title becomes frosted glass. */
+/* Chat: claude.ai paints a page-coloured strip behind the title bar, to hide the
+   messages that slide under it. Over a picture that strip would be a plain band,
+   so it is made see-through. Nothing is blurred. In its place the messages fade
+   out as they reach the title bar. */
 html[data-wallpaper="on"] .df-header-backdrop {
     background-color: transparent !important;
-    backdrop-filter: blur(16px);
+}
+
+html[data-wallpaper="on"] [data-testid="chat-column-body"] > [data-autoscroll-container] {
+    mask-image: linear-gradient(to bottom, transparent 10px, #000 60px);
 }
 
 /* Chat: the message box is left exactly as Claude draws it. Nothing is added to

@@ -68,16 +68,20 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   const kept = await chrome.storage.local.get({ preset: null, imageId: null, sidebarMode: null, sidebarPreset: null, sidebarImageId: null });
   store["image-wide"] = colourImage("#336699", 400, 100); store["image-tall"] = colourImage("#996633", 100, 400);
   const wp = document.getElementById("claude-wallpaper");
-  const zoomLook = () => { const b = wp.getBoundingClientRect(), s = sb.getBoundingClientRect(), c = getComputedStyle(wp), sc = getComputedStyle(sb, "::before"); return { window: Math.round(b.width) + "x" + Math.round(b.height), main: c.backgroundSize, at: wp.style.backgroundPosition, content: (() => { const m = document.querySelector(".dframe-content").getBoundingClientRect(); return [m.left, m.top, m.width, m.height].map(Math.round).join(","); })(), repeat: c.backgroundRepeat, sidebarBox: Math.round(s.width) + "x" + Math.round(s.height), sidebar: sc.backgroundSize, sidebarRepeat: sc.backgroundRepeat, size: size() }; };
+  const zoomLook = () => { const b = wp.getBoundingClientRect(), s = sb.getBoundingClientRect(), c = getComputedStyle(wp), sc = getComputedStyle(sb, "::before"); return { window: Math.round(b.width) + "x" + Math.round(b.height), main: c.backgroundSize, at: wp.style.backgroundPosition, middle: (() => { const z = wp.style.backgroundSize.match(/-?[0-9.]+/g), a = wp.style.backgroundPosition.match(/-?[0-9.]+/g); return z && a ? (Number(a[0]) + Number(z[0]) / 2) + "," + (Number(a[1]) + Number(z[1]) / 2) : ""; })(), content: (() => { const m = document.querySelector(".dframe-content").getBoundingClientRect(); return [m.left, m.top, m.width, m.height].map(Math.round).join(","); })(), repeat: c.backgroundRepeat, sidebarBox: Math.round(s.width) + "x" + Math.round(s.height), sidebar: sc.backgroundSize, sidebarRepeat: sc.backgroundRepeat, size: size() }; };
   await chrome.storage.local.set({ preset: null, imageId: "wide", sidebarMode: "own", sidebarPreset: null, sidebarImageId: "tall" }); await wait(200);
+  results.zoomAutomaticLandscape = zoomLook();
+  await chrome.storage.local.set({ imageId: "tall" }); await wait(200);
+  results.zoomAutomaticUpright = zoomLook();
+  await chrome.storage.local.set({ imageId: "wide", imageZoom: 1 }); await wait(200);
   results.zoomFills = zoomLook();
-  await chrome.storage.local.set({ zoom: 0, sidebarZoom: 0 }); await wait(100);
+  await chrome.storage.local.set({ imageZoom: 0, sidebarZoom: 0 }); await wait(100);
   results.zoomWhole = zoomLook();
-  await chrome.storage.local.set({ zoom: 0.5, sidebarZoom: 0.5 }); await wait(100);
+  await chrome.storage.local.set({ imageZoom: 0.5, sidebarZoom: 0.5 }); await wait(100);
   results.zoomHalfway = zoomLook();
-  await chrome.storage.local.set({ zoom: 2, sidebarZoom: 2 }); await wait(100);
+  await chrome.storage.local.set({ imageZoom: 2, sidebarZoom: 2 }); await wait(100);
   results.zoomTwice = zoomLook();
-  await chrome.storage.local.set({ zoom: 0, sidebarZoom: 0, imageId: "tall", sidebarImageId: "wide" }); await wait(200);
+  await chrome.storage.local.set({ imageZoom: 0, sidebarZoom: 0, imageId: "tall", sidebarImageId: "wide" }); await wait(200);
   results.zoomWholeOtherShapes = zoomLook();
   await chrome.storage.local.set({ preset: "dusk", sidebarPreset: "forest" }); await wait(100);
   results.zoomPresetsIgnoreIt = zoomLook();
@@ -85,7 +89,9 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   results.zoomJoinedSidebar = zoomLook();
   await chrome.storage.local.set({ preset: null, imageId: "wide" }); await wait(200);
   results.zoomWholeBehindAJoinedSidebar = zoomLook();
-  await chrome.storage.local.set({ zoom: 1, sidebarZoom: 1, ...kept }); await wait(200);
+  await chrome.storage.local.set({ imageZoom: 1 }); await wait(100);
+  results.zoomFillsBehindAJoinedSidebar = zoomLook();
+  await chrome.storage.local.set({ imageZoom: null, sidebarZoom: 1, ...kept }); await wait(200);
   results.zoomBack = zoomLook();
   // ----- the open chat's row in the sidebar -----
   const rowLook = () => { const s = getComputedStyle(document.getElementById("rowsel")); return { selected: s.backgroundColor, edge: s.boxShadow.slice(0, 70), other: getComputedStyle(document.getElementById("rowhov")).boxShadow, hover: getComputedStyle(document.getElementById("rowhov")).backgroundColor, size: size() }; };

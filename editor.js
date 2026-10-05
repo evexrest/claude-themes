@@ -167,6 +167,46 @@ function slider(id, key, shown, stored, slid) {
     });
 }
 
+// The main picture's Zoom slider. Until it has been moved the zoom is automatic,
+// worked out from the picture's shape, and the slider shows what that comes to.
+function mainZoom() {
+    const input = byId("zoom");
+
+    input.addEventListener("input", () => {
+        save({ imageZoom: zoomStored(Number(input.value)) }, "flow");
+    });
+    byId("zoom-auto").addEventListener("click", () => {
+        save({ imageZoom: null });
+    });
+    updaters.push(() => {
+        const automatic = state.imageZoom === null;
+        const shape = shapes.get(state.imageId);
+        input.value = hundredths(automatic ? (shape ? autoZoom(shape.width, shape.height) : 1) : state.imageZoom);
+        byId("zoom-value").textContent = zoomed(Number(input.value)) + (automatic ? ", automatic" : "");
+        byId("zoom-auto").hidden = automatic;
+        if (automatic && !shape) {
+            readShape(state.imageId);
+        }
+    });
+}
+
+// The shape of each saved image, read from its small copy, which has the same
+// proportions. The automatic zoom depends on it.
+const shapes = new Map();
+function readShape(id) {
+    const image = state.images.find((item) => item.id === id);
+    if (!image || !image.thumb || shapes.has(id)) {
+        return;
+    }
+    shapes.set(id, null);
+    const small = new Image();
+    small.addEventListener("load", () => {
+        shapes.set(id, { width: small.naturalWidth, height: small.naturalHeight });
+        sync();
+    });
+    small.src = image.thumb;
+}
+
 // The same for one of a side picture's own settings (`what` is "Size", "Position"
 // or "Opacity"): the slider shows and changes it for whichever side is selected.
 function sideSlider(id, what, shown, stored, slid) {
@@ -347,7 +387,9 @@ function usePicture(kind, id, zone) {
         }
         choose("sidebar");
     } else {
-        save(kind === "preset" ? { preset: id, enabled: true } : { preset: null, imageId: id, enabled: true });
+        // A different picture starts again on the automatic zoom.
+        const zoom = state.imageId === id ? {} : { imageZoom: null };
+        save(kind === "preset" ? { preset: id, enabled: true } : { preset: null, imageId: id, enabled: true, ...zoom });
         choose("main");
     }
 }
@@ -1155,7 +1197,7 @@ async function start() {
 
     // The main page.
     slider("opacity", "opacity", percent, fraction, hundredths);
-    slider("zoom", "zoom", zoomed, zoomStored, hundredths);
+    mainZoom();
     colours("text-swatches", "text-color", "textColor", textSwatches, "#ffffff");
     colours("code-swatches", "code-color", "codeColor", codeSwatches, "#8e2626");
     fontChoice("font", "font-custom", "font", "fontCustom");

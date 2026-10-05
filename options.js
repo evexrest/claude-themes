@@ -266,9 +266,11 @@ document.getElementById("save").addEventListener("click", async () => {
     const saved = await chrome.storage.local.get({ images: [] });
 
     // Use it straight away, as the main background or as the sidebar's own picture.
+    // A cropped picture was shaped to the screen here, so it fills the page. A GIF
+    // was not, and gets the automatic zoom.
     const use = target === "sidebar"
         ? { sidebarMode: "own", sidebarPreset: null, sidebarImageId: id }
-        : { preset: null, imageId: id };
+        : { preset: null, imageId: id, imageZoom: movingData ? null : 1 };
 
     try {
         await chrome.storage.local.set({
