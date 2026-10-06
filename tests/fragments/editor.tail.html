@@ -245,6 +245,29 @@
   r.strangeThemeFile = { told: odd, textColor: store.textColor ?? null, opacity: typeof store.opacity, enabled: store.enabled, unknown: "unknownThing" in store, imagesStillAList: Array.isArray(store.images) && store.images.every((i) => i.id !== "x"), preset: store.preset, imageId: store.imageId ?? null, panelOpacity: store.panelOpacity, sidebarTextColor: store.sidebarTextColor };
   el("undo").click(); await wait(120);
 
+  // ----- a warning when the text is hard to read on the background -----
+  const shades = (list) => list.map((c) => c.join(",")).join(" ");
+  r.colourSums = { blackOnWhite: contrast(rgb("#000000"), rgb("#ffffff")), onItself: contrast(rgb("#777777"), rgb("#777777")), halfBlackOverWhite: mix(rgb("#000000"), rgb("#ffffff"), 0.5).join(","),
+    washColours: shades(gradientColours("radial-gradient(circle at 15% 20%, rgba(255, 190, 150, 0.35), transparent 45%), linear-gradient(135deg, #000000, #ffffff)")),
+    whiteTextOverHalfBlackOnLightPage: shades(backdrop({ opacity: 0.5 }, "main", "light", [rgb("#000000")], null)), readsAtTheWorstQuarter: reads("#ffffff", "light", [rgb("#ffffff"), rgb("#000000"), rgb("#000000"), rgb("#000000"), rgb("#000000")]) };
+  const warning = (id) => el(id).hidden ? null : { says: el(id).querySelector("span").textContent, button: el(id).querySelector("button").hidden ? null : el(id).querySelector("button").textContent };
+  el("part-main").click(); await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
+  r.readable = { asInstalled: [warning("text-warning"), warning("side-text-warning")] };
+  await chrome.storage.local.set({ preset: "none", textColor: "#ffffff" }); await wait(150);
+  r.readable.whiteOnClaudesOwnPage = warning("text-warning");
+  el("text-warning").querySelector("button").click(); await wait(150);
+  r.readable.afterTheButton = { textColor: store.textColor, warning: warning("text-warning") };
+  await chrome.storage.local.set({ "image-dk": colourImage("#101010"), images: [...store.images, { id: "dk", thumb: colourImage("#101010") }] }); await wait(80);
+  await chrome.storage.local.set({ preset: null, imageId: "dk", opacity: 1, textColor: "#0b0b0b" }); await wait(250);
+  r.readable.blackOnADarkPicture = warning("text-warning");
+  el("text-warning").querySelector("button").click(); await wait(250);
+  r.readable.afterItsButton = { textColor: store.textColor, warning: warning("text-warning") };
+  await chrome.storage.local.set({ opacity: 0.5, textColor: null, sidebarMode: "own", sidebarPreset: "graphite", sidebarOpacity: 1, sidebarTextColor: "#2b2b2b" }); await wait(250);
+  r.readable.sidebarHasItsOwn = { main: warning("text-warning"), sidebar: warning("side-text-warning") };
+  await chrome.storage.local.set({ enabled: false }); await wait(150);
+  r.readable.nothingWhenTheThemeIsOff = [warning("text-warning"), warning("side-text-warning")];
+  await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
+
   // ----- a change Chrome cannot store is put back, and the person is told -----
   el("part-main").click(); const realSet = chrome.storage.local.set, opacityStored = Math.round((store.opacity ?? 0.5) * 100);
   chrome.storage.local.set = async () => { throw new Error("disk full"); };

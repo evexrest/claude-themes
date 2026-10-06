@@ -926,6 +926,22 @@ input[type="text"] {
     margin-bottom: 14px;
 }
 
+/* A warning that the text may be hard to read (readable.js). */
+.warn {
+    margin: 10px 0 0;
+    padding: 8px 10px;
+    border: 1px solid #b98a2f;
+    border-radius: 8px;
+    background: #2b2413;
+    color: #f1dca6;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.warn .wide {
+    margin-top: 8px;
+}
+
 /* ---------- The first-time note, the theme's own buttons, and a question ---------- */
 
 #welcome {

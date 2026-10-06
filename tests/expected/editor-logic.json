@@ -471,6 +471,47 @@
   "panelOpacity": 0.4,
   "sidebarTextColor": "#ABCDEF"
  },
+ "colourSums": {
+  "blackOnWhite": 21,
+  "onItself": 1,
+  "halfBlackOverWhite": "128,128,128",
+  "washColours": "0,0,0 128,128,128 255,255,255",
+  "whiteTextOverHalfBlackOnLightPage": "126,126,126",
+  "readsAtTheWorstQuarter": 21
+ },
+ "readable": {
+  "asInstalled": [
+   null,
+   null
+  ],
+  "whiteOnClaudesOwnPage": {
+   "says": "This text colour may be hard to read on this background in Claude's light mode.",
+   "button": "Use Claude's own colour"
+  },
+  "afterTheButton": {
+   "textColor": null,
+   "warning": null
+  },
+  "blackOnADarkPicture": {
+   "says": "This text colour may be hard to read on this background in both light and dark mode.",
+   "button": "Use white"
+  },
+  "afterItsButton": {
+   "textColor": "#ffffff",
+   "warning": null
+  },
+  "sidebarHasItsOwn": {
+   "main": null,
+   "sidebar": {
+    "says": "This text colour may be hard to read on this background in both light and dark mode.",
+    "button": "Use white"
+   }
+  },
+  "nothingWhenTheThemeIsOff": [
+   null,
+   null
+  ]
+ },
  "saveFails": {
   "told": "Chrome could not save that change, so it was put back. disk full",
   "sliderBackAtStoredValue": true
