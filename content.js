@@ -5,6 +5,10 @@
 
 const root = document.documentElement;
 let settings = defaults;
+
+// True on a page that is left exactly as Claude draws it: anything that is not a
+// chat. See onChatPage.
+let plainPage = false;
 let wallpaper = null;
 let frameUrl = null;
 
@@ -204,11 +208,31 @@ function sizePictures() {
         : null);
 }
 
-function applyBackground(sourceChanged) {
-    const preset = presets.find((item) => item.id === settings.preset);
+// The main page's theme is for chats. claude.ai's other pages (Projects, Artifacts,
+// Scheduled, Customize and the rest) are built from solid panels of their own, which
+// a background shows through in patches, so those pages are left as Claude draws
+// them. A chat is a page with a message box in it. While a page is still loading
+// there is nothing to look at yet, and its address decides.
+function onChatPage() {
+    const pane = ".dframe-pane-primary ";
+    if (document.querySelector(pane + '[data-cds="Page"]')) {
+        return false;
+    }
+    if (document.querySelector(pane + '[data-cds="ChatComposer"], [data-testid="chat-column-body"]')) {
+        return true;
+    }
+    return /^\/($|new($|\/)|chat\/)/.test(location.pathname);
+}
 
-    // Off, set to Claude's own background, or nothing to show.
-    if (!settings.enabled || settings.preset === "none" || (!preset && !settings.imageId)) {
+// Whether the settings ask for a background on the main page at all.
+function wantsBackground() {
+    const preset = presets.find((item) => item.id === settings.preset);
+    return settings.enabled && settings.preset !== "none" && Boolean(preset || settings.imageId);
+}
+
+function applyBackground(sourceChanged) {
+    // Off, set to Claude's own background, nothing to show, or not a chat.
+    if (!wantsBackground() || plainPage) {
         setAttribute("data-wallpaper", false);
         return;
     }
@@ -404,7 +428,8 @@ function applyFrames(imageChanged) {
 
     const combined = settings.frameLayout === "combined";
     applyFrame("sidebar", combined ? "none" : settings.frameSidebar);
-    applyFrame("main", combined ? "none" : settings.frameMain);
+    // The chat window's frame is part of the main page's theme: chats only.
+    applyFrame("main", combined || plainPage ? "none" : settings.frameMain);
     applyFrame("all", combined ? settings.frameAll : "none");
 }
 
@@ -421,16 +446,21 @@ function applyTextValue(name, variable, value) {
 // restyling; this hands it the colours and the fonts.
 function applyText() {
     const on = settings.enabled;
+    // The main page's text is themed in chats only.
+    const main = on && !plainPage;
 
-    const colour = on ? settings.textColor : null;
+    const colour = main ? settings.textColor : null;
     applyTextValue("data-ct-text", "--ct-text", colour);
     if (colour) {
         root.style.setProperty("--ct-text-hsl", hslParts(colour));
     }
-    applyTextValue("data-ct-code", "--ct-code", on ? settings.codeColor : null);
-    applyTextValue("data-ct-font", "--ct-font", on ? fontFamily(settings.font, settings.fontCustom) : null);
+    applyTextValue("data-ct-code", "--ct-code", main ? settings.codeColor : null);
+    applyTextValue("data-ct-font", "--ct-font", main ? fontFamily(settings.font, settings.fontCustom) : null);
 
-    const sideColour = on ? settings.sidebarTextColor : null;
+    // A sidebar joined to the main background loses that background on a page that
+    // is not a chat, and a colour chosen to be read against it goes with it.
+    const bare = plainPage && settings.sidebarMode === "joined" && wantsBackground();
+    const sideColour = on && !bare ? settings.sidebarTextColor : null;
     applyTextValue("data-ct-side-text", "--ct-side-text", sideColour);
     if (sideColour) {
         root.style.setProperty("--ct-side-text-hsl", hslParts(sideColour));
@@ -463,6 +493,7 @@ function tellEditor() {
     }
     editorFrame.contentWindow.postMessage({
         claudeThemes: "layout",
+        plainPage: plainPage,
         boxes: {
             // Only an open sidebar: the theme leaves a collapsed one alone.
             sidebar: boxOf(document.querySelector('.dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar')),
@@ -541,8 +572,23 @@ function watchEditor() {
     });
 }
 
+// Look again at what kind of page this is, and switch the main page's theme on or
+// off if that has changed.
+function checkPage() {
+    const plain = !onChatPage();
+    if (plain === plainPage) {
+        return;
+    }
+    plainPage = plain;
+    applyBackground(false);
+    applyFrames(false);
+    applyText();
+    placeStickers();
+}
+
 async function start() {
     settings = await chrome.storage.local.get(defaults);
+    plainPage = !onChatPage();
     applyBackground(true);
     applySidebar(true);
     applyFrames(true);
@@ -582,6 +628,21 @@ async function start() {
         ]
     });
 
+    // claude.ai goes from page to page without reloading. Whenever it adds or takes
+    // away part of the page, look at whether this is still a chat: once for each
+    // burst of changes, a moment after the first of them. (A timer, because a tab
+    // that is not showing draws no frames to wait for.)
+    let looking = false;
+    new MutationObserver(() => {
+        if (!looking) {
+            looking = true;
+            setTimeout(() => {
+                looking = false;
+                checkPage();
+            }, 30);
+        }
+    }).observe(root, { childList: true, subtree: true });
+
     // The empty space beside the chat changes when the window is resized, the
     // sidebar opens or closes, or another chat is opened. claude.ai swaps pages
     // without reloading, so a slow timer catches the changes nothing announces.
@@ -603,6 +664,7 @@ async function start() {
             }
             watched = pane;
         }
+        checkPage();
         placeStickers();
         sizePictures();
     }, 1000);

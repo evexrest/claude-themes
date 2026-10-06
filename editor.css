@@ -498,6 +498,7 @@ body.moving {
 
 /* Notes that sit under the bar. */
 #stale,
+#not-a-chat,
 #refresh,
 #toast {
     position: fixed;
@@ -509,6 +510,7 @@ body.moving {
 }
 
 #stale,
+#not-a-chat,
 #refresh {
     z-index: 1000;
     width: min(520px, 100vw - 24px);

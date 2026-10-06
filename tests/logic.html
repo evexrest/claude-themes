@@ -164,6 +164,23 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   await chrome.storage.local.set({ stickerLeft: "b" }); await wait(150);
   results.leftSwapped = { shown: st(0).shown, blob: await fetch(document.querySelector(".claude-sticker").src).then((r) => r.blob()).then((b) => b.size) };
   await chrome.storage.local.set({ preset: "dusk" }); await wait(60);
+  // ----- pages that are not chats are left as Claude draws them -----
+  const before = await chrome.storage.local.get({ enabled: null, preset: null, imageId: null, textColor: null, sidebarTextColor: null, sidebarMode: null, sidebarPreset: null, frameLayout: null, frameMain: null, frameSidebar: null, stickerLeft: null });
+  await chrome.storage.local.set({ enabled: true, preset: "dusk", textColor: "#ffffff", sidebarTextColor: "#ffffff", sidebarMode: "own", sidebarPreset: "forest", frameLayout: "separate", frameMain: "brush", frameSidebar: "brush", stickerLeft: "a" }); await wait(250);
+  const themed = () => ({ background: R.getAttribute("data-wallpaper"), text: R.getAttribute("data-ct-text"), frame: R.getAttribute("data-frame-main"), pageColour: getComputedStyle(document.querySelector(".dframe-content")).backgroundColor, sidePicture: st(0) ? st(0).shown : null, sidebarPicture: R.getAttribute("data-sidebar-image"), sidebarText: R.getAttribute("data-ct-side-text"), sidebarFrame: R.getAttribute("data-frame-sidebar"), size: size() });
+  results.onAChat = themed();
+  const messageBox = document.querySelector('[data-cds="ChatComposer"]'), holder = messageBox.parentNode, after = messageBox.nextSibling;
+  const listPage = document.createElement("div"); listPage.setAttribute("data-cds", "Page");
+  messageBox.remove(); pane.appendChild(listPage); await wait(200);
+  results.onAListPage = themed();
+  await chrome.storage.local.set({ sidebarMode: "joined" }); await wait(120);
+  results.onAListPageWithAJoinedSidebar = themed();
+  await chrome.storage.local.set({ sidebarMode: "own" }); await wait(120);
+  listPage.remove(); await wait(200);
+  results.onAPageWithNoMessageBox = themed();
+  holder.insertBefore(messageBox, after); await wait(250);
+  results.backOnAChat = themed();
+  await chrome.storage.local.set(before); await wait(200);
   await chrome.storage.local.set({ sidebarMode: "own", enabled: false }); await wait(60);
   results.disabled = { ...state(), side: R.getAttribute("data-sidebar-image"), frame: R.getAttribute("data-frame-all"), sticker: st(0).shown };
   // ----- the editor, laid over the page -----

@@ -1490,6 +1490,7 @@ function startOnPage() {
     window.addEventListener("message", (event) => {
         if (event.source === window.parent && event.data && event.data.claudeThemes === "layout") {
             pageBoxes = event.data.boxes;
+            byId("not-a-chat").hidden = event.data.plainPage !== true;
             layout();
         }
     });
