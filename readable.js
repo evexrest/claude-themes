@@ -136,9 +136,14 @@ function watchReadability(place, noteId) {
         fix = found.fix;
         note.hidden = found.modes.length === 0;
         const where = found.modes.length === 2 ? "both light and dark mode" : `Claude's ${found.modes[0]} mode`;
+        // With no one colour to offer, the advice depends on how strong the background is.
+        const strength = place === "sidebar" && state.sidebarMode === "own" ? state.sidebarOpacity : state.opacity;
+        const advice = strength < 1
+            ? " A background at full opacity looks the same in both modes, which makes a colour easier to choose."
+            : " The picture has both light and dark areas. A lower opacity fades it into Claude's page colour, where Claude's own text colour reads well.";
         note.querySelector("span").textContent =
             `${state[key] ? "This text colour" : "Claude's own text colour"} may be hard to read on this background in ${where}.` +
-            (fix === undefined ? " A background at full opacity looks the same in both modes, which makes a colour easier to choose." : "");
+            (fix === undefined ? advice : "");
         button.hidden = fix === undefined;
         button.textContent = names.get(fix) || "";
     };

@@ -264,15 +264,23 @@
   r.readable.afterItsButton = { textColor: store.textColor, warning: warning("text-warning") };
   await chrome.storage.local.set({ opacity: 0.5, textColor: null, sidebarMode: "own", sidebarPreset: "graphite", sidebarOpacity: 1, sidebarTextColor: "#2b2b2b" }); await wait(250);
   r.readable.sidebarHasItsOwn = { main: warning("text-warning"), sidebar: warning("side-text-warning") };
+  const halves = (() => { const c = document.createElement("canvas"); c.width = 8; c.height = 8; const x = c.getContext("2d"); x.fillStyle = "#ffffff"; x.fillRect(0, 0, 8, 4); x.fillStyle = "#000000"; x.fillRect(0, 4, 8, 4); return c.toDataURL("image/png"); })();
+  await chrome.storage.local.set({ "image-hf": halves, images: [...store.images, { id: "hf", thumb: halves }] }); await wait(80);
+  await chrome.storage.local.set({ preset: null, imageId: "hf", opacity: 1, textColor: null, sidebarMode: "plain", sidebarTextColor: null }); await wait(250);
+  r.readable.halfLightHalfDarkAtFullStrength = warning("text-warning");
+  await chrome.storage.local.set({ opacity: 0.4 }); await wait(250);
+  r.readable.theSamePictureFaded = warning("text-warning");
   await chrome.storage.local.set({ enabled: false }); await wait(150);
   r.readable.nothingWhenTheThemeIsOff = [warning("text-warning"), warning("side-text-warning")];
   await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
 
   // ----- the ready-made themes -----
-  const worst = {};
+  const worst = {}, worstSpot = {};
   for (const theme of builtInThemes) { const c = themeChange(theme), main = await sourceColours(c.preset, null, []), side = await sourceColours(c.sidebarPreset, null, []);
-    worst[theme.id] = Math.min(...["main", "sidebar"].flatMap((place) => ["light", "dark"].map((mode) => reads(place === "main" ? c.textColor : c.sidebarTextColor, mode, backdrop(c, place, mode, main, side))))); }
-  r.builtInThemes = { names: builtInThemes.map((t) => t.name).join(", "), tiles: el("themes").children.length, leastContrastInEitherModeOnPageOrSidebar: worst, allReadWell: Object.values(worst).every((n) => n >= 4.5),
+    const everywhere = ["main", "sidebar"].flatMap((place) => ["light", "dark"].map((mode) => ({ text: place === "main" ? c.textColor : c.sidebarTextColor, mode, behind: backdrop(c, place, mode, main, side) })));
+    worst[theme.id] = Math.min(...everywhere.map((w) => reads(w.text, w.mode, w.behind)));
+    worstSpot[theme.id] = Math.min(...everywhere.flatMap((w) => w.behind.map((colour) => contrast(rgb(w.text || claudeColours[w.mode].text), colour)))); }
+  r.builtInThemes = { names: builtInThemes.map((t) => t.name).join(", "), tiles: el("themes").children.length, contrastOnThreeQuartersOfTheBackground: worst, contrastAtTheWorstSpot: worstSpot, allReadWell: Object.values(worst).every((n) => n >= 4.5) && Object.values(worstSpot).every((n) => n >= 4.5),
     settingsAThemeFileCouldNotHold: builtInThemes.flatMap((t) => Object.entries(t.settings).filter(([k, v]) => !soundSetting(k, v)).map(([k]) => t.id + "." + k)),
     backgroundsThatDoNotExist: builtInThemes.filter((t) => !presets.some((p) => p.id === t.settings.preset)).map((t) => t.id) };
   await chrome.storage.local.set({ preset: null, imageId: "th", stickerLeft: "ts", frameMain: "custom", frameImage: colourImage("#ff0000"), frameSlice: [1, 1, 1, 1], textColor: "#123456", sidebarMode: "plain" }); await wait(150);
@@ -294,13 +302,14 @@
   const controls = [...document.querySelectorAll("button, input:not([type=file]), select, a[href]")].filter((c) => !c.closest(".warn[hidden]")), choices = [...document.querySelectorAll(".pair button, .tile, .swatch, .frame-choice")];
   el("show-library").focus(); const ring = getComputedStyle(el("show-library"));
   r.withoutAMouse = { controls: controls.length, withNoName: [...new Set(controls.filter((c) => !nameOf(c)).map(called))], choices: choices.length, choicesThatDoNotSayWhetherTheyAreOn: [...new Set(choices.filter((c) => !c.hasAttribute("aria-pressed")).map(called))],
-    cannotBeTabbedTo: controls.filter((c) => c.tabIndex < 0).map(called), focusRing: ring.outlineStyle + " " + ring.outlineWidth, messagesAreReadOut: el("toast").getAttribute("role"),
+    takenOutOfTheTabOrder: controls.filter((c) => c.tabIndex < 0).map(called), removeButtonsSay: [...new Set([...document.querySelectorAll(".remove")].map(nameOf))], focusRing: ring.outlineStyle + " " + ring.outlineWidth, messagesAreReadOut: el("toast").getAttribute("role"),
     pageOverlayHiddenFromScreenReaders: el("overlay").getAttribute("aria-hidden"), windowsNamed: ["library", "inspector"].map((w) => el(w).getAttribute("aria-label")).join(", ") };
   el("theme-reset").focus(); el("theme-reset").click(); await wait(60); const inAsk = document.activeElement.id; el("ask-no").click(); await wait(60);
   r.withoutAMouse.question = { focusGoesToIt: inAsk, andBackAfter: document.activeElement.id };
 
   // ----- the foot of the library: version, shortcut, where to report a problem -----
-  r.about = { showsTheVersionChromeIsRunning: el("version").textContent === chrome.runtime.getManifest().version && /^\d+\.\d+\.\d+$/.test(el("version").textContent), shortcut: el("shortcut").textContent,
+  window.shortcutKeys = ""; await showShortcut(); const withoutKeys = el("shortcut").textContent; window.shortcutKeys = undefined; await showShortcut();
+  r.about = { whenAnotherExtensionHasTheKeys: withoutKeys, showsTheVersionChromeIsRunning: el("version").textContent === chrome.runtime.getManifest().version && /^\d+\.\d+\.\d+$/.test(el("version").textContent), shortcut: el("shortcut").textContent,
     links: [...el("about").querySelectorAll("a")].map((a) => a.textContent + " -> " + a.href + (a.target === "_blank" ? " (new tab)" : "")) };
 
   // ----- a change Chrome cannot store is put back, and the person is told -----
@@ -308,6 +317,9 @@
   chrome.storage.local.set = async () => { throw new Error("disk full"); };
   set("opacity", opacityStored === 11 ? 12 : 11); await wait(60);
   r.saveFails = { told: el("toast").hidden ? "" : el("toast").textContent, sliderBackAtStoredValue: Number(el("opacity").value) === opacityStored };
+  chrome.storage.local.set = async () => { await wait(40); throw new Error("disk full"); };
+  for (const value of [71, 72, 73, 74, 75]) { set("opacity", value); await wait(15); } await wait(200);
+  r.saveFails.afterFiveQuickChangesEachRefusedLater = { slider: Number(el("opacity").value) === opacityStored ? "at the stored value" : el("opacity").value, undoOff: el("undo").disabled, redoOff: el("redo").disabled };
   chrome.storage.local.set = realSet;
 
   // ----- the toolbar icon -----

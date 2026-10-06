@@ -47,7 +47,7 @@ The description already says "Unofficial, not made by Anthropic".
 > - Ink and pop-out borders that never move or resize anything
 > - Save a whole theme to a file, with its pictures, to back it up or share it
 > - Works in light and dark mode, and warns you when your text colour is hard to read
-> - Works from the keyboard and with a screen reader
+> - Buttons, sliders and choices work from the keyboard and are named for screen readers
 >
 > What it leaves alone: the message box, menus and code blocks keep Claude's own look, and
 > pages that are not chats are shown as Claude draws them.

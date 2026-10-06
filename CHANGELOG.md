@@ -3,6 +3,15 @@
 What changed in each version, newest first. Versions before 0.18.0 were made over two days
 and are grouped.
 
+## 0.19.1 (2026-10-06)
+
+- The Library no longer starts partly under the Settings window, so every theme shows.
+- A change Chrome refuses to store now goes back to the stored value even while a slider
+  is still moving.
+- The readability warning gives advice that fits a picture with both light and dark
+  areas at full opacity.
+- The cross on a saved picture has a name a screen reader can say.
+
 ## 0.19.0 (2026-10-06)
 
 - Nine ready-made themes at the top of the Library. One click switches the whole look.
@@ -13,8 +22,9 @@ and are grouped.
   both.
 - A keyboard shortcut for the editor: Alt+Shift+E, or Option+Shift+E on a Mac. Change it
   at `chrome://extensions/shortcuts`.
-- The editor works without a mouse. Every control has a name a screen reader can say,
-  choices say whether they are on, and the keyboard's place is ringed.
+- Every button, slider and choice in the editor can be reached with Tab and has a name
+  a screen reader can say. Choices say whether they are on, and the keyboard's place is
+  ringed. Dragging a picture or a window still needs a mouse.
 - A question such as "Remove this picture?" starts on Cancel, so Enter never removes
   anything.
 - If Chrome cannot store a change, the editor puts the change back and says so.

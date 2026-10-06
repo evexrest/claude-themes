@@ -178,7 +178,7 @@ const builtInThemes = [
     { id: "sunset", name: "Sunset", settings: { preset: "dusk", opacity: 0.55 } },
     { id: "northern-lights", name: "Northern lights", settings: { preset: "aurora", opacity: 0.55, font: "sans", sidebarFont: "sans" } },
     { id: "campfire", name: "Campfire", settings: { preset: "ember", opacity: 0.5, font: "serif" } },
-    { id: "deep-sea", name: "Deep sea", settings: { preset: "ocean", opacity: 0.55, font: "rounded", sidebarFont: "rounded" } },
+    { id: "deep-sea", name: "Deep sea", settings: { preset: "ocean", opacity: 0.45, font: "rounded", sidebarFont: "rounded" } },
     { id: "woodland", name: "Woodland", settings: { preset: "forest", opacity: 0.5, font: "typewriter" } },
     {
         id: "midnight",
@@ -296,9 +296,10 @@ byId("welcome-done").addEventListener("click", () => {
 // At the foot of the library: which version this is, and the keys that open the
 // editor. Chrome leaves the keys unset when another extension already has them.
 byId("version").textContent = chrome.runtime.getManifest().version;
-chrome.commands.getAll().then((commands) => {
-    const opener = commands.find((command) => command.name === "_execute_action");
+async function showShortcut() {
+    const opener = (await chrome.commands.getAll()).find((command) => command.name === "_execute_action");
     byId("shortcut").textContent = opener && opener.shortcut
         ? `${opener.shortcut} opens and closes this editor.`
         : "To open this editor from the keyboard, choose the keys at chrome://extensions/shortcuts.";
-});
+}
+showShortcut();

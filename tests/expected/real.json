@@ -29,6 +29,9 @@
   "foot": "Claude Themes <version>. ⌥⇧E opens and closes this editor. Report a problem Privacy",
   "oldCopyNotice": false
  },
+ "themeMidnight": "midnight #f5f0e6 1",
+ "pageShowsMidnight": "midnight wash, text #f5f0e6",
+ "themeUndone": "dusk null",
  "chooseOcean": "ocean",
  "pageShowsOcean": "radial-gradient(circle at 25% 85%, rgba(150,",
  "dropOnTheRight": {
@@ -42,11 +45,11 @@
   "at": "1310,567,180,144"
  },
  "windowsWithARealMouse": {
-  "libraryFirst": "520,505,768,296",
-  "afterDraggingTitleBar": "300,245,768,296",
-  "afterDraggingCorner": "300,245,908,406",
-  "afterDraggingLeftEdge": "210,245,998,406",
-  "remembered": "{\"height\":406,\"left\":210,\"top\":245,\"width\":998}",
+  "libraryFirst": "520,505,656,296",
+  "afterDraggingTitleBar": "300,245,656,296",
+  "afterDraggingCorner": "300,245,796,406",
+  "afterDraggingLeftEdge": "210,245,886,406",
+  "remembered": "{\"height\":406,\"left\":210,\"top\":245,\"width\":886}",
   "pageUnderneathUnmoved": "288/296"
  },
  "themeButtons": {
@@ -56,7 +59,7 @@
   "fileWritten": "format 1"
  },
  "done": "clicked",
- "windowsRememberedNextTime": "210,245,998,406",
+ "windowsRememberedNextTime": "210,245,886,406",
  "afterDone": {
   "editor": false,
   "stillThemed": true

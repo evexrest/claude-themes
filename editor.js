@@ -87,15 +87,14 @@ function save(change, how = "step") {
     if (how !== "none") {
         remember(change, how === "flow");
     }
-    const before = {};
-    for (const key of Object.keys(change)) {
-        before[key] = state[key];
-    }
     Object.assign(state, change);
     // Chrome can refuse to store a change (a full disk, a profile it cannot write to).
-    // The page only ever shows what is stored, so the editor goes back to that too.
-    chrome.storage.local.set(change).catch((error) => {
-        Object.assign(state, before);
+    // The page only ever shows what is stored, so the editor reads that back. Earlier
+    // steps may have been refused too, so Undo starts again from here.
+    chrome.storage.local.set(change).catch(async (error) => {
+        const asked = Object.fromEntries(Object.keys(change).map((key) => [key, defaults[key]]));
+        Object.assign(state, await chrome.storage.local.get(asked));
+        forgetHistory();
         sync();
         say("Chrome could not save that change, so it was put back. " + error.message);
     });
@@ -489,6 +488,7 @@ function removable(button, title, remove) {
     cross.className = "remove";
     cross.textContent = "×";
     cross.title = title;
+    cross.setAttribute("aria-label", title);
     cross.addEventListener("click", remove);
 
     cell.append(button, cross);
@@ -877,6 +877,13 @@ function layout() {
         const edge = onPage ? 0 : screenBox.getBoundingClientRect().left;
         document.body.style.setProperty("--middle", edge + (column.left + column.width / 2) * scale + "px");
         document.body.style.setProperty("--column", column.width * scale + "px");
+        // The library starts at the column's left edge and stops short of the
+        // settings, which start at the right, so neither covers the other. On a
+        // window too narrow for that it keeps a width it can be used at.
+        const left = edge + column.left * scale;
+        const width = Math.min(column.width * scale, Math.max(420, innerWidth - settingsSpace - left));
+        document.body.style.setProperty("--library-middle", left + width / 2 + "px");
+        document.body.style.setProperty("--library-width", width + "px");
     }
 
     cover(byId("zone-sidebar"), boxes.sidebar);
@@ -1080,6 +1087,9 @@ function watchGrip(grip) {
 // has no `left`, and sits where the stylesheet puts it.
 const windowIds = ["bar", "library", "inspector"];
 const smallest = { width: 220, height: 120 };
+// What the settings take up at the right when they have not been moved: their
+// width, their gap from the edge and a gap beside them (see #inspector in editor.css).
+const settingsSpace = 312 + 12 + 12;
 let windows = {};
 let front = 2;
 

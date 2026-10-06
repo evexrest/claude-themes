@@ -84,7 +84,8 @@ build your own:
   both, with a button that fixes it when one colour reads in both
 - A keyboard shortcut for the editor: Alt+Shift+E, or Option+Shift+E on a Mac. Change it
   at `chrome://extensions/shortcuts`
-- The editor works from the keyboard and with a screen reader
+- Every button, slider and choice in the editor can be reached with Tab and has a name
+  for a screen reader. Dragging a picture or a window still needs a mouse
 - Upload your own frame picture; its thickness is measured for you
 - Works in light and dark mode
 - Save the whole theme to a file, with its pictures, and load it again: as a backup, on

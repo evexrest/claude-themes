@@ -507,6 +507,11 @@
     "button": "Use white"
    }
   },
+  "halfLightHalfDarkAtFullStrength": {
+   "says": "Claude's own text colour may be hard to read on this background in both light and dark mode. The picture has both light and dark areas. A lower opacity fades it into Claude's page colour, where Claude's own text colour reads well.",
+   "button": null
+  },
+  "theSamePictureFaded": null,
   "nothingWhenTheThemeIsOff": [
    null,
    null
@@ -515,16 +520,27 @@
  "builtInThemes": {
   "names": "Sunset, Northern lights, Campfire, Deep sea, Woodland, Midnight, Paperback, Morning mist, Blossom",
   "tiles": 9,
-  "leastContrastInEitherModeOnPageOrSidebar": {
+  "contrastOnThreeQuartersOfTheBackground": {
    "sunset": 6.69,
    "northern-lights": 6.98,
    "campfire": 6.86,
-   "deep-sea": 6.25,
+   "deep-sea": 7.32,
    "woodland": 6.52,
    "midnight": 6.66,
    "paperback": 6.31,
    "morning-mist": 5.97,
    "blossom": 6.35
+  },
+  "contrastAtTheWorstSpot": {
+   "sunset": 5.94,
+   "northern-lights": 5.97,
+   "campfire": 4.88,
+   "deep-sea": 5.46,
+   "woodland": 4.57,
+   "midnight": 6.07,
+   "paperback": 5.83,
+   "morning-mist": 5.4,
+   "blossom": 5.73
   },
   "allReadWell": true,
   "settingsAThemeFileCouldNotHold": [],
@@ -556,11 +572,15 @@
   }
  },
  "withoutAMouse": {
-  "controls": 167,
+  "controls": 169,
   "withNoName": [],
-  "choices": 109,
+  "choices": 110,
   "choicesThatDoNotSayWhetherTheyAreOn": [],
-  "cannotBeTabbedTo": [],
+  "takenOutOfTheTabOrder": [],
+  "removeButtonsSay": [
+   "Remove this image",
+   "Remove this picture"
+  ],
   "focusRing": "solid 2px",
   "messagesAreReadOut": "status",
   "pageOverlayHiddenFromScreenReaders": "true",
@@ -571,6 +591,7 @@
   }
  },
  "about": {
+  "whenAnotherExtensionHasTheKeys": "To open this editor from the keyboard, choose the keys at chrome://extensions/shortcuts.",
   "showsTheVersionChromeIsRunning": true,
   "shortcut": "Alt+Shift+E opens and closes this editor.",
   "links": [
@@ -580,7 +601,12 @@
  },
  "saveFails": {
   "told": "Chrome could not save that change, so it was put back. disk full",
-  "sliderBackAtStoredValue": true
+  "sliderBackAtStoredValue": true,
+  "afterFiveQuickChangesEachRefusedLater": {
+   "slider": "at the stored value",
+   "undoOff": true,
+   "redoOff": true
+  }
  },
  "iconOnAClaudeTab": {
   "asked": "5:toggle-editor",
