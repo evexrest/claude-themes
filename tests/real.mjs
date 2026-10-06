@@ -121,6 +121,9 @@ try {
     found.insideTheEditor = await run(editor, `(() => { const at = ${at}; return { mode: document.body.className, themeOn: document.getElementById("enabled").checked, sidebar: at("zone-sidebar"), main: at("zone-main"), left: at("zone-left"), right: at("zone-right"),
       seeThrough: getComputedStyle(document.body).backgroundColor, backgrounds: document.getElementById("presets").children.length, themes: document.getElementById("themes").children.length, foot: document.getElementById("about").textContent.replace(/\\s+/g, " ").trim().replace(/\\d+\\.\\d+\\.\\d+/, "<version>"), oldCopyNotice: !document.getElementById("stale").hidden }; })()`);
 
+    // The picture an earlier version left has its grip, where the page says the picture is.
+    found.insideTheEditor.handles = await run(editor, handles);
+
     found.themeMidnight = await run(editor, `(async () => { document.querySelector('#themes .tile[data-theme="midnight"]').click(); await new Promise((r) => setTimeout(r, 500)); const kept = await chrome.storage.local.get(["preset", "textColor", "opacity"]); return kept.preset + " " + kept.textColor + " " + kept.opacity; })()`);
     found.pageShowsMidnight = await run(page, `(document.getElementById("claude-wallpaper").style.backgroundImage.includes("5, 7, 13") ? "midnight wash" : "another background") + ", text " + getComputedStyle(document.documentElement).getPropertyValue("--ct-text").trim()`);
     found.themeUndone = await run(editor, `(async () => { document.getElementById("undo").click(); await new Promise((r) => setTimeout(r, 500)); const kept = await chrome.storage.local.get({ preset: "dusk", textColor: null }); return kept.preset + " " + kept.textColor; })()`);

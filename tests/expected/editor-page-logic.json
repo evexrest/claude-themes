@@ -66,6 +66,11 @@
   "usesIt": true,
   "classes": "on-page"
  },
+ "anOlderPageScriptStillRunning": {
+  "zones": "296,48,224,852 | 1288,48,224,852",
+  "grips": "p1 hidden",
+  "errors": 0
+ },
  "pageWithoutParts": "296,0,1216,900 | hidden | hidden | hidden grip hidden",
  "windowsAtFirst": {
   "library": "520,505,656,296",

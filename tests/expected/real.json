@@ -34,7 +34,10 @@
   "backgrounds": 11,
   "themes": 9,
   "foot": "Claude Themes <version>. ⌥⇧E opens and closes this editor. Report a problem Privacy",
-  "oldCopyNotice": false
+  "oldCopyNotice": false,
+  "handles": [
+   "left 338,227,140,175"
+  ]
  },
  "themeMidnight": "midnight #f5f0e6 1",
  "pageShowsMidnight": "midnight wash, text #f5f0e6",

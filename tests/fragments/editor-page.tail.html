@@ -55,6 +55,11 @@
   await until(() => store.images.length > n);
   r.droppedOnTheSidebar = { images: store.images.length - n, sidebarMode: store.sidebarMode, usesIt: store.sidebarImageId === store.images[store.images.length - 1].id, classes: classes() };
 
+  // a page script from before 0.20.0, which Chrome runs until the extension is reloaded, says where one picture a side is
+  await tell({ sidebar: page.sidebar, pane: page.pane, column: page.column, left: page.placed.p1, right: null });
+  r.anOlderPageScriptStillRunning = { zones: at("zone-left") + " | " + at("zone-right"), grips: gripsNow(), errors: window.errors.length };
+  await tell(page);
+
   // a page with no sidebar and no message box (a settings page, or the sidebar collapsed)
   await tell({ sidebar: null, pane: page.pane, column: null, placed: {} });
   r.pageWithoutParts = ["main", "sidebar", "left", "right"].map((z) => at("zone-" + z)).join(" | ") + " grip " + gripAt("p1");
