@@ -111,8 +111,9 @@ function soundPlaced(value) {
 function fromFormatOne(file) {
     const settings = { ...file.settings };
     // A file that says nothing about the sides leaves them as they are.
-    if ("stickerLeft" in settings || "stickerRight" in settings) {
-        settings.placed = placedFromOld(settings).map((item) => ({ ...item, id: item.side }));
+    const placed = placedFromOld(settings);
+    if (placed) {
+        settings.placed = placed.map((item) => ({ ...item, id: item.side }));
     }
     const pictures = file.pictures || {};
     return { settings: settings, pictures: { main: pictures.main, sidebar: pictures.sidebar, side: { left: pictures.left, right: pictures.right } } };

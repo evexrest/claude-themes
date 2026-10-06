@@ -134,7 +134,11 @@ const oldSideSettings = [
 ];
 
 // Those settings as the list they would be now: the left picture, then the right.
+// Null when they say nothing about either side's picture.
 function placedFromOld(kept) {
+    if (!("stickerLeft" in kept || "stickerRight" in kept)) {
+        return null;
+    }
     const placed = [];
     for (const side of ["Left", "Right"]) {
         const item = { key: side.toLowerCase(), id: kept["sticker" + side], side: side.toLowerCase() };
@@ -160,7 +164,7 @@ async function readSettings() {
         settings[key] = key in kept ? kept[key] : defaults[key];
     }
     if (!("placed" in kept)) {
-        settings.placed = placedFromOld(kept);
+        settings.placed = placedFromOld(kept) || defaults.placed;
     }
     return settings;
 }
