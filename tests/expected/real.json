@@ -143,5 +143,15 @@
   ],
   "editors": 1
  },
- "problems": []
+ "problems": [],
+ "pagesOwnRules": {
+  "editorCallingOut": "refused by the page's own rules (connect-src)",
+  "uploadPageCallingOut": "refused by the page's own rules (connect-src)",
+  "refusedAnythingElse": []
+ },
+ "uploadPageUnderItsRules": {
+  "previewShown": true,
+  "savedMore": 1,
+  "styled": 1
+ }
 }

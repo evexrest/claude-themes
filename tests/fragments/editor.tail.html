@@ -397,6 +397,28 @@
   r.readable.nothingWhenTheThemeIsOff = [warning("text-warning"), warning("side-text-warning")];
   await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
 
+  // ----- a theme file made to do harm takes nothing, and a real one still loads -----
+  const nowHolds = (keys) => JSON.stringify(keys.map((k) => Object.hasOwn(store, k) ? store[k] : null));
+  const harm = async (settings) => { const keys = Object.keys(settings), before = nowHolds(keys); await loadTheme(JSON.stringify({ claudeThemes: 2, settings })); await wait(120); const same = nowHolds(keys) === before; if (!same) { const took = nowHolds(keys).slice(0, 90); el("undo").click(); await wait(120); return "TOOK " + took; } return "nothing taken"; };
+  await chrome.storage.local.set({ frameImage: colourImage("#00ff00"), frameSlice: [2, 2, 2, 2] }); await wait(80);
+  r.harmfulThemeFile = {
+    aPictureThatIsNotBase64: await harm({ frameImage: "data:image/png;base64,@", frameSlice: [1, 1, 1, 1] }),
+    aPictureThatEndsItsUrlAndAddsAnother: await harm({ frameImage: 'data:image/png;base64,AAAA"), url("https://example.com/beacon.gif', frameSlice: [1, 1, 1, 1] }),
+    measurementsThatAreNotAList: await harm({ frameImage: colourImage("#0000ff"), frameSlice: "x" }),
+    aBorderAsThickAsThePage: await harm({ frameWidth: 10000 }),
+    anOpacityOfTenThousand: await harm({ panelOpacity: 10000 }),
+    aBackgroundThatDoesNotExist: await harm({ preset: "nope" }),
+    aZoomThatIsText: await harm({ imageZoom: "big" }),
+    namesEveryObjectHas: await harm({ constructor: "x", toString: 1, hasOwnProperty: true }),
+    anEmptyFrameLeavesTheUsersOwn: await harm({ frameImage: null, frameSlice: null }) };
+  const framed = await loadTheme(JSON.stringify({ claudeThemes: 2, settings: { frameMain: "custom", frameWidth: 20, frameImage: colourImage("#0000ff"), frameSlice: [3, 3, 3, 3] } })); await wait(120);
+  r.harmfulThemeFile.aRealFrameStillLoads = { told: framed, frameMain: store.frameMain, width: store.frameWidth, slice: JSON.stringify(store.frameSlice), itsPicture: store.frameImage === colourImage("#0000ff") };
+  el("undo").click(); await wait(120);
+  el("theme-reset").click(); await wait(60); el("ask-yes").click(); await wait(150);
+  r.resetKeepsTheUploadedFrame = store.frameImage === colourImage("#00ff00") && JSON.stringify(store.frameSlice) === "[2,2,2,2]";
+  el("undo").click(); await wait(120);
+  await chrome.storage.local.set({ frameImage: null, frameSlice: null }); await wait(80);
+
   // ----- the ready-made themes -----
   const worst = {}, worstSpot = {};
   for (const theme of builtInThemes) { const c = themeChange(theme), main = await sourceColours(c.preset, null, []), side = await sourceColours(c.sidebarPreset, null, []);
@@ -417,7 +439,7 @@
   r.themeTiles.unmarkedOnceChanged = pressed("#themes .tile");
   el("undo").click(); await wait(60); el("undo").click(); await wait(150);
   r.themeTiles.undoneInOneStep = { preset: store.preset, imageId: store.imageId, textColor: store.textColor, frameMain: store.frameMain, placed: placedAs() };
-  await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
+  await chrome.storage.local.set({ ...freshSettings(), frameImage: null, frameSlice: null }); await wait(150);
 
   // ----- every control has a name and can be reached and seen without a mouse -----
   // With two pictures on the selected side, so that its row of pictures is among the controls.

@@ -77,7 +77,8 @@ private in it, and take screenshots of the Claude window at 1280 x 800. Up to fi
   larger than the default 10 MB allowance."
 - **Host permission: claude.ai.** "The extension restyles this one site. It adds styles
   and the user's pictures to the page and opens its editor there."
-- **Remote code:** No. All code is in the package.
+- **Remote code:** No. All code is in the package, and the manifest's content security
+  policy lets the extension's pages load nothing from outside it.
 - **Data use:** it collects none of the listed kinds of data. Tick the three statements
   (not sold, not used for unrelated purposes, not used for creditworthiness).
 - **Privacy policy URL:** the address of `PRIVACY.md` on GitHub.

@@ -17,9 +17,16 @@
 // under "left" and "right". It still loads.
 const themeFormat = 2;
 const notInAThemeFile = ["images", "stickers"];
+// An uploaded frame is a file of the user's, like a saved picture: going back to a
+// fresh look keeps it.
+const userFrame = ["frameImage", "frameSlice"];
 // The setting that names each of the two backgrounds' pictures.
 const themePictures = { main: "imageId", sidebar: "sidebarImageId" };
+// The most text one picture in a theme file may be: a background (a 25 MB GIF is
+// about this much as text), a picture beside the chat (12 MB), an uploaded frame.
 const largestPicture = 36 * 1024 * 1024;
+const largestSidePicture = 17 * 1024 * 1024;
+const largestFrame = 3 * 1024 * 1024;
 
 // The theme as it is now, ready to be written to a file.
 async function themeFile() {
@@ -55,35 +62,69 @@ async function themeFile() {
     return { claudeThemes: themeFormat, madeWith: filesVersion, settings: settings, pictures: pictures };
 }
 
-// One setting from a theme file, checked against the setting's default: the same
-// kind of value, or nothing at all where the default is nothing. Anything else,
-// and anything this version does not know, is left out, so a file from a stranger
-// can only ever set what the editor itself could have set. The list of pictures
-// beside the chat is checked on its own, by soundPlaced.
+// A picture as text, in the one form the editor itself writes: an image kind, then
+// its bytes in base64. Nothing else can come along inside it, such as a quote that
+// would end the `url("...")` a frame's picture is put in.
+function soundPicture(data, most) {
+    return typeof data === "string" && data.length <= most && /^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+\/]+={0,2}$/.test(data);
+}
+
+// What a theme file may put in each setting. A setting that takes one of a list
+// of names takes only those names; a number keeps to the ends of its slider.
+const frameNames = [...frames.map((frame) => frame.id), "none", "custom"];
+const settingChoices = {
+    preset: [...presets.map((preset) => preset.id), "none"],
+    sidebarPreset: presets.map((preset) => preset.id),
+    font: fonts.map((font) => font.id),
+    sidebarFont: fonts.map((font) => font.id),
+    frameMain: frameNames,
+    frameSidebar: frameNames,
+    frameAll: frameNames,
+    frameLayout: ["separate", "combined"],
+    sidebarMode: ["joined", "own", "plain"]
+};
+const settingRanges = {
+    opacity: [0, 1], panelOpacity: [0, 1], sidebarOpacity: [0, 1],
+    imageZoom: [0, 4], sidebarZoom: [0, 4],
+    imageShiftX: [-5, 5], imageShiftY: [-5, 5], sidebarShiftX: [-5, 5], sidebarShiftY: [-5, 5],
+    frameWidth: [4, 40], frameSidebarWidth: [4, 40]
+};
+// Settings that may be empty. An uploaded frame is not among them: a file with no
+// frame of its own leaves the user's where it is.
+const settingsThatMayBeEmpty = ["preset", "sidebarPreset", "imageId", "sidebarImageId", "imageZoom", "textColor", "codeColor", "sidebarTextColor"];
+const settingsThatAreText = ["fontCustom", "sidebarFontCustom", "imageId", "sidebarImageId"];
+
+// One setting from a theme file. Anything this version does not know, and any
+// value the editor could not have set, is left out, so a file from a stranger can
+// only ever do what the editor itself could have done. The list of placed pictures
+// is checked on its own (soundPlaced).
 function soundSetting(key, value) {
-    if (!(key in defaults) || notInAThemeFile.includes(key)) {
+    if (!Object.hasOwn(defaults, key) || notInAThemeFile.includes(key) || key === "placed") {
         return false;
     }
     if (value === null) {
-        return defaults[key] === null || /Id$|^preset$|Preset$|Color$|^frame(Image|Slice)$/.test(key);
+        return settingsThatMayBeEmpty.includes(key);
+    }
+    if (Object.hasOwn(settingChoices, key)) {
+        return settingChoices[key].includes(value);
+    }
+    if (Object.hasOwn(settingRanges, key)) {
+        return typeof value === "number" && value >= settingRanges[key][0] && value <= settingRanges[key][1];
     }
     if (/Color$/.test(key)) {
         return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
     }
     if (key === "frameImage") {
-        return typeof value === "string" && value.startsWith("data:image/") && value.length < largestPicture;
+        return soundPicture(value, largestFrame);
     }
-    if (typeof value === "number") {
-        return Number.isFinite(value) && Math.abs(value) <= 10000 && (defaults[key] === null || typeof defaults[key] === "number");
+    if (key === "frameSlice") {
+        // The measurements of an uploaded frame: four numbers.
+        return Array.isArray(value) && value.length === 4 && value.every((part) => typeof part === "number" && part >= 0 && part <= 10000);
     }
-    if (typeof value === "boolean") {
-        return typeof defaults[key] === "boolean";
+    if (key === "enabled") {
+        return typeof value === "boolean";
     }
-    if (typeof value === "string") {
-        return value.length <= 200 && (defaults[key] === null || typeof defaults[key] === "string");
-    }
-    // The measurements of an uploaded frame are a short list of numbers.
-    return key === "frameSlice" && JSON.stringify(value).length < 200;
+    return settingsThatAreText.includes(key) && typeof value === "string" && value.length <= 200;
 }
 
 // The pictures beside the chat, from a theme file: no more than there can be, each
@@ -142,12 +183,18 @@ async function loadTheme(text) {
         }
     }
 
+    // A frame is its picture and its measurements together, or neither.
+    if (!("frameImage" in change && "frameSlice" in change)) {
+        delete change.frameImage;
+        delete change.frameSlice;
+    }
+
     // Each picture is kept under a new id of its own. `keep` returns that id, or
     // null for anything that is not a picture.
     const added = { images: [], stickers: [] };
     const files = {};
     const keep = async (data, kind) => {
-        if (typeof data !== "string" || !data.startsWith("data:image/") || data.length > largestPicture) {
+        if (!soundPicture(data, kind === "image" ? largestPicture : largestSidePicture)) {
             return null;
         }
         try {
@@ -218,7 +265,7 @@ async function loadTheme(text) {
 function freshSettings() {
     const fresh = {};
     for (const key of Object.keys(defaults)) {
-        if (!notInAThemeFile.includes(key)) {
+        if (!notInAThemeFile.includes(key) && !userFrame.includes(key)) {
             fresh[key] = defaults[key];
         }
     }
@@ -270,10 +317,7 @@ const builtInThemes = [
 // Everything a ready-made theme sets: a fresh install's settings with its own on
 // top. An uploaded frame is a file of the user's, like a saved picture, and stays.
 function themeChange(theme) {
-    const change = { ...freshSettings(), ...theme.settings };
-    delete change.frameImage;
-    delete change.frameSlice;
-    return change;
+    return { ...freshSettings(), ...theme.settings };
 }
 
 // The shelf of ready-made themes. Each tile is a small sample: the background,

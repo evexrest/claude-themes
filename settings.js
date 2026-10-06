@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The editor compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.20.0";
+const filesVersion = "0.20.1";
 
 const defaults = {
     enabled: true,
@@ -461,7 +461,7 @@ const frames = [
 function frameValues(id, width, customUrl, customSlice) {
     let frame = frames.find((item) => item.id === id);
 
-    if (id === "custom" && customUrl && customSlice) {
+    if (id === "custom" && customUrl && Array.isArray(customSlice)) {
         frame = {
             source: `url("${customUrl}")`,
             slice: customSlice.join(" "),

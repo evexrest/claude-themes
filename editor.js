@@ -1672,7 +1672,7 @@ async function start() {
         }
         for (const key of Object.keys(changes)) {
             // Full-size pictures are stored under their own keys; skip those.
-            if (key in defaults) {
+            if (Object.hasOwn(defaults, key)) {
                 state[key] = "newValue" in changes[key] ? changes[key].newValue : defaults[key];
             }
         }

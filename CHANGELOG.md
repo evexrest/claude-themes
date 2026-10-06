@@ -3,6 +3,25 @@
 What changed in each version, newest first. Versions before 0.18.0 were made over two days
 and are grouped.
 
+## 0.20.1 (2026-10-06)
+
+A security pass before publishing.
+
+- A theme file from someone else is held to exactly what the editor could have set: names
+  from the editor's own lists, numbers within the sliders' ends, pictures in the one form
+  the editor writes. Before, a file could set a border thick enough to cover the chat, or
+  store a frame the page could not draw.
+- A stored value that cannot be drawn no longer stops the rest of the theme on claude.ai.
+  Each part is drawn on its own.
+- The editor and the upload page are told by Chrome's own rules to load only files inside
+  the extension. They cannot contact another site.
+- Loading a theme file, or Reset everything, keeps a frame you uploaded, as they keep
+  your saved pictures.
+- The privacy statement says what claude.ai itself can see of a theme.
+- Chrome 120 or newer is needed. The fade under the chat's title bar already needed it.
+- `tools/package.sh` zips only files that git knows, and refuses if one of them has
+  changes that are not committed.
+
 ## 0.20.0 (2026-10-06)
 
 - Several pictures on each side of the chat, where there was one. Click a side picture in

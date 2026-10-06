@@ -782,5 +782,10 @@
  "iconTogglesIt": {
   "reopened": true,
   "closedAgain": true
+ },
+ "aFrameThatCannotBeDrawn": {
+  "theTextIsStillColoured": "#123456",
+  "markedOn": true,
+  "andLaterChangesStillArrive": "#654321"
  }
 }

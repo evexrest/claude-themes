@@ -637,28 +637,39 @@ function checkPage() {
     placeStickers();
 }
 
+// Draw each part of the theme on its own. One that cannot be drawn (a stored
+// picture that is not a picture, say) must not stop the others, or stop the
+// listeners in start from being set up.
+function drawEach(parts) {
+    for (const part of parts) {
+        try {
+            part();
+        } catch (error) {
+            console.warn("Claude Themes: a part of the theme could not be drawn.", error);
+        }
+    }
+}
+
 async function start() {
     settings = await readSettings();
     plainPage = !onChatPage();
-    applyBackground(true);
-    applySidebar(true);
-    applyFrames(true);
-    applyText();
-    placeStickers();
+    drawEach([() => applyBackground(true), () => applySidebar(true), () => applyFrames(true), applyText, placeStickers]);
 
     chrome.storage.onChanged.addListener((changes) => {
         for (const key of Object.keys(changes)) {
             // Full-size pictures are stored under their own keys; skip those.
             // A setting that was deleted has no new value, so it goes back to its default.
-            if (key in defaults) {
+            if (Object.hasOwn(defaults, key)) {
                 settings[key] = "newValue" in changes[key] ? changes[key].newValue : defaults[key];
             }
         }
-        applyBackground("preset" in changes || "imageId" in changes);
-        applySidebar("sidebarMode" in changes || "sidebarPreset" in changes || "sidebarImageId" in changes);
-        applyFrames("frameImage" in changes);
-        applyText();
-        placeStickers();
+        drawEach([
+            () => applyBackground("preset" in changes || "imageId" in changes),
+            () => applySidebar("sidebarMode" in changes || "sidebarPreset" in changes || "sidebarImageId" in changes),
+            () => applyFrames("frameImage" in changes),
+            applyText,
+            placeStickers
+        ]);
     });
 
     // If the page removes our element or attributes while it loads, put them back.

@@ -736,6 +736,25 @@
    null
   ]
  },
+ "harmfulThemeFile": {
+  "aPictureThatIsNotBase64": "nothing taken",
+  "aPictureThatEndsItsUrlAndAddsAnother": "nothing taken",
+  "measurementsThatAreNotAList": "nothing taken",
+  "aBorderAsThickAsThePage": "nothing taken",
+  "anOpacityOfTenThousand": "nothing taken",
+  "aBackgroundThatDoesNotExist": "nothing taken",
+  "aZoomThatIsText": "nothing taken",
+  "namesEveryObjectHas": "nothing taken",
+  "anEmptyFrameLeavesTheUsersOwn": "nothing taken",
+  "aRealFrameStillLoads": {
+   "told": "Theme loaded. Undo goes back to the one you had.",
+   "frameMain": "custom",
+   "width": 20,
+   "slice": "[3,3,3,3]",
+   "itsPicture": true
+  }
+ },
+ "resetKeepsTheUploadedFrame": true,
  "builtInThemes": {
   "names": "Sunset, Northern lights, Campfire, Deep sea, Woodland, Midnight, Paperback, Morning mist, Blossom",
   "tiles": 9,

@@ -217,6 +217,23 @@ try {
 
   found.problems = events.filter((e) => e.method === "Runtime.exceptionThrown" || (e.method === "Log.entryAdded" && e.params.entry.level === "error"))
     .map((e) => (e.params.exceptionDetails?.exception?.description || e.params.entry?.text || "").slice(0, 200)).slice(0, 8);
+  // ----- the extension's own pages may load only what is in the folder -----
+  {
+    const frame = (await targets()).find((t) => t.url.startsWith(base + "editor.html"));
+    const editorPage = frame ? await attach(frame.targetId) : null;
+    const tryToCallOut = `new Promise((done) => { addEventListener("securitypolicyviolation", (e) => done("refused by the page's own rules (" + e.effectiveDirective + ")"), { once: true }); fetch("https://lock-check.invalid/").then(() => done("REACHED"), () => setTimeout(() => done("failed, but not because of the page's rules"), 400)); })`;
+    const optionsTab = await send("Target.createTarget", { url: base + "options.html#sides" });
+    const options = await attach(optionsTab.targetId); await sleep(900);
+    found.pagesOwnRules = { editorCallingOut: editorPage ? await run(editorPage, tryToCallOut) : "no editor open", uploadPageCallingOut: await run(options, tryToCallOut) };
+    found.uploadPageUnderItsRules = await run(options, `(async () => { const c = document.createElement("canvas"); c.width = 60; c.height = 60; c.getContext("2d").fillRect(5, 5, 50, 50);
+      const file = new File([await new Promise((ok) => c.toBlob(ok, "image/png"))], "box.png", { type: "image/png" }); const dt = new DataTransfer(); dt.items.add(file);
+      const input = document.getElementById("sticker-file"); input.files = dt.files; input.dispatchEvent(new Event("change")); await new Promise((r) => setTimeout(r, 800));
+      const before = (await chrome.storage.local.get({ stickers: [] })).stickers.length; document.getElementById("sticker-left").click(); await new Promise((r) => setTimeout(r, 800));
+      return { previewShown: document.getElementById("sticker-preview").naturalWidth > 0, savedMore: (await chrome.storage.local.get({ stickers: [] })).stickers.length - before, styled: getComputedStyle(document.body).fontFamily !== "" && document.styleSheets.length }; })()`);
+    await sleep(300);
+    found.pagesOwnRules.refusedAnythingElse = events.filter((e) => e.method === "Log.entryAdded" && /Content Security Policy|Refused to/.test(e.params.entry.text) && !e.params.entry.text.includes("lock-check.invalid")).map((e) => e.params.entry.text.slice(0, 160));
+  }
+
   console.log(JSON.stringify(found, null, 1));
 } finally {
   chrome.kill("SIGKILL"); server.close(); await sleep(400); rmSync(profile, { recursive: true, force: true });
