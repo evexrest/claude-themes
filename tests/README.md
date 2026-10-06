@@ -23,10 +23,10 @@ The suites can also be run one at a time, to read everything they print:
 |---|---|
 | `python3 tests/build.py` | Makes the editor and upload test pages. Run it first, and again after changing `editor.html`, `preview.html` or `options.html` |
 | `tests/dump.sh logic 14000` | The page script and stylesheet: backgrounds, sidebar, frames, text, side pictures |
-| `tests/dump.sh editor-logic 20000` | The editor in a tab of its own: selecting parts, the library, dropping files, dragging pictures, moving and resizing a side picture, undo and redo, every setting, the toolbar icon |
+| `tests/dump.sh editor-logic 20000` | The editor in a tab of its own: selecting parts, the library, dropping files, dragging pictures, moving and resizing a side picture, undo and redo, every setting, the toolbar icon; the ready-made themes and the contrast each gives; the readability warning; that every control has a name and can be reached with Tab; a change Chrome refuses to store |
 | `tests/dump.sh editor-page-logic 12000 "on=page"` | The editor as it runs over the real page: its parts follow the page's measurements, the windows move, resize, fold, close and go back, and get out of the way of a drag; Done and Esc close it |
 | `tests/dump.sh options-logic` | Uploading a GIF and a still image, for the main page and the sidebar |
-| `tests/shot.sh editor-test 1512 900 "part=left&dark=1"` | A picture of the editor, saved as `tests/editor-test.png`. The last part is optional: `part=` selects a part, `dark=1` the dark preview, `drag=files` shows the drop areas |
+| `tests/shot.sh editor-test 1512 900 "part=left&dark=1"` | A picture of the editor, saved as `tests/editor-test.png`. The last part is optional: `part=` selects a part, `theme=` switches a ready-made theme on by its id (`theme=paperback`), `dark=1` the dark preview, `drag=files` shows the drop areas |
 | `node tests/real.mjs` | The real thing: loads the folder as an extension and clicks the toolbar icon on a Claude tab, on another tab, and with no Claude tab open; in the editor it changes a setting, drops a picture and checks the page underneath follows, then moves and resizes a window with the mouse itself. It never visits claude.ai: a small server on this computer stands in for it. Saves `tests/real-page.png`, `tests/real-page-dark.png` and `tests/real-page-windows.png` |
 | `node tests/cdp.mjs "file://$PWD/tests/page.html?bg=image&gif=1&f=none&o=1" /tmp/ct-profile` | Whether a GIF background moves: several real-time captures, counted |
 
