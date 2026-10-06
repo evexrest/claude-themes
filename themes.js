@@ -1,8 +1,8 @@
 // Part of the editor: saving the whole theme to a file, loading one, putting
 // everything back to Claude's own, and the note shown the first time the editor is
 // opened. Loaded after editor.js, whose `state`, `save`, `say`, `ask`, `byId`,
-// `newId`, `openPicture`, `drawn` and `showLibrary` it uses, with `defaults`,
-// `imageKey` and `stickerKey` from settings.js.
+// `openPicture`, `drawn` and `showLibrary` it uses, with `defaults`, `imageKey`,
+// `stickerKey` and `newId` from settings.js.
 
 // A theme file is plain JSON:
 //   { claudeThemes: 1, madeWith: "0.18.0", settings: { ... }, pictures: { ... } }

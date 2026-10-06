@@ -6,8 +6,8 @@
 // selected. They can be moved, resized, folded away and closed like any window.
 // Every change to the theme is saved straight away, and the page picks it up from
 // storage. `defaults`, `presets`,
-// `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey`, `sideKey`, `sideValue`
-// and `filesVersion` come from settings.js.
+// `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey`, `newId`, `sideKey`,
+// `sideValue` and `filesVersion` come from settings.js.
 
 const preview = document.getElementById("preview");
 const screenBox = document.getElementById("screen");
@@ -624,15 +624,10 @@ function drawn(picture, longest, type, quality) {
     return canvas.toDataURL(type, quality);
 }
 
-// Each saved picture gets its own id, so earlier ones are kept.
-let made = 0;
-function newId() {
-    return Date.now().toString(36) + (made++).toString(36);
-}
-
-// Keep a file as a background image and return its id. A still picture is shrunk
-// to what the largest screens need; the page fits it to its space. A GIF is kept
-// exactly as it is, so that it keeps moving.
+// Keep a file as a background image and return its id. Each saved picture gets an
+// id of its own, so earlier ones are kept. A still picture is shrunk to what the
+// largest screens need; the page fits it to its space. A GIF is kept exactly as it
+// is, so that it keeps moving.
 async function keepImage(file) {
     const animated = file.type === "image/gif";
     if (animated && file.size > maxMovingBytes) {

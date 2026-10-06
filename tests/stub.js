@@ -9,7 +9,8 @@ window.chrome = {
       async get(keys) {
         await new Promise((r) => setTimeout(r, 5));
         const out = {};
-        if (typeof keys === "string") { if (keys in store) out[keys] = clone(store[keys]); return out; }
+        // A name, or a list of names: only the ones that are stored come back.
+        if (typeof keys === "string" || Array.isArray(keys)) { for (const k of [].concat(keys)) if (k in store) out[k] = clone(store[k]); return out; }
         for (const k of Object.keys(keys)) out[k] = k in store ? clone(store[k]) : keys[k];
         return out;
       },

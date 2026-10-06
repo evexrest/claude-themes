@@ -103,6 +103,13 @@ function stickerKey(id) {
     return "sticker-" + id;
 }
 
+// A new id, different from every one made before it: the time, then a count, so
+// that two made in the same instant still differ.
+let idsMade = 0;
+function newId() {
+    return Date.now().toString(36) + (idsMade++).toString(36);
+}
+
 // The name of one of a side picture's own settings. `side` is "left" or "right"
 // and `what` is "Size", "Position" or "Opacity".
 function sideKey(side, what) {
