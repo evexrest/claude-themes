@@ -27,6 +27,8 @@ window.chrome = {
     onChanged: { addListener(l) { listeners.push(l); } }
   },
   action: { onClicked: { addListener(l) { window.iconClicked = l; } } },
+  // `shortcutKeys` is what Chrome gave the toolbar icon; empty when another extension had them first.
+  commands: { getAll: async () => [{ name: "_execute_action", shortcut: window.shortcutKeys ?? "Alt+Shift+E" }] },
   windows: { update() {} },
   runtime: { onMessage: { addListener(l) { messageListeners.push(l); } },
     sendMessage(message, sender = {}) { return new Promise((ok, no) => { if (!messageListeners.length) return no(new Error("no one listening")); let answered; messageListeners.forEach((l) => l(message, sender, (a) => { answered = a; })); ok(answered); }); },

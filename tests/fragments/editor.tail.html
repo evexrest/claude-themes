@@ -299,6 +299,10 @@
   el("theme-reset").focus(); el("theme-reset").click(); await wait(60); const inAsk = document.activeElement.id; el("ask-no").click(); await wait(60);
   r.withoutAMouse.question = { focusGoesToIt: inAsk, andBackAfter: document.activeElement.id };
 
+  // ----- the foot of the library: version, shortcut, where to report a problem -----
+  r.about = { showsTheVersionChromeIsRunning: el("version").textContent === chrome.runtime.getManifest().version && /^\d+\.\d+\.\d+$/.test(el("version").textContent), shortcut: el("shortcut").textContent,
+    links: [...el("about").querySelectorAll("a")].map((a) => a.textContent + " -> " + a.href + (a.target === "_blank" ? " (new tab)" : "")) };
+
   // ----- a change Chrome cannot store is put back, and the person is told -----
   el("part-main").click(); const realSet = chrome.storage.local.set, opacityStored = Math.round((store.opacity ?? 0.5) * 100);
   chrome.storage.local.set = async () => { throw new Error("disk full"); };

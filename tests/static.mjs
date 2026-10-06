@@ -77,7 +77,13 @@ for (const name of shipped.filter((file) => file.endsWith(".html"))) {
 // Nothing talks to the internet. The only addresses allowed are claude.ai (the page
 // the extension runs on, and tabs it opens), the name of the SVG format, and
 // chrome://extensions in a message to the user.
-const allowed = [/^https:\/\/claude\.ai\//, /^http:\/\/www\.w3\.org\/2000\/svg$/];
+// The project's own GitHub pages are allowed as links a person clicks (report a
+// problem, the privacy statement): they open in a tab, and the extension itself
+// asks them for nothing.
+const allowed = [/^https:\/\/claude\.ai\//, /^http:\/\/www\.w3\.org\/2000\/svg$/, /^https:\/\/github\.com\/evexrest\/claude-themes\//];
+for (const name of shipped.filter((file) => file.endsWith(".js"))) {
+    check(!/github\.com/.test(read(name)), `${name} mentions GitHub: links belong in the pages, where a person clicks them`);
+}
 for (const name of shipped.filter((file) => /\.(js|html|css)$/.test(file))) {
     const text = read(name);
     for (const [address] of text.matchAll(/https?:\/\/[^\s"'`)<>\\]+/g)) {

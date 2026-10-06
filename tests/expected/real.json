@@ -1,6 +1,7 @@
 {
  "loaded": "yes",
  "iconScript": "background.js",
+ "shortcut": "_execute_action = ⌥⇧E",
  "claudeTab": {
   "address": "https://claude.ai/chat/demo",
   "themed": "on",
@@ -24,6 +25,8 @@
   "right": "1288,48,224,765",
   "seeThrough": "rgba(0, 0, 0, 0)",
   "backgrounds": 11,
+  "themes": 9,
+  "foot": "Claude Themes <version>. ⌥⇧E opens and closes this editor. Report a problem Privacy",
   "oldCopyNotice": false
  },
  "chooseOcean": "ocean",

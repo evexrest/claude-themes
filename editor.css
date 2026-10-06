@@ -668,9 +668,15 @@ h3 {
     flex: 3 1 300px;
 }
 
-#library-note {
+#library-note,
+#about {
     flex: 1 1 100%;
     margin: 0;
+}
+
+#about a {
+    margin-left: 8px;
+    color: #e8a48c;
 }
 
 /* The pictures: presets, saved images and side pictures. */

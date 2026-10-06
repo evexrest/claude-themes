@@ -292,3 +292,13 @@ byId("welcome-done").addEventListener("click", () => {
     byId("welcome").hidden = true;
     chrome.storage.local.set({ welcomed: true });
 });
+
+// At the foot of the library: which version this is, and the keys that open the
+// editor. Chrome leaves the keys unset when another extension already has them.
+byId("version").textContent = chrome.runtime.getManifest().version;
+chrome.commands.getAll().then((commands) => {
+    const opener = commands.find((command) => command.name === "_execute_action");
+    byId("shortcut").textContent = opener && opener.shortcut
+        ? `${opener.shortcut} opens and closes this editor.`
+        : "To open this editor from the keyboard, choose the keys at chrome://extensions/shortcuts.";
+});

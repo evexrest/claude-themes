@@ -556,7 +556,7 @@
   }
  },
  "withoutAMouse": {
-  "controls": 165,
+  "controls": 167,
   "withNoName": [],
   "choices": 109,
   "choicesThatDoNotSayWhetherTheyAreOn": [],
@@ -569,6 +569,14 @@
    "focusGoesToIt": "ask-no",
    "andBackAfter": "theme-reset"
   }
+ },
+ "about": {
+  "showsTheVersionChromeIsRunning": true,
+  "shortcut": "Alt+Shift+E opens and closes this editor.",
+  "links": [
+   "Report a problem -> https://github.com/evexrest/claude-themes/issues (new tab)",
+   "Privacy -> https://github.com/evexrest/claude-themes/blob/main/PRIVACY.md (new tab)"
+  ]
  },
  "saveFails": {
   "told": "Chrome could not save that change, so it was put back. disk full",

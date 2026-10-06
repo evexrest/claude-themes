@@ -30,6 +30,12 @@
             "48": "icons/icon-48.png"
         }
     },
+    "commands": {
+        "_execute_action": {
+            "suggested_key": { "default": "Alt+Shift+E" },
+            "description": "Open or close the editor"
+        }
+    },
     "web_accessible_resources": [
         {
             "resources": ["editor.html"],

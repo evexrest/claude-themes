@@ -85,6 +85,8 @@ try {
   const worker = (await targets()).find((t) => t.type === "service_worker" && t.url.startsWith(base));
   found.iconScript = worker ? worker.url.slice(base.length) : "not running";
   const icon = await attach(worker.targetId);
+  // The keys Chrome really gave the toolbar icon, from the manifest's suggestion.
+  found.shortcut = await run(icon, `chrome.commands.getAll().then((all) => all.map((c) => c.name + " = " + c.shortcut).join(", "))`);
   // Click the toolbar icon while a given tab is the one in front.
   const clickIconOn = (which) => run(icon, `(async () => { const tabs = await chrome.tabs.query({}); const claudeTab = (t) => (t.url || t.pendingUrl || "").startsWith("https://claude.ai/"); const tab = tabs.find((t) => ${JSON.stringify(which)} === "claude" ? claudeTab(t) : !claudeTab(t)); if (!tab) return "no such tab"; await chrome.tabs.update(tab.id, { active: true }); chrome.action.onClicked.dispatch(tab); return "clicked"; })()`);
   const editorFrames = async () => (await targets()).filter((t) => t.url.startsWith(base + "editor.html?on=page")).length;
@@ -106,7 +108,7 @@ try {
     await sleep(600);
     const at = `(id) => { const e = document.getElementById(id); return e.hidden ? "hidden" : [e.style.left, e.style.top, e.style.width, e.style.height].map((v) => Math.round(parseFloat(v))).join(","); }`;
     found.insideTheEditor = await run(editor, `(() => { const at = ${at}; return { mode: document.body.className, themeOn: document.getElementById("enabled").checked, sidebar: at("zone-sidebar"), main: at("zone-main"), left: at("zone-left"), right: at("zone-right"),
-      seeThrough: getComputedStyle(document.body).backgroundColor, backgrounds: document.getElementById("presets").children.length, oldCopyNotice: !document.getElementById("stale").hidden }; })()`);
+      seeThrough: getComputedStyle(document.body).backgroundColor, backgrounds: document.getElementById("presets").children.length, themes: document.getElementById("themes").children.length, foot: document.getElementById("about").textContent.replace(/\\s+/g, " ").trim().replace(/\\d+\\.\\d+\\.\\d+/, "<version>"), oldCopyNotice: !document.getElementById("stale").hidden }; })()`);
 
     found.chooseOcean = await run(editor, `(async () => { document.querySelector('.tile[data-id="ocean"]').click(); await new Promise((r) => setTimeout(r, 500)); return (await chrome.storage.local.get(["preset"])).preset; })()`);
     found.pageShowsOcean = await run(page, `document.getElementById("claude-wallpaper").style.backgroundImage.slice(0, 44)`);
