@@ -555,6 +555,21 @@
    "left": "ts"
   }
  },
+ "withoutAMouse": {
+  "controls": 165,
+  "withNoName": [],
+  "choices": 109,
+  "choicesThatDoNotSayWhetherTheyAreOn": [],
+  "cannotBeTabbedTo": [],
+  "focusRing": "solid 2px",
+  "messagesAreReadOut": "status",
+  "pageOverlayHiddenFromScreenReaders": "true",
+  "windowsNamed": "Library, Settings",
+  "question": {
+   "focusGoesToIt": "ask-no",
+   "andBackAfter": "theme-reset"
+  }
+ },
  "saveFails": {
   "told": "Chrome could not save that change, so it was put back. disk full",
   "sliderBackAtStoredValue": true

@@ -144,7 +144,7 @@
                 <iframe id="preview" data-src="preview.html" title="Preview of claude.ai" tabindex="-1"></iframe>
 
                 <!-- Laid over the preview: the parts that can be selected and dropped on. -->
-                <div id="overlay">
+                <div id="overlay" aria-hidden="true">
                     <div class="zone" id="zone-main" data-zone="main">
                         <span class="tag">Main page</span>
                         <span class="drop">Drop here for the background</span>
@@ -168,7 +168,7 @@
                 </div>
             </div>
 
-            <p id="toast" hidden></p>
+            <p id="toast" role="status" hidden></p>
         </section>
 
         <!-- The settings of the part that is selected. -->
@@ -232,8 +232,8 @@
                 </label>
 
                 <h3>Font</h3>
-                <select id="font"></select>
-                <input type="text" id="font-custom" placeholder="Type the font's name, e.g. Futura" hidden>
+                <select id="font" aria-label="Font"></select>
+                <input type="text" id="font-custom" aria-label="The font's name" placeholder="Type the font's name, e.g. Futura" hidden>
 
                 <p class="note">
                     The text colour is for everything written on the page, including the small
@@ -330,8 +330,8 @@
                 </p>
 
                 <h3>Font</h3>
-                <select id="side-font"></select>
-                <input type="text" id="side-font-custom" placeholder="Type the font's name, e.g. Futura" hidden>
+                <select id="side-font" aria-label="Font"></select>
+                <input type="text" id="side-font-custom" aria-label="The font's name" placeholder="Type the font's name, e.g. Futura" hidden>
 
                 <p class="note">For everything written in the sidebar. Icons stay as they are.</p>
 

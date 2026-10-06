@@ -288,6 +288,17 @@
   r.themeTiles.undoneInOneStep = { preset: store.preset, imageId: store.imageId, textColor: store.textColor, frameMain: store.frameMain, left: store.stickerLeft };
   await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
 
+  // ----- every control has a name and can be reached and seen without a mouse -----
+  const nameOf = (c) => (c.getAttribute("aria-label") || (c.id && document.querySelector(`label[for="${c.id}"]`)?.textContent) || c.closest("label")?.textContent || c.textContent || c.title || "").trim();
+  const called = (c) => c.id ? "#" + c.id : "." + c.className.split(" ").join(".") + (c.parentElement.id ? " in #" + c.parentElement.id : "");
+  const controls = [...document.querySelectorAll("button, input:not([type=file]), select, a[href]")].filter((c) => !c.closest(".warn[hidden]")), choices = [...document.querySelectorAll(".pair button, .tile, .swatch, .frame-choice")];
+  el("show-library").focus(); const ring = getComputedStyle(el("show-library"));
+  r.withoutAMouse = { controls: controls.length, withNoName: [...new Set(controls.filter((c) => !nameOf(c)).map(called))], choices: choices.length, choicesThatDoNotSayWhetherTheyAreOn: [...new Set(choices.filter((c) => !c.hasAttribute("aria-pressed")).map(called))],
+    cannotBeTabbedTo: controls.filter((c) => c.tabIndex < 0).map(called), focusRing: ring.outlineStyle + " " + ring.outlineWidth, messagesAreReadOut: el("toast").getAttribute("role"),
+    pageOverlayHiddenFromScreenReaders: el("overlay").getAttribute("aria-hidden"), windowsNamed: ["library", "inspector"].map((w) => el(w).getAttribute("aria-label")).join(", ") };
+  el("theme-reset").focus(); el("theme-reset").click(); await wait(60); const inAsk = document.activeElement.id; el("ask-no").click(); await wait(60);
+  r.withoutAMouse.question = { focusGoesToIt: inAsk, andBackAfter: document.activeElement.id };
+
   // ----- a change Chrome cannot store is put back, and the person is told -----
   el("part-main").click(); const realSet = chrome.storage.local.set, opacityStored = Math.round((store.opacity ?? 0.5) * 100);
   chrome.storage.local.set = async () => { throw new Error("disk full"); };

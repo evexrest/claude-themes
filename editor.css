@@ -29,6 +29,15 @@ button {
     cursor: pointer;
 }
 
+/* Whatever the keyboard has reached is ringed, in every window. */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+    outline: 2px solid #ffb59a;
+    outline-offset: 2px;
+}
+
 /* Hidden means hidden, whatever else a rule below says about the element. */
 [hidden] {
     display: none !important;

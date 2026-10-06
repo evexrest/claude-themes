@@ -451,13 +451,18 @@ function ask(question, yes) {
         byId("ask-text").textContent = question;
         byId("ask-yes").textContent = yes;
         box.hidden = false;
-        byId("ask-yes").focus();
+        // Enter on a question should never be the answer that cannot be taken back.
+        const asker = document.activeElement;
+        byId("ask-no").focus();
 
         const finish = (said) => {
             box.hidden = true;
             byId("ask-yes").removeEventListener("click", agreed);
             byId("ask-no").removeEventListener("click", refused);
             document.removeEventListener("keydown", escaped, true);
+            if (asker && asker.isConnected) {
+                asker.focus();
+            }
             answer(said);
         };
         const agreed = () => finish(true);
@@ -569,8 +574,10 @@ function showLibrary() {
         const button = document.createElement("button");
         button.className = "tile";
         button.dataset.side = sticker.id === null ? "" : sticker.id;
+        press(button, false);
         if (sticker.thumb) {
             button.style.backgroundImage = `url("${sticker.thumb}")`;
+            button.setAttribute("aria-label", "Saved side picture " + (state.stickers.indexOf(sticker) + 1));
         } else {
             button.textContent = "None";
         }
@@ -1204,6 +1211,7 @@ function makeWindow(id) {
             keepWindows();
         });
 
+        element.setAttribute("aria-label", element.dataset.name);
         const name = document.createElement("b");
         name.textContent = element.dataset.name;
         grab.append(lights, name);
