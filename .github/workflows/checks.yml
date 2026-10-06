@@ -1,0 +1,22 @@
+name: Checks
+
+# The checks that need no browser: the scripts parse, the manifest is sound, the two
+# version numbers agree, and nothing in the extension talks to the internet.
+# The browser tests (tests/run.mjs) need a Mac with Chrome and are run by hand.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tests/static.mjs

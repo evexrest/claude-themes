@@ -1,20 +1,44 @@
 # Claude Themes
 
-A Chrome extension that puts a background behind claude.ai, on the chat, cowork and code
-screens, with frames and your own text colour and font.
+Backgrounds, borders, side pictures, text colour and fonts for [claude.ai](https://claude.ai),
+set up in an editor that opens right on top of the Claude page.
 
-The toolbar icon opens an editor right on top of the Claude page. Its three windows (a
-bar, the library and the settings) float over the page like windows on a desktop: drag one
-by its title bar to move it, drag an edge or a corner to resize it, and use the three dots
-to close it, fold it away or put it back. They stay where you leave them. The page itself
-is the canvas: click a part of it (the main page, the
-sidebar, or the space on either side of the chat) to change that part, and drag pictures
-onto it from your computer or from the library. Every change shows on
-the real page as you make it. A side picture can be dragged up and down and resized by its
-corner. Undo and redo work as in any editor. **Done**, Esc, or the toolbar icon again
-closes it.
+![The editor open over a chat, with the Library and Settings windows](docs/screenshots/editor-main.png)
 
-Clicked on another tab, the icon goes to your Claude tab, or opens one.
+Unofficial. Not made by, or affiliated with, Anthropic. It restyles the page in your own
+browser only: your pictures and settings stay in Chrome on your computer and are never sent
+anywhere. See [PRIVACY.md](PRIVACY.md).
+
+## Install
+
+It is not on the Chrome Web Store yet. Until it is:
+
+1. Download this folder: the green **Code** button on GitHub, then **Download ZIP**, and
+   unzip it. (Or `git clone` it.)
+2. In Chrome, open `chrome://extensions`.
+3. Turn on **Developer mode**, at the top right.
+4. Click **Load unpacked** and choose the folder.
+5. Open [claude.ai](https://claude.ai) and click the Claude Themes icon in the toolbar. If
+   you do not see it, click the puzzle-piece icon and pin it.
+
+After changing or updating the folder, press the reload arrow on the Claude Themes card on
+`chrome://extensions`, then refresh claude.ai.
+
+## Using it
+
+The toolbar icon opens the editor over the Claude page. Its three windows (the bar, the
+Library and the Settings) float like windows on a desktop: drag one by its title bar, drag
+an edge to resize it, and use the three dots to close it, fold it away or put it back.
+
+1. Click a part of the page: the main page, the sidebar, or the space on either side of
+   the chat.
+2. Click a picture in the Library to put it there, or drag one in from your computer.
+3. Change it in the Settings window. Drag a picture on the page to move it.
+4. **Done**, Esc, or the toolbar icon again closes the editor. Undo takes back any step.
+
+![The sidebar selected, with a background of its own](docs/screenshots/editor-sidebar.png)
+
+## What it does
 
 - Six built-in gradient presets
 - Drop your own images onto the editor, or upload one with cropping: drag and zoom to
@@ -53,24 +77,40 @@ Clicked on another tab, the icon goes to your Claude tab, or opens one.
   read, and a separate colour for the words Claude marks out (normally crimson)
 - Upload your own frame picture; its thickness is measured for you
 - Works in light and dark mode
+- Save the whole theme to a file, with its pictures, and load it again: as a backup, on
+  another computer, or to give to someone else. **Reset everything** goes back to the start
+- Undo and redo for every change
 
-Unofficial. Not made by, or affiliated with, Anthropic. It restyles the page in your own
-browser only. Your images are stored in Chrome on your computer and are not sent anywhere.
+## What it leaves alone
 
-**Status: early.** It can break when claude.ai changes its layout. If something looks
-wrong, turn it off with the **On** switch and open an issue.
+- The message box, menus, code blocks and anything else you work with keep Claude's own
+  look. Nothing is moved, resized or made to behave differently.
+- Pages that are not chats (Projects, Artifacts, Scheduled, Customize) are shown exactly as
+  Claude draws them.
+- If Claude's site changes so that a chat is no longer built the way this version expects,
+  the theme switches itself off on that page instead of showing it half-themed, and the
+  editor says so. That is the sign to update.
 
-## Install
+## Limits
 
-1. Download this repository (green **Code** button, then **Download ZIP**) and unzip it.
-2. In Chrome, open `chrome://extensions`.
-3. Turn on **Developer mode** (top right).
-4. Click **Load unpacked** and choose the unzipped folder.
-5. Open claude.ai. The Dusk preset shows straight away.
-6. Click the puzzle-piece icon in the toolbar, then **Claude Themes**, to open the editor
-   over the page.
+- Chrome, and browsers built on it, only. The Claude desktop app cannot be themed.
+- It depends on how claude.ai is built, which Anthropic can change at any time.
+- A stretched background, zoom and dragging are for saved images. The six built-in
+  backgrounds are washes of colour.
 
-It also works in other Chromium browsers such as Edge, Brave and Arc.
+## For developers
+
+No build step and no dependencies: the folder is the extension.
+
+```
+node tests/static.mjs     # checks that need no browser (also run on every push)
+node tests/run.mjs        # every browser test: prints PASS or FAIL for each suite
+tools/package.sh          # makes dist/claude-themes-<version>.zip for the Chrome Web Store
+```
+
+The browser tests need a Mac with Chrome installed; see [tests/README.md](tests/README.md).
+[CONTRIBUTING.md](CONTRIBUTING.md) says how changes are made, [CHANGELOG.md](CHANGELOG.md)
+what changed in each version.
 
 ## Files
 
@@ -86,6 +126,10 @@ It also works in other Chromium browsers such as Edge, Brave and Arc.
 | `options.html`, `options.js`, `options.css` | The upload page, opened from the editor: crop an image for the screen or the sidebar and add it to your saved images |
 | `frame-upload.js` | The upload page: read and save your own frame picture |
 | `stickers.js` | The upload page: save a picture or GIF for beside the chat |
+| `themes.js` | The editor: save the theme to a file, load one, reset everything, and the first-time note |
+| `icons/` | The extension's icon, as a drawing (`icon.svg`) and at the four sizes Chrome uses |
+| `tools/` | Scripts that make the icons, the screenshots and the zip for the Chrome Web Store |
+| `docs/` | Screenshots, and what to put in the Chrome Web Store listing |
 | `tests/` | Checks that run the extension's code in a separate, throwaway Chrome. See `tests/README.md` |
 
 ## Licence

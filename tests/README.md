@@ -5,7 +5,19 @@ open is never touched. Most of them run the real `settings.js`, `content.js`, `t
 `editor.js` and `options.js` as ordinary pages, with a stand-in for Chrome's storage
 (`stub.js`). `real.mjs` loads the folder as an extension, the way Chrome will.
 
-Run from the project folder:
+The two commands to know, run from the project folder:
+
+```
+node tests/static.mjs     # no browser needed: scripts parse, manifest sound, versions agree, nothing talks to the internet
+node tests/run.mjs        # every suite below, compared with tests/expected/: PASS or FAIL
+```
+
+`run.mjs` passes when every named result is the same as the one kept in `tests/expected/`,
+which holds what each suite gave when a person last looked it over. A FAIL lists what was
+expected and what came out. If the change was meant, `node tests/run.mjs --update` records
+the new results; commit them with the change. `node tests/run.mjs logic` runs one suite.
+
+The suites can also be run one at a time, to read everything they print:
 
 | Command | What it checks |
 |---|---|
@@ -18,8 +30,7 @@ Run from the project folder:
 | `node tests/real.mjs` | The real thing: loads the folder as an extension and clicks the toolbar icon on a Claude tab, on another tab, and with no Claude tab open; in the editor it changes a setting, drops a picture and checks the page underneath follows, then moves and resizes a window with the mouse itself. It never visits claude.ai: a small server on this computer stands in for it. Saves `tests/real-page.png`, `tests/real-page-dark.png` and `tests/real-page-windows.png` |
 | `node tests/cdp.mjs "file://$PWD/tests/page.html?bg=image&gif=1&f=none&o=1" /tmp/ct-profile` | Whether a GIF background moves: several real-time captures, counted |
 
-Each `dump.sh` run prints its results as JSON. There is no pass or fail line yet: read the
-values. `page.html` is a stand-in for claude.ai's layout that takes its settings from the
+Each `dump.sh` run prints its results as JSON; `run.mjs` is what compares them. `page.html` is a stand-in for claude.ai's layout that takes its settings from the
 address, for pictures; `logic.html` runs a fixed script.
 
 `gif.py` writes the two test characters (`char.gif`, `char2.gif`); `gifs.js` holds them as
