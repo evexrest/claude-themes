@@ -437,6 +437,16 @@
   r.about = { whenAnotherExtensionHasTheKeys: withoutKeys, showsTheVersionChromeIsRunning: el("version").textContent === chrome.runtime.getManifest().version && /^\d+\.\d+\.\d+$/.test(el("version").textContent), shortcut: el("shortcut").textContent,
     links: [...el("about").querySelectorAll("a")].map((a) => a.textContent + " -> " + a.href + (a.target === "_blank" ? " (new tab)" : "")) };
 
+  // ----- the placed pictures changed by something else end this editor's steps -----
+  el("part-main").click(); set("opacity", 33); await wait(60); const hadAStep = !el("undo").disabled, some = store.stickers[0].id, listBefore = store.placed || [];
+  await chrome.storage.local.set({ placed: [...listBefore, { key: "out", id: some, side: "left", size: 100, position: 50, opacity: 1, shift: 0 }] }); await wait(100);
+  r.listChangedFromOutside = { hadAStep, undoOffAfter: el("undo").disabled, theOutsidePictureStays: store.placed.some((p) => p.key === "out") };
+  await chrome.storage.local.set({ placed: listBefore }); await wait(100);
+  // ----- an earlier version's picture that is no longer among the saved ones is not carried over -----
+  { const held = store.placed; delete store.placed; store.stickerLeft = "gone"; store.stickerRight = some; store.stickerSize = 140;
+    r.carriedOverFromAnEarlierVersion = (await readSettings()).placed.map((p) => p.side + " " + (p.id === some ? "saved" : p.id) + " " + p.size).join(", ");
+    delete store.stickerLeft; delete store.stickerRight; delete store.stickerSize; if (held !== undefined) store.placed = held; }
+
   // ----- a change Chrome cannot store is put back, and the person is told -----
   el("part-main").click(); const realSet = chrome.storage.local.set, opacityStored = Math.round((store.opacity ?? 0.5) * 100);
   chrome.storage.local.set = async () => { throw new Error("disk full"); };

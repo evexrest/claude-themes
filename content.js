@@ -37,6 +37,8 @@ const layers = {
 // show: `url` is null until the file has been fetched. Two placed copies of one
 // picture share it.
 const stickers = new Map();
+// The one element that holds them all, once there is a picture to show.
+let stickerHolder = null;
 const stickerFiles = new Map();
 
 // Space kept clear around a side picture, and the least room worth using.
@@ -394,8 +396,15 @@ function placeStickers() {
             element.style.display = "none";
             return;
         }
-        if (element.parentNode !== home) {
-            home.appendChild(element);
+        if (!stickerHolder) {
+            stickerHolder = document.createElement("div");
+            stickerHolder.className = "claude-stickers";
+        }
+        if (stickerHolder.parentNode !== home) {
+            home.appendChild(stickerHolder);
+        }
+        if (element.parentNode !== stickerHolder) {
+            stickerHolder.appendChild(element);
         }
 
         // Keep clear of the bar along the top of the chat window.
@@ -432,10 +441,11 @@ function placeStickers() {
         style.top = top + height * share + "px";
         style.transform = `translateY(${-share * 100}%)`;
         style.opacity = item.opacity;
-        // The list runs from the back to the front, and every picture stays below
-        // the page's own contents: the front one at -1, the rest under it. A layer
-        // is changed here and never by moving the <img>, which would start a GIF again.
-        style.zIndex = index - settings.placed.length;
+        // The list runs from the back to the front. The holder is what keeps them
+        // all below the page's own contents (see .claude-stickers in theme.css);
+        // inside it each has a layer of its own. A layer is changed here and never
+        // by moving the <img>, which would start a GIF again.
+        style.zIndex = index;
     });
 }
 

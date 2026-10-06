@@ -411,7 +411,7 @@
    "order": "ABCD",
    "row": "D* B A",
    "buttons": "backward,back",
-   "inPreview": "A-4 B-3 C-2 D-1",
+   "inPreview": "A0 B1 C2 D3",
    "grips": "A1 B2 C3 D4",
    "aPressLandsOn": "D",
    "outlined": "D"
@@ -433,14 +433,14 @@
    "order": "DABC",
    "row": "B A D*",
    "buttons": "forward,front",
-   "inPreview": "D-4 A-3 B-2 C-1",
+   "inPreview": "D0 A1 B2 C3",
    "aPressLandsOn": "B"
   },
   "andBroughtBackToTheFront": {
    "order": "ABCD",
    "row": "D* B A",
    "buttons": "backward,back",
-   "inPreview": "A-4 B-3 C-2 D-1",
+   "inPreview": "A0 B1 C2 D3",
    "aPressLandsOn": "D"
   },
   "choosingInTheRow": {
@@ -454,7 +454,7 @@
    "order": "ACDB",
    "row": "B* D A",
    "buttons": "backward,back",
-   "inPreview": "A-4 C-3 D-2 B-1",
+   "inPreview": "A0 C1 D2 B3",
    "aPressLandsOn": "B",
    "grips": "A1 C2 D3 B4",
    "sameElementsInThePreview": true
@@ -463,32 +463,32 @@
    "order": "ACBD",
    "row": "D B* A",
    "buttons": "forward,backward,front,back",
-   "inPreview": "A-4 C-3 B-2 D-1",
+   "inPreview": "A0 C1 B2 D3",
    "aPressLandsOn": "D"
   },
   "toTheBack": {
    "order": "BACD",
    "row": "D A B*",
    "buttons": "forward,front",
-   "inPreview": "B-4 A-3 C-2 D-1",
+   "inPreview": "B0 A1 C2 D3",
    "aPressLandsOn": "D"
   },
   "toTheFront": {
    "order": "ACDB",
    "row": "B* D A",
    "buttons": "backward,back",
-   "inPreview": "A-4 C-3 D-2 B-1",
+   "inPreview": "A0 C1 D2 B3",
    "aPressLandsOn": "B"
   },
   "undone": {
    "order": "BACD",
    "row": "D A B*",
-   "inPreview": "B-4 A-3 C-2 D-1"
+   "inPreview": "B0 A1 C2 D3"
   },
   "redone": {
    "order": "ACDB",
    "row": "B* D A",
-   "inPreview": "A-4 C-3 D-2 B-1"
+   "inPreview": "A0 C1 D2 B3"
   },
   "aloneOnItsSide": {
    "row": "C*",
@@ -498,7 +498,7 @@
     "order": "ADBC",
     "row": "C*",
     "buttons": "back",
-    "inPreview": "A-4 D-3 B-2 C-1",
+    "inPreview": "A0 D1 B2 C3",
     "aPressLandsOn": "B"
    }
   },
@@ -822,6 +822,12 @@
    "Privacy -> https://github.com/evexrest/claude-themes/blob/main/PRIVACY.md (new tab)"
   ]
  },
+ "listChangedFromOutside": {
+  "hadAStep": true,
+  "undoOffAfter": true,
+  "theOutsidePictureStays": true
+ },
+ "carriedOverFromAnEarlierVersion": "right saved 140",
  "saveFails": {
   "told": "Chrome could not save that change, so it was put back. disk full",
   "sliderBackAtStoredValue": true,

@@ -55,10 +55,12 @@ function stickerThumbnail() {
 // front of any pictures that are there already.
 async function saveSticker(side) {
     const saved = await readSettings();
-    const id = stickerId || newId();
+    // The picture may have been removed in the editor since this page kept it.
+    const kept = saved.stickers.some((sticker) => sticker.id === stickerId);
+    const id = kept ? stickerId : newId();
     const change = {};
 
-    if (!stickerId) {
+    if (!kept) {
         change[stickerKey(id)] = stickerData;
         change.stickers = [...saved.stickers, { id: id, thumb: stickerThumbnail() }];
     }
@@ -80,9 +82,14 @@ async function saveSticker(side) {
     }
 }
 
-for (const side of ["left", "right"]) {
-    document.getElementById("sticker-" + side).addEventListener("click", () => {
-        saveSticker(side);
+// One save at a time. Two at once would each read the lists before the other had
+// written them, and the second would write over the first.
+const sideButtons = ["left", "right"].map((side) => document.getElementById("sticker-" + side));
+for (const button of sideButtons) {
+    button.addEventListener("click", async () => {
+        sideButtons.forEach((each) => { each.disabled = true; });
+        await saveSticker(button.id.slice("sticker-".length));
+        sideButtons.forEach((each) => { each.disabled = false; });
     });
 }
 

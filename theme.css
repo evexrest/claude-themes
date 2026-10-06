@@ -80,10 +80,18 @@ html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-c
    page area and works out where the empty space is. They are drawn above the page
    area's own background and below everything in it, so a picture bigger than the
    empty space carries on behind the chat and never sits on top of it. content.js
-   gives each its own layer, all of them below zero: -1 for the one in front. */
+   keeps them in one holder, and the holder is what sits below the page's contents,
+   at the one layer measured on claude.ai (-1, on 2026-10-05). Inside the holder each
+   picture has a layer of its own, counted up from the back. */
+.claude-stickers {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+
 .claude-sticker {
     position: fixed;
-    z-index: -1;
     pointer-events: none;
     user-select: none;
     object-fit: contain;
@@ -91,7 +99,7 @@ html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-c
 
 /* That order holds only while the page area keeps its layers to itself. claude.ai
    already sets this on it; it is repeated here in case that changes. */
-.dframe-root :has(> .claude-sticker) {
+.dframe-root :has(> .claude-stickers) {
     isolation: isolate;
 }
 

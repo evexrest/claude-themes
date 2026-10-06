@@ -12,6 +12,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Script } from "node:vm";
 
 const folder = dirname(dirname(fileURLToPath(import.meta.url)));
 const read = (name) => readFileSync(join(folder, name), "utf8");
@@ -29,6 +30,20 @@ for (const name of shipped.filter((file) => file.endsWith(".js"))) {
         execFileSync("node", ["--check", join(folder, name)], { stdio: "pipe" });
     } catch (error) {
         problems.push(`${name} is not valid JavaScript: ${String(error.stderr).split("\n").slice(0, 3).join(" ")}`);
+    }
+}
+
+// The test pages' own scripts. One that does not parse runs nothing at all, and the
+// browser tests then only say that a page printed no results.
+const testsIn = join(folder, "tests");
+const testPages = [...readdirSync(join(testsIn, "fragments")).map((name) => join("fragments", name)), "logic.html"].filter((name) => name.endsWith(".html"));
+for (const name of testPages) {
+    for (const [, code] of readFileSync(join(testsIn, name), "utf8").matchAll(/<script>([\s\S]*?)<\/script>/g)) {
+        try {
+            new Script(code);
+        } catch (error) {
+            problems.push(`tests/${name} has a script that is not valid JavaScript: ${error.message}`);
+        }
     }
 }
 

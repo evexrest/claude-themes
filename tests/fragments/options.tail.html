@@ -54,6 +54,13 @@
   giveSide(new File([gifBytes], "wave.gif", { type: "image/gif" })); await until(() => stickerStatus.textContent === ""); await wait(100);
   document.getElementById("sticker-right").click(); await wait(300);
   r.sidePictureWhenThereIsNoRoom = { placed: store.placed.length, saved: store.stickers.length, status: stickerStatus.textContent };
+  await chrome.storage.local.set({ placed: [] }); giveSide(new File([gifBytes], "twice.gif", { type: "image/gif" })); await until(() => stickerStatus.textContent === ""); await wait(100);
+  const savedBefore = store.stickers.length, files = () => Object.keys(store).filter((k) => k.startsWith("sticker-")).length;
+  document.getElementById("sticker-left").click(); document.getElementById("sticker-left").click(); await wait(400);
+  r.sidePicturePressedTwiceAtOnce = { placed: store.placed.length, savedMore: store.stickers.length - savedBefore, filesNoListNames: files() - store.stickers.length, buttonsBackOn: !document.getElementById("sticker-left").disabled };
+  const twice = store.stickers[store.stickers.length - 1].id; await chrome.storage.local.set({ stickers: store.stickers.filter((s) => s.id !== twice), placed: [] }); await chrome.storage.local.remove("sticker-" + twice);
+  document.getElementById("sticker-right").click(); await wait(400);
+  r.sidePictureRemovedInTheEditorThenAddedAgain = { placed: store.placed.length, itsPictureIsSaved: store.placed.length === 1 && store.stickers.some((s) => s.id === store.placed[0].id) && ("sticker-" + store.placed[0].id) in store };
   document.getElementById("out").textContent = "RESULT" + JSON.stringify(r, null, 1) + "END";
 })().catch((e) => { document.getElementById("out").textContent = "RESULT" + JSON.stringify("error " + e.stack) + "END"; });
 </script>

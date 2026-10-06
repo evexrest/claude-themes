@@ -57,6 +57,10 @@ const updaters = [];
 // holds the settings as they were `before` and `after`.
 const steps = [];
 const undoneSteps = [];
+// The lists of placed pictures this editor has sent to be stored and not yet heard
+// back about, as text. A list that comes back and is not one of these was changed
+// by something else (see the storage listener in start).
+const ownLists = [];
 let lastKeys = "";
 let lastTime = 0;
 
@@ -93,6 +97,9 @@ function save(change, how = "step", what = "") {
         remember(change, how === "flow", what);
     }
     Object.assign(state, change);
+    if ("placed" in change) {
+        ownLists.push(JSON.stringify(change.placed));
+    }
     // Chrome can refuse to store a change (a full disk, a profile it cannot write to).
     // The page only ever shows what is stored, so the editor reads that back. Earlier
     // steps may have been refused too, so Undo starts again from here.
@@ -101,6 +108,7 @@ function save(change, how = "step", what = "") {
         for (const key of Object.keys(change)) {
             state[key] = kept[key];
         }
+        ownLists.length = 0;
         forgetHistory();
         sync();
         say("Chrome could not save that change, so it was put back. " + error.message);
@@ -1652,6 +1660,16 @@ async function start() {
     window.addEventListener("resize", placeWindows);
 
     chrome.storage.onChanged.addListener((changes) => {
+        // The placed pictures changed by something else (the upload page, an editor
+        // in another tab): each of this editor's steps holds the whole list as it
+        // was, so taking one back would take that change back with it.
+        if ("placed" in changes) {
+            const mine = ownLists.indexOf(JSON.stringify(changes.placed.newValue ?? defaults.placed));
+            if (mine < 0) {
+                forgetHistory();
+            }
+            ownLists.splice(0, mine + 1);
+        }
         for (const key of Object.keys(changes)) {
             // Full-size pictures are stored under their own keys; skip those.
             if (key in defaults) {

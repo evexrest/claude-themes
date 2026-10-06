@@ -124,6 +124,7 @@ try {
     // The picture an earlier version left has its grip, where the page says the picture is.
     found.insideTheEditor.handles = await run(editor, handles);
 
+    found.openingTheEditorSavesNoList = await run(icon, inStorage);
     found.themeMidnight = await run(editor, `(async () => { document.querySelector('#themes .tile[data-theme="midnight"]').click(); await new Promise((r) => setTimeout(r, 500)); const kept = await chrome.storage.local.get(["preset", "textColor", "opacity"]); return kept.preset + " " + kept.textColor + " " + kept.opacity; })()`);
     found.pageShowsMidnight = await run(page, `(document.getElementById("claude-wallpaper").style.backgroundImage.includes("5, 7, 13") ? "midnight wash" : "another background") + ", text " + getComputedStyle(document.documentElement).getPropertyValue("--ct-text").trim()`);
     found.themeUndone = await run(editor, `(async () => { document.getElementById("undo").click(); await new Promise((r) => setTimeout(r, 500)); const kept = await chrome.storage.local.get({ preset: "dusk", textColor: null }); return kept.preset + " " + kept.textColor; })()`);

@@ -1,5 +1,6 @@
 {
     "manifest_version": 3,
+    "minimum_chrome_version": "111",
     "name": "Claude Themes",
     "version": "0.20.0",
     "description": "Backgrounds, frames, side pictures, text colour and fonts for claude.ai. Unofficial, not made by Anthropic.",

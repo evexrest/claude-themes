@@ -11,7 +11,7 @@
  },
  "itsPictureIsStillShown": {
   "onThePage": [
-   "left 338,227,140,175 layer -1 opacity 0.9"
+   "left 338,227,140,175 layer 0 opacity 0.9"
   ],
   "inStorage": "(no list saved)"
  },
@@ -39,13 +39,14 @@
    "left 338,227,140,175"
   ]
  },
+ "openingTheEditorSavesNoList": "(no list saved)",
  "themeMidnight": "midnight #f5f0e6 1",
  "pageShowsMidnight": "midnight wash, text #f5f0e6",
  "themeUndone": "dusk null",
  "listIsSavedOnceItChanges": {
   "inStorage": "left old 140/30/0.9/0",
   "onThePage": [
-   "left 338,227,140,175 layer -1 opacity 0.9"
+   "left 338,227,140,175 layer 0 opacity 0.9"
   ]
  },
  "chooseOcean": "ocean",
@@ -60,8 +61,8 @@
   "said": "Added. It is kept under Side pictures."
  },
  "pageShowsThePicture": [
-  "left 338,227,140,175 layer -2 opacity 0.9",
-  "right 1310,567,180,144 layer -1 opacity 1"
+  "left 338,227,140,175 layer 0 opacity 0.9",
+  "right 1310,567,180,144 layer 1 opacity 1"
  ],
  "addASecond": {
   "inStorage": "left old 140/30/0.9/0, right dropped 180/85/1/0, right dropped 180/73/1/0",
@@ -73,9 +74,9 @@
   "panel": "Pictures on the right"
  },
  "pageShowsBoth": [
-  "left 338,227,140,175 layer -3 opacity 0.9",
-  "right 1310,567,180,144 layer -2 opacity 1",
-  "right 1310,495,180,144 layer -1 opacity 1"
+  "left 338,227,140,175 layer 0 opacity 0.9",
+  "right 1310,567,180,144 layer 1 opacity 1",
+  "right 1310,495,180,144 layer 2 opacity 1"
  ],
  "sendItBack": {
   "inStorage": "left old 140/30/0.9/0, right dropped 180/73/1/0, right dropped 180/85/1/0",
@@ -83,9 +84,9 @@
   "canStill": "forward,front,back"
  },
  "pageShowsTheNewOrder": [
-  "left 338,227,140,175 layer -3 opacity 0.9",
-  "right 1310,567,180,144 layer -1 opacity 1",
-  "right 1310,495,180,144 layer -2 opacity 1"
+  "left 338,227,140,175 layer 0 opacity 0.9",
+  "right 1310,567,180,144 layer 2 opacity 1",
+  "right 1310,495,180,144 layer 1 opacity 1"
  ],
  "draggingWhereTwoOverlap": {
   "inStorage": "left old 140/30/0.9/0, right dropped 180/73/1/0, right dropped 180/68/1/-60",
@@ -95,9 +96,9 @@
    "right 1310,495,180,144"
   ],
   "onThePage": [
-   "left 338,227,140,175 layer -3 opacity 0.9",
-   "right 1250,465,180,144 layer -1 opacity 1",
-   "right 1310,495,180,144 layer -2 opacity 1"
+   "left 338,227,140,175 layer 0 opacity 0.9",
+   "right 1250,465,180,144 layer 2 opacity 1",
+   "right 1310,495,180,144 layer 1 opacity 1"
   ]
  },
  "windowsWithARealMouse": {

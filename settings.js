@@ -164,7 +164,9 @@ async function readSettings() {
         settings[key] = key in kept ? kept[key] : defaults[key];
     }
     if (!("placed" in kept)) {
-        settings.placed = placedFromOld(kept) || defaults.placed;
+        // A picture that has since been removed from the saved ones is not carried over.
+        settings.placed = (placedFromOld(kept) || defaults.placed)
+            .filter((item) => settings.stickers.some((sticker) => sticker.id === item.id));
     }
     return settings;
 }

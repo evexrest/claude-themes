@@ -100,5 +100,15 @@
   "placed": 20,
   "saved": 3,
   "status": "Saved to your side pictures, but not put on the page: there are already 20 pictures beside the chat, which is the most there can be. Take one off in the editor first."
+ },
+ "sidePicturePressedTwiceAtOnce": {
+  "placed": 1,
+  "savedMore": 1,
+  "filesNoListNames": 0,
+  "buttonsBackOn": true
+ },
+ "sidePictureRemovedInTheEditorThenAddedAgain": {
+  "placed": 1,
+  "itsPictureIsSaved": true
  }
 }

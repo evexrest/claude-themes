@@ -172,7 +172,7 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   results.eachItsOwn = { left: st("l"), right: st("r") };
   await alter({ all: { size: 400, position: 0, opacity: 0.5 } });
   // a taller window, so the picture's height no longer holds it back: wider than the empty space, it goes behind the chat
-  const layers = () => { const e = pic("l"), c = document.querySelector('[data-cds="ChatComposer"]'), b = c.getBoundingClientRect(); e.style.pointerEvents = "auto"; const found = document.elementsFromPoint(b.left + 20, b.top + 10); e.style.pointerEvents = ""; return { parent: e.parentElement.className, z: getComputedStyle(e).zIndex, underTheMessageBox: found.indexOf(e) > found.indexOf(c), aboveThePageColour: found.indexOf(e) >= 0 && found.indexOf(e) < found.indexOf(e.parentElement), clicksPassThrough: getComputedStyle(e).pointerEvents }; };
+  const layers = () => { const e = pic("l"), c = document.querySelector('[data-cds="ChatComposer"]'), b = c.getBoundingClientRect(); e.style.pointerEvents = "auto"; const found = document.elementsFromPoint(b.left + 20, b.top + 10); e.style.pointerEvents = ""; return { parent: e.parentElement.className, z: getComputedStyle(e).zIndex, underTheMessageBox: found.indexOf(e) > found.indexOf(c), aboveThePageColour: found.indexOf(e) >= 0 && found.indexOf(e) < found.indexOf(e.closest(".dframe-content")), clicksPassThrough: getComputedStyle(e).pointerEvents }; };
   document.querySelector(".dframe-root").style.height = "1300px"; await wait(1200);
   results.pastTheGap = { box: box(), left: st("l"), right: st("r"), layers: layers(), size: size() };
   await alter({ all: { size: 800 } });

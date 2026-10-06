@@ -362,7 +362,7 @@
    "bottom": 396,
    "width": 100,
    "opacity": "1",
-   "layer": "-2",
+   "layer": "0",
    "type": "blob",
    "pe": "none"
   },
@@ -375,7 +375,7 @@
    "bottom": 396,
    "width": 140,
    "opacity": "0.5",
-   "layer": "-1",
+   "layer": "1",
    "type": "blob",
    "pe": "none"
   },
@@ -400,7 +400,7 @@
    "bottom": 396,
    "width": 100,
    "opacity": "1",
-   "layer": "-2",
+   "layer": "0",
    "type": "blob",
    "pe": "none"
   },
@@ -413,7 +413,7 @@
    "bottom": 396,
    "width": 100,
    "opacity": "1",
-   "layer": "-1",
+   "layer": "1",
    "type": "blob",
    "pe": "none"
   },
@@ -456,7 +456,7 @@
    "bottom": 396,
    "width": 100,
    "opacity": "1",
-   "layer": "-3",
+   "layer": "0",
    "type": "blob",
    "pe": "none"
   },
@@ -469,7 +469,7 @@
    "bottom": 355,
    "width": 100,
    "opacity": "1",
-   "layer": "-2",
+   "layer": "1",
    "type": "blob",
    "pe": "none"
   },
@@ -482,17 +482,17 @@
    "bottom": 396,
    "width": 100,
    "opacity": "1",
-   "layer": "-1",
+   "layer": "2",
    "type": "blob",
    "pe": "none"
   },
-  "layers": "l -3, l2 -2, r -1",
+  "layers": "l 0, l2 1, r 2",
   "whereTwoOverlap": "chat window > l2 > l > page area",
   "inPage": "l,r,l2",
   "twoOfOnePictureShareItsFile": true
  },
  "reordered": {
-  "layers": "r -3, l2 -2, l -1",
+  "layers": "r 0, l2 1, l 2",
   "whereTwoOverlap": "chat window > l > l2 > page area",
   "sameElementsStillShowingTheSameFile": "l,l2,r",
   "inPage": "l,r,l2",
@@ -502,14 +502,14 @@
   "count": 2,
   "itsElement": "gone",
   "othersKept": "l,r",
-  "layers": "r -2, l -1",
+  "layers": "r 0, l 1",
   "fileStillShownByTheOther": "still there"
  },
  "lastOfAPictureRemoved": {
   "count": 1,
   "itsFile": "let go",
   "theOthersFile": "still there",
-  "layers": "l -1"
+  "layers": "l 0"
  },
  "heldByHeight": {
   "left": {
@@ -521,7 +521,7 @@
    "bottom": 396,
    "width": 266,
    "opacity": "0.5",
-   "layer": "-2",
+   "layer": "0",
    "type": "blob",
    "pe": "none"
   },
@@ -534,7 +534,7 @@
    "bottom": 396,
    "width": 266,
    "opacity": "0.5",
-   "layer": "-1",
+   "layer": "1",
    "type": "blob",
    "pe": "none"
   }
@@ -549,7 +549,7 @@
    "bottom": 396,
    "width": 80,
    "opacity": "0.3",
-   "layer": "-2",
+   "layer": "0",
    "type": "blob",
    "pe": "none"
   },
@@ -562,7 +562,7 @@
    "bottom": 239,
    "width": 140,
    "opacity": "0.5",
-   "layer": "-1",
+   "layer": "1",
    "type": "blob",
    "pe": "none"
   }
@@ -585,7 +585,7 @@
    "bottom": 564,
    "width": 400,
    "opacity": "0.5",
-   "layer": "-2",
+   "layer": "0",
    "type": "blob",
    "pe": "none"
   },
@@ -598,13 +598,13 @@
    "bottom": 564,
    "width": 400,
    "opacity": "0.5",
-   "layer": "-1",
+   "layer": "1",
    "type": "blob",
    "pe": "none"
   },
   "layers": {
-   "parent": "dframe-content",
-   "z": "-2",
+   "parent": "claude-stickers",
+   "z": "0",
    "underTheMessageBox": true,
    "aboveThePageColour": true,
    "clicksPassThrough": "none"
@@ -621,7 +621,7 @@
    "bottom": 1064,
    "width": 800,
    "opacity": "0.5",
-   "layer": "-2",
+   "layer": "0",
    "type": "blob",
    "pe": "none"
   },
@@ -634,7 +634,7 @@
    "bottom": 1064,
    "width": 800,
    "opacity": "0.5",
-   "layer": "-1",
+   "layer": "1",
    "type": "blob",
    "pe": "none"
   }
@@ -649,7 +649,7 @@
    "bottom": 1174,
    "width": 888,
    "opacity": "0.5",
-   "layer": "-2",
+   "layer": "0",
    "type": "blob",
    "pe": "none"
   },
@@ -662,7 +662,7 @@
    "bottom": 1174,
    "width": 888,
    "opacity": "0.5",
-   "layer": "-1",
+   "layer": "1",
    "type": "blob",
    "pe": "none"
   }

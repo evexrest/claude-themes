@@ -6,8 +6,8 @@ and are grouped.
 ## 0.20.0 (2026-10-06)
 
 - Several pictures on each side of the chat, where there was one. Click a side picture in
-  the Library, or drop a file on a side, and it is added in front of the others, a little
-  higher up. The same picture can be added more than once. There can be 20 in all.
+  the Library, or drop a file on a side, and it is added in front of the others, a step
+  away from the last one so that it is not hidden behind it. The same picture can be added more than once. There can be 20 in all.
 - Layers. The Left side and Right side settings show that side's pictures in a row, the one
   in front first. Bring forward, Send back, To the front and To the back move the chosen
   picture. Where pictures overlap on the page, a press picks up the one in front.
@@ -15,10 +15,13 @@ and are grouped.
   row to choose it. The sliders and the Delete key work on the chosen one. Remove from the
   page takes it off and keeps it in the Library.
 - A picture set up in an earlier version is still there, as it was left.
-- Theme files hold every side picture and the order they are layered in. Files saved by
+- Theme files hold the side pictures that are on the page and the order they are layered in. Files saved by
   earlier versions still load. An earlier version asked to load a new file says to update.
 - The upload page's two buttons add the picture on a side. Each press adds one more.
-- The button that made the other side's picture match is gone.
+- The button that made the other side's picture match is gone. So is swapping the picture
+  in a place for another: take the one off and add the other.
+- Chrome 111 or newer is needed, and the extension now says so. Its styles already
+  needed it.
 
 ## 0.19.1 (2026-10-06)
 

@@ -10,5 +10,5 @@ shot() { # name, then the settings for the test page
 }
 shot editor-main    "part=main&light=1&theme=paperback"
 shot editor-sidebar "part=sidebar&dark=1&theme=midnight"
-shot editor-side    "part=left&light=1&preset=ember&size=220"
+shot editor-side    "part=left&light=1&preset=ember&placed=three"
 ls -la $R/docs/screenshots
