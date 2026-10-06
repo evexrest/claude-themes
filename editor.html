@@ -378,19 +378,14 @@
                         it, here or on the screen.
                     </p>
 
+                    <!-- Where two pictures overlap, the one in front covers the other. -->
                     <h3>Layer</h3>
                     <div class="layers">
-                        <button id="layer-forward">Bring forward</button>
-                        <button id="layer-backward">Send back</button>
-                        <button id="layer-front">To the front</button>
-                        <button id="layer-back">To the back</button>
+                        <button id="layer-forward" title="In front of the next picture on this side">Bring forward</button>
+                        <button id="layer-backward" title="Behind the next picture on this side">Send back</button>
+                        <button id="layer-front" title="In front of every picture, on both sides">To the front</button>
+                        <button id="layer-back" title="Behind every picture, on both sides">To the back</button>
                     </div>
-                    <p class="note">
-                        Where two pictures overlap, the one in front covers the other. The
-                        first two buttons move this picture past the next one on this side.
-                        The other two put it in front of, or behind, every picture on both
-                        sides.
-                    </p>
                     <button class="wide" id="side-remove" title="It stays in the Library (Delete)">Remove from the page</button>
 
                     <h3>Place and size</h3>
@@ -419,8 +414,6 @@
                         <span id="sticker-opacity-value"></span>
                     </label>
                     <input type="range" id="sticker-opacity">
-
-                    <p class="note">These three are for the chosen picture only.</p>
                 </div>
             </div>
             </div>

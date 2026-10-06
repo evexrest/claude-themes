@@ -416,6 +416,13 @@
    "aPressLandsOn": "D",
    "outlined": "D"
   },
+  "settingsFitWithoutScrolling": true,
+  "buttonTitles": [
+   "In front of the next picture on this side",
+   "Behind the next picture on this side",
+   "In front of every picture, on both sides",
+   "Behind every picture, on both sides"
+  ],
   "rowNames": [
    "Picture 1 of 3, counted from the front (Front)",
    "Picture 2 of 3, counted from the front",

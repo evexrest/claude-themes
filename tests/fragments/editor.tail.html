@@ -242,7 +242,10 @@
   const pick = async (key) => { [...el("side-placed").children].find((b) => b.dataset.key === key).click(); await wait(200); };
   const push = async (how) => { el("layer-" + how).click(); await wait(250); return { order: order(), row: row(), buttons: layerButtons(), inPreview: inPreview(), aPressLandsOn: underTheMiddleOfB() }; };
   const elements = Object.fromEntries(store.placed.map((p) => [p.key, picture(p.key)]));
+  const settingsContent = el("inspector").querySelector(".content");
   r.layers = { atFirst: { order: order(), row: row(), buttons: layerButtons(), inPreview: inPreview(), grips: gripOrder(), aPressLandsOn: underTheMiddleOfB(), outlined: outlined() },
+    // Everything about a side's chosen picture shows at once in a window this size, down to the last slider.
+    settingsFitWithoutScrolling: settingsContent.scrollHeight <= settingsContent.clientHeight, buttonTitles: [...document.querySelectorAll(".layers button")].map((b) => b.title),
     rowNames: [...el("side-placed").children].map((b) => b.getAttribute("aria-label") + (b.textContent ? " (" + b.textContent + ")" : "")), buttonNames: [...document.querySelectorAll(".layers button, #side-remove")].map((b) => b.textContent).join(" | ") };
   // the one in front is chosen without being picked; moved, it is still the chosen one
   r.layers.theFrontOneSentBack = await push("back");
