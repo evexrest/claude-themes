@@ -169,6 +169,88 @@ function freshSettings() {
     return fresh;
 }
 
+// The ready-made themes: a name, and the settings that differ from a fresh
+// install. The first five are washes at part strength, which fade into Claude's
+// page colour and so follow light and dark mode, with Claude's own text colour.
+// The last four are at full strength with a text colour of their own, and look
+// the same in both modes. tests/run.mjs checks that each reads well in both.
+const builtInThemes = [
+    { id: "sunset", name: "Sunset", settings: { preset: "dusk", opacity: 0.55 } },
+    { id: "northern-lights", name: "Northern lights", settings: { preset: "aurora", opacity: 0.55, font: "sans", sidebarFont: "sans" } },
+    { id: "campfire", name: "Campfire", settings: { preset: "ember", opacity: 0.5, font: "serif" } },
+    { id: "deep-sea", name: "Deep sea", settings: { preset: "ocean", opacity: 0.55, font: "rounded", sidebarFont: "rounded" } },
+    { id: "woodland", name: "Woodland", settings: { preset: "forest", opacity: 0.5, font: "typewriter" } },
+    {
+        id: "midnight",
+        name: "Midnight",
+        settings: { preset: "midnight", opacity: 1, panelOpacity: 0.25, textColor: "#f5f0e6", sidebarTextColor: "#f5f0e6", codeColor: "#8fd3ff" }
+    },
+    {
+        id: "paperback",
+        name: "Paperback",
+        settings: {
+            preset: "paper", opacity: 1, panelOpacity: 0.25, textColor: "#2b2b2b", sidebarTextColor: "#2b2b2b", codeColor: "#8e2626",
+            font: "serif", sidebarFont: "serif", frameMain: "double"
+        }
+    },
+    {
+        id: "morning-mist",
+        name: "Morning mist",
+        settings: {
+            preset: "mist", opacity: 1, panelOpacity: 0.25, textColor: "#10254a", sidebarTextColor: "#10254a", codeColor: "#8e2626",
+            font: "sans", sidebarFont: "sans", frameMain: "fineliner"
+        }
+    },
+    {
+        id: "blossom",
+        name: "Blossom",
+        settings: {
+            preset: "blossom", opacity: 1, panelOpacity: 0.25, textColor: "#3d1010", sidebarTextColor: "#3d1010", codeColor: "#0d4a8f",
+            font: "rounded", sidebarFont: "rounded"
+        }
+    }
+];
+
+// Everything a ready-made theme sets: a fresh install's settings with its own on
+// top. An uploaded frame is a file of the user's, like a saved picture, and stays.
+function themeChange(theme) {
+    const change = { ...freshSettings(), ...theme.settings };
+    delete change.frameImage;
+    delete change.frameSlice;
+    return change;
+}
+
+// The shelf of ready-made themes. Each tile is a small sample: the background,
+// and the name in the theme's own text colour and font.
+function showThemes() {
+    const row = byId("themes");
+    for (const theme of builtInThemes) {
+        const change = themeChange(theme);
+        const button = document.createElement("button");
+        button.className = "tile theme";
+        button.dataset.theme = theme.id;
+        button.title = "Switch to this theme. Your pictures are kept, and Undo takes it back";
+        button.style.backgroundImage = presets.find((item) => item.id === change.preset).css;
+        const label = document.createElement("span");
+        label.textContent = theme.name;
+        label.style.color = change.textColor || "";
+        label.style.fontFamily = fontFamily(change.font, "") || "";
+        button.appendChild(label);
+        button.addEventListener("click", () => {
+            save(change);
+            say(`${theme.name} is on. Undo goes back to the look you had.`);
+        });
+        row.appendChild(button);
+        // Marked while every one of its settings is as the theme left it.
+        const mark = () => {
+            press(button, Object.keys(change).every((key) => state[key] === change[key]));
+        };
+        updaters.push(mark);
+        mark();
+    }
+}
+showThemes();
+
 byId("theme-save").addEventListener("click", async () => {
     const text = JSON.stringify(await themeFile());
     const link = document.createElement("a");

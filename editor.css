@@ -542,7 +542,7 @@ body.moving {
     bottom: 12px;
     left: var(--middle, 50%);
     width: min(var(--column, 768px), 100vw - 24px);
-    height: 204px;
+    height: 296px;
     transform: translateX(-50%);
 }
 
@@ -720,6 +720,38 @@ h3 {
     color: #fff;
     font-size: 11px;
     text-shadow: 0 1px 2px #000;
+}
+
+.tile.light span {
+    color: #151515;
+    text-shadow: none;
+}
+
+/* The ready-made themes: a row of their own across the top of the library, each
+   tile a sample with the theme's name in its own colour and font. */
+#theme-gallery {
+    flex: 1 1 100%;
+}
+
+#themes {
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+}
+
+.tile.theme {
+    height: 52px;
+}
+
+.tile.theme span {
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.15;
+    text-shadow: none;
 }
 
 /* Side pictures are shown whole, whatever their shape. */

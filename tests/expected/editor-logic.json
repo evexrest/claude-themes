@@ -21,7 +21,7 @@
   "zoneSidebarWidthInPreview": 288,
   "zoneLeftWidthInPreview": 224,
   "tiles": {
-   "presets": 7,
+   "presets": 11,
    "images": 2,
    "stickers": 2
   },
@@ -53,14 +53,14 @@
   "preset": "ocean",
   "sidebarMode": "(joined)",
   "showing": "Ocean",
-  "library": "0001000"
+  "library": "00010000000"
  },
  "presetOnSidebar": {
   "sidebarMode": "own",
   "sidebarPreset": "ember",
   "mainStill": "ocean",
   "showing": "Ember",
-  "library": "0010000",
+  "library": "00100000000",
   "preview": "on"
  },
  "claudeOwnSidebar": {
@@ -511,6 +511,49 @@
    null,
    null
   ]
+ },
+ "builtInThemes": {
+  "names": "Sunset, Northern lights, Campfire, Deep sea, Woodland, Midnight, Paperback, Morning mist, Blossom",
+  "tiles": 9,
+  "leastContrastInEitherModeOnPageOrSidebar": {
+   "sunset": 6.69,
+   "northern-lights": 6.98,
+   "campfire": 6.86,
+   "deep-sea": 6.25,
+   "woodland": 6.52,
+   "midnight": 6.66,
+   "paperback": 6.31,
+   "morning-mist": 5.97,
+   "blossom": 6.35
+  },
+  "allReadWell": true,
+  "settingsAThemeFileCouldNotHold": [],
+  "backgroundsThatDoNotExist": []
+ },
+ "themeTiles": {
+  "noneMarkedOnACustomLook": "000000000",
+  "paperback": {
+   "preset": "paper",
+   "opacity": 1,
+   "textColor": "#2b2b2b",
+   "font": "serif",
+   "frameMain": "double",
+   "sidebarMode": "joined",
+   "sidePictureOff": true,
+   "marked": "000000100",
+   "told": "Paperback is on. Undo goes back to the look you had.",
+   "libraryKept": true,
+   "uploadedFrameKept": true,
+   "previewText": "#2b2b2b"
+  },
+  "unmarkedOnceChanged": "000000000",
+  "undoneInOneStep": {
+   "preset": null,
+   "imageId": "th",
+   "textColor": "#123456",
+   "frameMain": "custom",
+   "left": "ts"
+  }
  },
  "saveFails": {
   "told": "Chrome could not save that change, so it was put back. disk full",

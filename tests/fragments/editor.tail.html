@@ -268,6 +268,26 @@
   r.readable.nothingWhenTheThemeIsOff = [warning("text-warning"), warning("side-text-warning")];
   await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
 
+  // ----- the ready-made themes -----
+  const worst = {};
+  for (const theme of builtInThemes) { const c = themeChange(theme), main = await sourceColours(c.preset, null, []), side = await sourceColours(c.sidebarPreset, null, []);
+    worst[theme.id] = Math.min(...["main", "sidebar"].flatMap((place) => ["light", "dark"].map((mode) => reads(place === "main" ? c.textColor : c.sidebarTextColor, mode, backdrop(c, place, mode, main, side))))); }
+  r.builtInThemes = { names: builtInThemes.map((t) => t.name).join(", "), tiles: el("themes").children.length, leastContrastInEitherModeOnPageOrSidebar: worst, allReadWell: Object.values(worst).every((n) => n >= 4.5),
+    settingsAThemeFileCouldNotHold: builtInThemes.flatMap((t) => Object.entries(t.settings).filter(([k, v]) => !soundSetting(k, v)).map(([k]) => t.id + "." + k)),
+    backgroundsThatDoNotExist: builtInThemes.filter((t) => !presets.some((p) => p.id === t.settings.preset)).map((t) => t.id) };
+  await chrome.storage.local.set({ preset: null, imageId: "th", stickerLeft: "ts", frameMain: "custom", frameImage: colourImage("#ff0000"), frameSlice: [1, 1, 1, 1], textColor: "#123456", sidebarMode: "plain" }); await wait(150);
+  const themeTile = (id) => document.querySelector(`#themes .tile[data-theme="${id}"]`), libraryBefore = store.images.length + "," + store.stickers.length;
+  r.themeTiles = { noneMarkedOnACustomLook: pressed("#themes .tile") };
+  themeTile("paperback").click(); await wait(150);
+  r.themeTiles.paperback = { preset: store.preset, opacity: store.opacity, textColor: store.textColor, font: store.font, frameMain: store.frameMain, sidebarMode: store.sidebarMode, sidePictureOff: store.stickerLeft === null, marked: pressed("#themes .tile"), told: el("toast").textContent,
+    libraryKept: store.images.length + "," + store.stickers.length === libraryBefore && "image-th" in store, uploadedFrameKept: store.frameImage === colourImage("#ff0000") && JSON.stringify(store.frameSlice) === "[1,1,1,1]",
+    previewText: getComputedStyle(page.documentElement).getPropertyValue("--ct-text").trim() };
+  set("opacity", 80); await wait(60);
+  r.themeTiles.unmarkedOnceChanged = pressed("#themes .tile");
+  el("undo").click(); await wait(60); el("undo").click(); await wait(150);
+  r.themeTiles.undoneInOneStep = { preset: store.preset, imageId: store.imageId, textColor: store.textColor, frameMain: store.frameMain, left: store.stickerLeft };
+  await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
+
   // ----- a change Chrome cannot store is put back, and the person is told -----
   el("part-main").click(); const realSet = chrome.storage.local.set, opacityStored = Math.round((store.opacity ?? 0.5) * 100);
   chrome.storage.local.set = async () => { throw new Error("disk full"); };

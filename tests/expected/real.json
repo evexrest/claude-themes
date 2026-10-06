@@ -23,7 +23,7 @@
   "left": "296,48,224,765",
   "right": "1288,48,224,765",
   "seeThrough": "rgba(0, 0, 0, 0)",
-  "backgrounds": 7,
+  "backgrounds": 11,
   "oldCopyNotice": false
  },
  "chooseOcean": "ocean",
@@ -39,11 +39,11 @@
   "at": "1310,567,180,144"
  },
  "windowsWithARealMouse": {
-  "libraryFirst": "520,597,768,204",
-  "afterDraggingTitleBar": "300,337,768,204",
-  "afterDraggingCorner": "300,337,908,314",
-  "afterDraggingLeftEdge": "210,337,998,314",
-  "remembered": "{\"height\":314,\"left\":210,\"top\":337,\"width\":998}",
+  "libraryFirst": "520,505,768,296",
+  "afterDraggingTitleBar": "300,245,768,296",
+  "afterDraggingCorner": "300,245,908,406",
+  "afterDraggingLeftEdge": "210,245,998,406",
+  "remembered": "{\"height\":406,\"left\":210,\"top\":245,\"width\":998}",
   "pageUnderneathUnmoved": "288/296"
  },
  "themeButtons": {
@@ -53,7 +53,7 @@
   "fileWritten": "format 1"
  },
  "done": "clicked",
- "windowsRememberedNextTime": "210,337,998,314",
+ "windowsRememberedNextTime": "210,245,998,406",
  "afterDone": {
   "editor": false,
   "stillThemed": true

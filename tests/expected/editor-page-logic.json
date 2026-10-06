@@ -7,7 +7,7 @@
   "openClaude": false,
   "zonesBeforeThePageSpeaks": "hidden | hidden | hidden | hidden",
   "enabled": true,
-  "tiles": 7
+  "tiles": 11
  },
  "zonesFollowThePage": {
   "sidebar": "0,0,288,900",
@@ -19,7 +19,7 @@
  },
  "panels": {
   "bar": "582,12,644,48",
-  "library": "520,597,768,204",
+  "library": "520,505,768,296",
   "inspector": "1188,72,312,729",
   "window": "1512x813",
   "pageBackground": "rgba(0, 0, 0, 0)",
@@ -53,7 +53,7 @@
  },
  "pageWithoutParts": "296,0,1216,900 | hidden | hidden | hidden grip hidden",
  "windowsAtFirst": {
-  "library": "520,597,768,204",
+  "library": "520,505,768,296",
   "inspector": "1188,72,312,729",
   "bar": "582,12,644,48",
   "kept": "null",
@@ -61,20 +61,20 @@
   "edges": "8+8+0"
  },
  "libraryMoved": {
-  "box": "370,397,768,204",
-  "kept": "{\"left\":370,\"top\":397}",
+  "box": "370,305,768,296",
+  "kept": "{\"left\":370,\"top\":305}",
   "othersStayed": true
  },
  "libraryResizedFromCorner": {
-  "box": "370,397,888,294",
-  "kept": "{\"left\":370,\"top\":397,\"width\":888,\"height\":294}"
+  "box": "370,305,888,386",
+  "kept": "{\"left\":370,\"top\":305,\"width\":888,\"height\":386}"
  },
- "leftEdgeMovesOnlyTheLeft": "430,397,828,294",
- "topEdgeMovesOnlyTheTop": "430,357,828,334",
+ "leftEdgeMovesOnlyTheLeft": "430,305,828,386",
+ "topEdgeMovesOnlyTheTop": "430,265,828,426",
  "neverSmallerThan": "1038,571,220,120",
  "contentFollowsTheSize": {
   "box": "1038,571,520,280",
-  "shelfTops": "186,410,410,410",
+  "shelfTops": "186,336,560,560,560",
   "contentScrolls": "auto"
  },
  "inspectorMoved": {

@@ -535,7 +535,9 @@ function showLibrary() {
     const presetRow = byId("presets");
     presetRow.replaceChildren();
     for (const preset of presets) {
-        presetRow.appendChild(tile("preset", preset.id, preset.name, preset.css));
+        const button = tile("preset", preset.id, preset.name, preset.css);
+        button.classList.toggle("light", preset.light === true);
+        presetRow.appendChild(button);
     }
     // No background at all: Claude looks the way it normally does.
     const plain = tile("preset", "none", "Claude's own", "none");

@@ -160,7 +160,8 @@ function hslParts(hex) {
     return `${hue} ${Math.round(strength * 100)}% ${Math.round(light * 100)}%`;
 }
 
-// Presets are CSS gradients, so they need no image files.
+// Presets are CSS gradients, so they need no image files. `light` marks a pale one, whose
+// name is written in dark letters on its tile in the editor.
 const presets = [
     {
         id: "dusk",
@@ -191,6 +192,29 @@ const presets = [
         id: "graphite",
         name: "Graphite",
         css: "radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.18), transparent 50%), linear-gradient(135deg, #1c1c1e, #4a4a4f 60%, #8a8a90)"
+    },
+    {
+        id: "midnight",
+        name: "Midnight",
+        css: "radial-gradient(circle at 80% 15%, rgba(110, 140, 255, 0.22), transparent 45%), linear-gradient(160deg, #05070d, #0d1424 55%, #1a2440)"
+    },
+    {
+        id: "paper",
+        name: "Paper",
+        light: true,
+        css: "radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.5), transparent 50%), linear-gradient(160deg, #f6efe0, #efe3cb 55%, #e3d2b0)"
+    },
+    {
+        id: "mist",
+        name: "Mist",
+        light: true,
+        css: "radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.5), transparent 50%), linear-gradient(170deg, #e8eef3, #cfdbe6 55%, #b4c6d6)"
+    },
+    {
+        id: "blossom",
+        name: "Blossom",
+        light: true,
+        css: "radial-gradient(circle at 75% 80%, rgba(255, 255, 255, 0.45), transparent 50%), linear-gradient(150deg, #fbe9ec, #f6cfd8 55%, #e8b3c6)"
     }
 ];
 

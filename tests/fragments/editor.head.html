@@ -18,5 +18,5 @@
   if (q.get("side")) store.sidebarMode = q.get("side");
   // For the pictures in docs/: no first-time note, and a chosen light or dark preview.
   if (q.get("shots")) store.welcomed = true;
-  addEventListener("load", () => setTimeout(() => { if (q.get("part")) document.getElementById("part-" + q.get("part")).click(); if (q.get("dark")) document.getElementById("mode-dark").click(); if (q.get("light")) document.getElementById("mode-light").click(); if (q.get("drag")) startDragging({ kind: q.get("drag") }); }, 300));
+  addEventListener("load", () => setTimeout(() => { if (q.get("theme")) document.querySelector(`#themes .tile[data-theme="${q.get("theme")}"]`).click(); if (q.get("part")) document.getElementById("part-" + q.get("part")).click(); if (q.get("dark")) document.getElementById("mode-dark").click(); if (q.get("light")) document.getElementById("mode-light").click(); if (q.get("drag")) startDragging({ kind: q.get("drag") }); }, 300));
 </script>
