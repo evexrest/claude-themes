@@ -471,6 +471,10 @@
   "panelOpacity": 0.4,
   "sidebarTextColor": "#ABCDEF"
  },
+ "saveFails": {
+  "told": "Chrome could not save that change, so it was put back. disk full",
+  "sliderBackAtStoredValue": true
+ },
  "iconOnAClaudeTab": {
   "asked": "5:toggle-editor",
   "newTab": null,

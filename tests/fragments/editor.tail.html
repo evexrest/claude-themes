@@ -245,6 +245,13 @@
   r.strangeThemeFile = { told: odd, textColor: store.textColor ?? null, opacity: typeof store.opacity, enabled: store.enabled, unknown: "unknownThing" in store, imagesStillAList: Array.isArray(store.images) && store.images.every((i) => i.id !== "x"), preset: store.preset, imageId: store.imageId ?? null, panelOpacity: store.panelOpacity, sidebarTextColor: store.sidebarTextColor };
   el("undo").click(); await wait(120);
 
+  // ----- a change Chrome cannot store is put back, and the person is told -----
+  el("part-main").click(); const realSet = chrome.storage.local.set, opacityStored = Math.round((store.opacity ?? 0.5) * 100);
+  chrome.storage.local.set = async () => { throw new Error("disk full"); };
+  set("opacity", opacityStored === 11 ? 12 : 11); await wait(60);
+  r.saveFails = { told: el("toast").hidden ? "" : el("toast").textContent, sliderBackAtStoredValue: Number(el("opacity").value) === opacityStored };
+  chrome.storage.local.set = realSet;
+
   // ----- the toolbar icon -----
   await new Promise((ok) => { const s = document.createElement("script"); s.src = "background.js"; s.onload = ok; document.head.appendChild(s); });
   const icon = async (tab, answers, claudeTabs) => { window.asked = []; window.openedTab = null; window.frontedTab = null; window.tabAnswers = answers; window.claudeTabs = claudeTabs; await iconClicked(tab); await wait(30); return { asked: window.asked.join(" "), newTab: window.openedTab, broughtToFront: window.frontedTab }; };

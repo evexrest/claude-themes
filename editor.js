@@ -87,8 +87,18 @@ function save(change, how = "step") {
     if (how !== "none") {
         remember(change, how === "flow");
     }
+    const before = {};
+    for (const key of Object.keys(change)) {
+        before[key] = state[key];
+    }
     Object.assign(state, change);
-    chrome.storage.local.set(change);
+    // Chrome can refuse to store a change (a full disk, a profile it cannot write to).
+    // The page only ever shows what is stored, so the editor goes back to that too.
+    chrome.storage.local.set(change).catch((error) => {
+        Object.assign(state, before);
+        sync();
+        say("Chrome could not save that change, so it was put back. " + error.message);
+    });
     sync();
 }
 
