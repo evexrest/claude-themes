@@ -60,8 +60,9 @@ const defaults = {
     // picture's own name, and `id` the saved picture it shows; one saved picture can
     // be placed more than once. `side` is "left" or "right": the empty space its
     // usual place is worked out from. `size` is its width in pixels, `position` its
-    // height on the page from 0 (the top) to 100 (the bottom), and `shift` how far it
-    // has been dragged sideways from its usual place, in pixels.
+    // height on the page from 0 (the top) to 100 (the bottom), `opacity` how solid
+    // it is, up to 1, and `shift` how far it has been dragged sideways from its usual
+    // place, in pixels.
     placed: [],
     // Chat text. A null colour and the "default" font leave Claude's own alone.
     // `codeColor` is for the words Claude marks like `this`, normally crimson.
