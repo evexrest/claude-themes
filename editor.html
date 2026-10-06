@@ -163,6 +163,8 @@
                         and it stays where it is while it gets bigger or smaller.
                     </p>
                     <button class="wide" id="zoom-auto">Go back to automatic</button>
+                    <p class="note">Drag the picture on the page to move it.</p>
+                    <button class="wide" id="shift-reset">Put the picture back where it was</button>
                 </div>
 
                 <button class="wide" id="crop-main">Upload with cropping</button>
@@ -254,7 +256,11 @@
                             <span id="side-zoom-value"></span>
                         </label>
                         <input type="range" id="side-zoom" min="0" max="400">
-                        <p class="note">All the way left shows the whole picture.</p>
+                        <p class="note">
+                            All the way left shows the whole picture. Drag the picture on the
+                            sidebar to move it.
+                        </p>
+                        <button class="wide" id="side-shift-reset">Put the picture back in the middle</button>
                     </div>
 
                     <button class="wide" id="crop-side">Upload with cropping</button>
@@ -303,10 +309,11 @@
                 <div class="tiles small" id="side-choices"></div>
 
                 <p class="note first">
-                    Drag the picture on the screen to move it up or down, and drag its corner
-                    to resize it. A picture bigger than the empty space carries on behind the
-                    chat, under the text and the message box.
+                    Drag the picture on the screen to move it anywhere in the chat window,
+                    and drag its corner to resize it. Wherever it overlaps the chat it lies
+                    behind it, under the text and the message box.
                 </p>
+                <button class="wide" id="sticker-shift-reset">Put it back beside the chat</button>
 
                 <label class="slider" for="sticker-size">
                     Size

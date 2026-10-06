@@ -182,9 +182,30 @@ body.dragging .grip {
 .grip {
     position: absolute;
     box-sizing: border-box;
-    border: 2px solid #d97757;
-    cursor: ns-resize;
+    border: 2px solid transparent;
+    cursor: move;
     touch-action: none;
+}
+
+/* A side picture can be dragged whether or not its side is selected. Its outline
+   and its corner show when it is, or when the mouse is over it. */
+.grip:hover,
+.grip.selected {
+    border-color: #d97757;
+}
+
+.grip:not(.selected):not(:hover) .handle {
+    display: none;
+}
+
+/* The main page and the sidebar, while they show a picture that can be dragged. */
+.zone.pannable {
+    cursor: grab;
+    touch-action: none;
+}
+
+.zone.pannable:active {
+    cursor: grabbing;
 }
 
 .handle {

@@ -93,6 +93,16 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   results.zoomFillsBehindAJoinedSidebar = zoomLook();
   await chrome.storage.local.set({ imageZoom: null }); await wait(100);
   results.zoomAutomaticLandscapeJoinedSidebar = zoomLook();
+  // ----- dragged: the main picture and the sidebar's -----
+  const draggedLook = () => ({ main: getComputedStyle(wp).backgroundSize, at: wp.style.backgroundPosition, sidebar: getComputedStyle(sb, "::before").backgroundSize, sidebarAt: R.style.getPropertyValue("--sidebar-image-position") || "(not set)", size: size() });
+  await chrome.storage.local.set({ preset: null, imageId: "wide", imageZoom: null, sidebarMode: "own", sidebarPreset: null, sidebarImageId: "tall", sidebarZoom: 1 }); await wait(200);
+  results.notDragged = draggedLook();
+  await chrome.storage.local.set({ imageShiftX: 0.1, imageShiftY: -0.05, sidebarShiftX: 0.25, sidebarShiftY: 0.1 }); await wait(100);
+  results.dragged = draggedLook();
+  await chrome.storage.local.set({ imageZoom: 0.5, sidebarZoom: 2 }); await wait(100);
+  results.draggedAndZoomed = draggedLook();
+  await chrome.storage.local.set({ imageShiftX: 0, imageShiftY: 0, sidebarShiftX: 0, sidebarShiftY: 0 }); await wait(100);
+  results.draggedBack = draggedLook();
   await chrome.storage.local.set({ imageZoom: null, sidebarZoom: 1, ...kept }); await wait(200);
   results.zoomBack = zoomLook();
   // ----- the open chat's row in the sidebar -----
@@ -116,6 +126,15 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   results.noStickers = document.querySelectorAll(".claude-sticker").length;
   await chrome.storage.local.set({ stickerLeft: "a", stickerRight: "b", stickerSize: 100, stickerPosition: 100 }); await wait(200);
   results.stickers = { box: box(), left: st(0), right: st(1), size: size() };
+  // dragged sideways: by that much, and never out of the chat window
+  const edges = () => ({ left: st(0).left, leftsRight: st(0).right, right: st(1).left, rightsRight: st(1).right });
+  results.stickersUsualPlace = edges();
+  await chrome.storage.local.set({ stickerLeftShift: 30, stickerRightShift: -45 }); await wait(60);
+  results.stickersDragged = edges();
+  await chrome.storage.local.set({ stickerLeftShift: 5000, stickerRightShift: -5000 }); await wait(60);
+  results.stickersDraggedTooFar = { ...edges(), pane: box().paneLeft + " to " + box().paneRight };
+  await chrome.storage.local.set({ stickerLeftShift: null, stickerRightShift: 0 }); await wait(60);
+  results.stickersPutBack = edges();
   const blobType = await fetch(document.querySelector(".claude-sticker").src).then((r) => r.blob()).then((b) => b.type + " " + b.size);
   results.stickerBlob = blobType;
   await chrome.storage.local.set({ stickerSize: 400, stickerPosition: 0, stickerOpacity: 0.5 }); await wait(60);

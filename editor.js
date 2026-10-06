@@ -381,7 +381,9 @@ function usedOn(place, kind, id) {
 function usePicture(kind, id, zone) {
     if (kind === "sticker") {
         const side = zone in sideKeys ? zone : lastSide;
-        save({ [sideKeys[side]]: id, enabled: true });
+        // A different picture starts in the usual place.
+        const back = state[sideKeys[side]] === id ? {} : { [sideKey(side, "Shift")]: null };
+        save({ [sideKeys[side]]: id, enabled: true, ...back });
         choose(side);
     } else if (zone === "sidebar") {
         if (id === "none") {
@@ -389,12 +391,13 @@ function usePicture(kind, id, zone) {
         } else if (kind === "preset") {
             save({ sidebarMode: "own", sidebarPreset: id, enabled: true });
         } else {
-            save({ sidebarMode: "own", sidebarPreset: null, sidebarImageId: id, enabled: true });
+            const back = state.sidebarImageId === id ? {} : { sidebarShiftX: 0, sidebarShiftY: 0 };
+            save({ sidebarMode: "own", sidebarPreset: null, sidebarImageId: id, enabled: true, ...back });
         }
         choose("sidebar");
     } else {
-        // A different picture starts again on the automatic zoom.
-        const zoom = state.imageId === id ? {} : { imageZoom: null };
+        // A different picture starts again on the automatic zoom, where its layout puts it.
+        const zoom = state.imageId === id ? {} : { imageZoom: null, imageShiftX: 0, imageShiftY: 0 };
         save(kind === "preset" ? { preset: id, enabled: true } : { preset: null, imageId: id, enabled: true, ...zoom });
         choose("main");
     }
@@ -835,35 +838,108 @@ function layout() {
     });
 
     for (const side of Object.keys(sideKeys)) {
-        const shown = part === side && state.enabled && state[sideKeys[side]] !== null;
+        const shown = state.enabled && state[sideKeys[side]] !== null;
         cover(byId("grip-" + side), shown && boxes[side]);
+        byId("grip-" + side).classList.toggle("selected", part === side);
     }
     showStage(boxes.sidebar);
 }
 
-// Say how big the main picture's space is, in the note under the Zoom slider: the
-// whole window when the sidebar is joined to the main background or is closed, and
-// otherwise the chat window, which is what is left to the right of the sidebar.
-// content.js works out the same space when it lays the picture out.
-function showStage(sidebar) {
+// The main picture's space: the whole window when the sidebar is joined to the
+// main background or is closed, and otherwise the chat window, which is what is
+// left to the right of the sidebar. content.js works out the same space when it
+// lays the picture out. `sidebar` is the sidebar's box, or null.
+function stageSize(sidebar) {
     const width = onPage ? window.innerWidth : screenWidth;
     const height = onPage ? window.innerHeight : screenHeight;
     const beside = state.sidebarMode !== "joined" && sidebar && sidebar.width > 0;
-    const text = beside
-        ? "the chat window, " + Math.ceil(width - sidebar.left - sidebar.width) + " \u00d7 " + Math.ceil(height)
-        : "the whole window, " + Math.ceil(width) + " \u00d7 " + Math.ceil(height);
+    return { width: beside ? width - sidebar.left - sidebar.width : width, height: height, beside: Boolean(beside) };
+}
+
+// Say how big that space is, in the note under the Zoom slider.
+function showStage(sidebar) {
+    const size = stageSize(sidebar);
+    const text = (size.beside ? "the chat window, " : "the whole window, ") +
+        Math.ceil(size.width) + " \u00d7 " + Math.ceil(size.height);
     if (byId("stage-size").textContent !== text) {
         byId("stage-size").textContent = text;
     }
 }
 
-// Dragging a side picture on the screen moves it up or down; dragging the corner
-// nearest the chat resizes it.
+// Whether the main page, or the sidebar, is showing a saved image that can be
+// dragged. A preset is a wash of colour and has nowhere to go.
+function pans(name) {
+    if (!state.enabled) {
+        return false;
+    }
+    return name === "sidebar"
+        ? state.sidebarMode === "own" && state.sidebarPreset === null && state.sidebarImageId !== null
+        : state.preset === null && state.imageId !== null;
+}
+
+// Dragging the main page or the sidebar on the screen moves its picture. How far
+// is kept as a share of the size of the picture's space, so that it comes out the
+// same in a window of another size. A press that does not move is still a click.
+function watchPan(name, xKey, yKey) {
+    const zone = byId("zone-" + name);
+    let start = null;
+
+    zone.addEventListener("pointerdown", (event) => {
+        const sidebar = (measure() || {}).sidebar;
+        const room = name === "sidebar" ? sidebar : stageSize(sidebar);
+        if (event.button !== 0 || !pans(name) || !room || !room.width || !room.height) {
+            return;
+        }
+        start = {
+            x: event.clientX, y: event.clientY, moved: false,
+            shiftX: state[xKey], shiftY: state[yKey], width: room.width, height: room.height
+        };
+        try {
+            zone.setPointerCapture(event.pointerId);
+        } catch (error) {
+            // Nothing to do.
+        }
+    });
+
+    zone.addEventListener("pointermove", (event) => {
+        if (!start) {
+            return;
+        }
+        const across = (event.clientX - start.x) / scale;
+        const down = (event.clientY - start.y) / scale;
+        if (!start.moved && Math.hypot(across, down) < 4) {
+            return;
+        }
+        if (!start.moved && part !== name) {
+            choose(name);
+        }
+        start.moved = true;
+        // To a thousandth, and never more than one whole space away.
+        const share = (from, moved, size) => clamp(Math.round((from + moved / size) * 1000) / 1000, -1, 1);
+        save({
+            [xKey]: share(start.shiftX, across, start.width),
+            [yKey]: share(start.shiftY, down, start.height)
+        }, "flow");
+    });
+
+    for (const ending of ["pointerup", "pointercancel"]) {
+        zone.addEventListener(ending, () => {
+            start = null;
+        });
+    }
+}
+
+// Dragging a side picture on the screen moves it, up and down and sideways within
+// the chat window; dragging the corner nearest the chat resizes it.
 function watchGrip(grip) {
     const side = grip.dataset.side;
     let start = null;
 
     grip.addEventListener("pointerdown", (event) => {
+        // A picture can be picked up straight away; that selects its side.
+        if (part !== side) {
+            choose(side);
+        }
         const boxes = measure() || {};
         const box = boxes[side];
         const pane = boxes.pane;
@@ -873,16 +949,24 @@ function watchGrip(grip) {
         }
 
         // These match placeStickers in content.js: the picture stays below the
-        // 56px title bar and 12px clear of the edges.
+        // 56px title bar and 12px clear of the edges. `usual` is where it sits
+        // sideways when it has not been dragged: in the middle of the empty space,
+        // or from the window's edge when it is wider than that.
+        const room = (side === "left" ? column.left - pane.left : pane.left + pane.width - column.left - column.width) - 24;
+        const beside = Math.max(0, room - box.width) / 2;
         start = {
             x: event.clientX,
             y: event.clientY,
             top: box.top,
+            left: box.left,
             width: box.width,
             resizing: event.target.classList.contains("handle"),
             highest: pane.top + 56,
             spare: pane.height - 56 - 12 - box.height,
-            room: (side === "left" ? column.left - pane.left : pane.left + pane.width - column.left - column.width) - 24
+            room: room,
+            usual: side === "left" ? pane.left + 12 + beside : pane.left + pane.width - 12 - beside - box.width,
+            leftmost: pane.left + 12,
+            rightmost: pane.left + pane.width - 12 - box.width
         };
         // Keeps the drag going when the pointer leaves the picture. A pointer
         // that cannot be captured still drags while it is over the picture.
@@ -906,9 +990,22 @@ function watchGrip(grip) {
             const towardsChat = side === "left" ? across : -across;
             const grown = start.width < start.room ? towardsChat * 2 : towardsChat;
             save({ [sideKey(side, "Size")]: clamp(Math.round(start.width + grown), 60, 800) }, "flow");
-        } else if (start.spare > 0) {
-            const share = (start.top + down - start.highest) / start.spare;
-            save({ [sideKey(side, "Position")]: clamp(Math.round(share * 100), 0, 100) }, "flow");
+        } else {
+            // Sideways anywhere in the chat window; up and down as far as there is
+            // room. A direction it has not been moved in is left as it was.
+            start.across = start.across || across !== 0;
+            start.down = start.down || down !== 0;
+            const change = {};
+            if (start.across) {
+                change[sideKey(side, "Shift")] = Math.round(clamp(start.left + across, start.leftmost, start.rightmost) - start.usual);
+            }
+            if (start.down && start.spare > 0) {
+                const share = (start.top + down - start.highest) / start.spare;
+                change[sideKey(side, "Position")] = clamp(Math.round(share * 100), 0, 100);
+            }
+            if (Object.keys(change).length > 0) {
+                save(change, "flow");
+            }
         }
     });
 
@@ -1168,6 +1265,12 @@ function sync() {
     // Zoom is for a saved image. A preset is a wash of colour with no size of its own.
     byId("zoom-main").hidden = state.preset !== null;
     byId("zoom-side").hidden = state.sidebarPreset !== null;
+    for (const name of ["main", "sidebar"]) {
+        byId("zone-" + name).classList.toggle("pannable", pans(name));
+    }
+    byId("shift-reset").hidden = state.imageShiftX === 0 && state.imageShiftY === 0;
+    byId("side-shift-reset").hidden = state.sidebarShiftX === 0 && state.sidebarShiftY === 0;
+    byId("sticker-shift-reset").hidden = !(part in sideKeys) || !sideValue(state, part, "Shift");
 
     // The main page's frame goes around the chat window ("separate", which leaves
     // the sidebar free to have its own) or around the whole window ("combined").
@@ -1221,6 +1324,19 @@ async function start() {
     // The main page.
     slider("opacity", "opacity", percent, fraction, hundredths);
     mainZoom();
+    watchPan("main", "imageShiftX", "imageShiftY");
+    watchPan("sidebar", "sidebarShiftX", "sidebarShiftY");
+    byId("shift-reset").addEventListener("click", () => {
+        save({ imageShiftX: 0, imageShiftY: 0 });
+    });
+    byId("side-shift-reset").addEventListener("click", () => {
+        save({ sidebarShiftX: 0, sidebarShiftY: 0 });
+    });
+    byId("sticker-shift-reset").addEventListener("click", () => {
+        if (part in sideKeys) {
+            save({ [sideKey(part, "Shift")]: 0 });
+        }
+    });
     colours("text-swatches", "text-color", "textColor", textSwatches, "#ffffff");
     colours("code-swatches", "code-color", "codeColor", codeSwatches, "#8e2626");
     fontChoice("font", "font-custom", "font", "fontCustom");

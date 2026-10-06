@@ -85,6 +85,29 @@
   usePicture("image", "zw", "main"); await wait(200); r.zoomAutomaticAgainForAnotherPicture = zoomNow("zoom", "imageZoom");
   set("side-zoom", 0); await wait(40); r.zoomSidebarOut = { ...zoomNow("side-zoom", "sidebarZoom"), mainUntouched: store.imageZoom };
   set("side-zoom", 100); await wait(40);
+
+  // ----- dragging the background, and the sidebar's picture -----
+  const press = (target, type, x, y) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, button: 0, clientX: x, clientY: y }));
+  const pull = (zone, dx, dy) => { const b = zone.getBoundingClientRect(); const x = b.left + b.width / 2, y = b.top + b.height / 2; press(zone, "pointerdown", x, y); press(zone, "pointermove", x + dx / 2, y + dy / 2); press(zone, "pointermove", x + dx, y + dy); press(zone, "pointerup", x + dx, y + dy); };
+  const wall = () => page.getElementById("claude-wallpaper").style.backgroundPosition;
+  const sideAt = () => page.documentElement.style.getPropertyValue("--sidebar-image-position") || "(not set)";
+  const wallBefore = wall();
+  r.canBeDragged = { main: el("zone-main").classList.contains("pannable"), sidebar: el("zone-sidebar").classList.contains("pannable"), resetHidden: el("shift-reset").hidden };
+  pull(el("zone-main"), 2, 1); await wait(80);
+  r.aPressThatDoesNotMoveIsNotADrag = { x: store.imageShiftX ?? 0, y: store.imageShiftY ?? 0 };
+  pull(el("zone-main"), 80, -40); await wait(120);
+  r.dragBackground = { x: store.imageShiftX, y: store.imageShiftY, expected: (80 / shrink / (screenWidth - 288)).toFixed(3) + ", " + (-40 / shrink / screenHeight).toFixed(3), before: wallBefore, after: wall(), resetHidden: el("shift-reset").hidden, sidebarUntouched: store.sidebarShiftX ?? 0 };
+  el("undo").click(); await wait(80);
+  r.dragBackgroundUndoneInOneStep = { x: store.imageShiftX ?? 0, back: wall() === wallBefore };
+  el("redo").click(); await wait(80); el("shift-reset").click(); await wait(80);
+  r.backgroundPutBack = { x: store.imageShiftX, y: store.imageShiftY, back: wall() === wallBefore };
+  pull(el("zone-sidebar"), 30, 60); await wait(120);
+  r.dragSidebarPicture = { x: store.sidebarShiftX, y: store.sidebarShiftY, at: sideAt(), mainUntouched: store.imageShiftX, selected: selected() };
+  el("part-sidebar").click(); await wait(60); el("side-shift-reset").click(); await wait(80);
+  r.sidebarPicturePutBack = { x: store.sidebarShiftX, at: sideAt() };
+  await chrome.storage.local.set({ preset: "ocean" }); await wait(80);
+  pull(el("zone-main"), 80, 40); await wait(80);
+  r.aPresetCannotBeDragged = { pannable: el("zone-main").classList.contains("pannable"), x: store.imageShiftX };
   await chrome.storage.local.set({ ...zoomKept, imageZoom: null }); await wait(80);
   // ----- dropping files from the computer -----
   const gifBytes = Uint8Array.from(atob(GIF1.split(",")[1]), (c) => c.charCodeAt(0));
@@ -148,6 +171,17 @@
   r.dragCorner = { size: "120 to " + store.stickerLeftSize, rightStill: store.stickerRightSize ?? "shared " + store.stickerSize, widthInPreview: Math.round(widthBefore) + " to " + Math.round(picture("left").getBoundingClientRect().width), slider: el("sticker-size").value };
   el("undo").click(); await wait(60); el("undo").click(); await wait(60);
   r.bothDragsUndone = { size: store.stickerLeftSize ?? "shared " + store.stickerSize, position: store.stickerLeftPosition ?? "shared " + store.stickerPosition };
+
+  // ----- dragging a side picture sideways, and picking it up without selecting its side first -----
+  el("part-main").click(); await wait(150);
+  r.gripsThereWithoutSelecting = { left: !el("grip-left").hidden, outlined: el("grip-left").classList.contains("selected") };
+  at = g(); const leftBefore = picture("left").getBoundingClientRect().left;
+  point(el("grip-left"), "pointerdown", at.left + 10, at.top + 10); point(el("grip-left"), "pointermove", at.left + 50, at.top + 10); point(el("grip-left"), "pointerup", at.left + 50, at.top + 10); await wait(250);
+  r.dragPictureSideways = { shift: store.stickerLeftShift, expected: Math.round(40 / shrink), movedInPreview: Math.round(picture("left").getBoundingClientRect().left - leftBefore), nowSelected: selected(), resetHidden: el("sticker-shift-reset").hidden, rightStill: store.stickerRightShift ?? "not set" };
+  at = g(); point(el("grip-left"), "pointerdown", at.left + 10, at.top + 10); point(el("grip-left"), "pointermove", at.left - 5000, at.top + 10); point(el("grip-left"), "pointerup", at.left - 5000, at.top + 10); await wait(250);
+  r.draggedFarLeftStopsAtTheEdge = { pictureLeft: Math.round(picture("left").getBoundingClientRect().left), paneLeft: Math.round(page.querySelector(".dframe-pane-primary").getBoundingClientRect().left) };
+  el("sticker-shift-reset").click(); await wait(250);
+  r.pictureBackBesideTheChat = { shift: store.stickerLeftShift, sameAsBefore: Math.round(picture("left").getBoundingClientRect().left) === Math.round(leftBefore), resetHidden: el("sticker-shift-reset").hidden };
   // each side has sliders of its own
   set("sticker-size", 300); set("sticker-opacity", 40); await wait(250);
   const leftNow = { size: store.stickerLeftSize, opacity: store.stickerLeftOpacity, widthInPreview: Math.round(picture("left").getBoundingClientRect().width), seeThrough: picture("left").style.opacity };

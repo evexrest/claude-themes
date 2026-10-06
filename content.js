@@ -92,8 +92,9 @@ async function loadPicture(layer, presetId, imageId, show) {
     sizePictures();
 }
 
-// Where and how big to draw a layer's picture, as CSS, or null to let it fill its
-// box the ordinary way (a preset, or a picture whose size is not known).
+// Where and how big to draw a layer's picture, in pixels from the box's corner, or
+// null to let it fill its box the ordinary way (a preset, or a picture whose size
+// is not known).
 //
 // The picture's middle is always the middle of `seen`, the part of the box that
 // nothing covers, whatever the zoom: zooming makes the picture bigger or smaller
@@ -115,10 +116,19 @@ function zoomedPicture(layer, zoom, box, seen) {
     const scale = zoom > 1 ? fills * zoom : whole + (fills - whole) * Math.max(0, zoom);
     const width = layer.width * scale;
     const height = layer.height * scale;
-    return {
-        size: Math.round(width) + "px " + Math.round(height) + "px",
-        position: Math.round(middleX - width / 2) + "px " + Math.round(middleY - height / 2) + "px"
-    };
+    return { width: width, height: height, left: middleX - width / 2, top: middleY - height / 2 };
+}
+
+// Set one of the values the stylesheet reads from the top of the page, or take it
+// away when `value` is null. Nothing is written when it is already right.
+function setRootValue(name, value) {
+    if (value === null) {
+        if (root.style.getPropertyValue(name)) {
+            root.style.removeProperty(name);
+        }
+    } else if (root.style.getPropertyValue(name) !== value) {
+        root.style.setProperty(name, value);
+    }
 }
 
 // The part of the window in which the main picture can be seen: the chat window,
@@ -151,33 +161,47 @@ function sizePictures() {
         if (automatic && stretches(layers.main.width, layers.main.height)) {
             // Stretched: exactly as wide and as tall as the space, corner to corner.
             drawn = {
-                size: Math.ceil(seen.width) + "px " + Math.ceil(seen.height) + "px",
-                position: Math.floor(seen.left - box.left) + "px " + Math.floor(seen.top - box.top) + "px"
+                width: Math.ceil(seen.width),
+                height: Math.ceil(seen.height),
+                left: Math.floor(seen.left - box.left),
+                top: Math.floor(seen.top - box.top)
             };
         } else {
             drawn = zoomedPicture(layers.main, automatic ? 1 : settings.imageZoom, box, seen);
         }
-        drawn = drawn || { size: "", position: "" };
-        if (wallpaper.style.backgroundSize !== drawn.size) {
-            wallpaper.style.backgroundSize = drawn.size;
+
+        let size = "";
+        let position = "";
+        if (drawn) {
+            // Then moved by however far it has been dragged.
+            size = Math.round(drawn.width) + "px " + Math.round(drawn.height) + "px";
+            position = Math.round(drawn.left + settings.imageShiftX * seen.width) + "px " +
+                Math.round(drawn.top + settings.imageShiftY * seen.height) + "px";
         }
-        if (wallpaper.style.backgroundPosition !== drawn.position) {
-            wallpaper.style.backgroundPosition = drawn.position;
+        if (wallpaper.style.backgroundSize !== size) {
+            wallpaper.style.backgroundSize = size;
+        }
+        if (wallpaper.style.backgroundPosition !== position) {
+            wallpaper.style.backgroundPosition = position;
         }
     }
 
-    const sidebar = settings.sidebarMode === "own" && settings.sidebarZoom !== 1
+    // The sidebar's own picture: its zoom, and how far it has been dragged from the
+    // middle of the sidebar.
+    const zoomed = settings.sidebarZoom !== 1;
+    const moved = settings.sidebarShiftX !== 0 || settings.sidebarShiftY !== 0;
+    const sidebar = settings.sidebarMode === "own" && (zoomed || moved)
         ? document.querySelector(".dframe-sidebar")
         : null;
     const box = sidebar ? sidebar.getBoundingClientRect() : null;
-    const drawn = box ? zoomedPicture(layers.sidebar, settings.sidebarZoom, box, box) : null;
-    if (drawn === null) {
-        if (root.style.getPropertyValue("--sidebar-image-size")) {
-            root.style.removeProperty("--sidebar-image-size");
-        }
-    } else if (root.style.getPropertyValue("--sidebar-image-size") !== drawn.size) {
-        root.style.setProperty("--sidebar-image-size", drawn.size);
-    }
+    const drawn = box && zoomed ? zoomedPicture(layers.sidebar, settings.sidebarZoom, box, box) : null;
+    setRootValue("--sidebar-image-size", drawn
+        ? Math.round(drawn.width) + "px " + Math.round(drawn.height) + "px"
+        : null);
+    setRootValue("--sidebar-image-position", box && moved
+        ? "calc(50% + " + Math.round(settings.sidebarShiftX * box.width) + "px) calc(50% + " +
+            Math.round(settings.sidebarShiftY * box.height) + "px)"
+        : null);
 }
 
 function applyBackground(sourceChanged) {
@@ -317,9 +341,16 @@ function placeStickers() {
 
         // Centred in the empty space when it fits, from the window's edge when it does not.
         const spare = Math.max(0, room - width) / 2;
-        const start = side === "left"
+        let start = side === "left"
             ? paneBox.left + stickerGap + spare
             : paneBox.right - stickerGap - spare - width;
+
+        // Then moved sideways by however far it has been dragged, but never out of
+        // the chat window.
+        const shift = sideValue(settings, side, "Shift") || 0;
+        if (shift !== 0) {
+            start = Math.min(Math.max(start + shift, paneBox.left + stickerGap), paneBox.right - stickerGap - width);
+        }
 
         const share = sideValue(settings, side, "Position") / 100;
         const style = slot.element.style;

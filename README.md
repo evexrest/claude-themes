@@ -40,6 +40,8 @@ Clicked on another tab, the icon goes to your Claude tab, or opens one.
   picture's own shape: from the whole picture, with nothing cut off, through filling the
   space, up to four times that. The picture grows and shrinks around its middle and
   never slides. The crop tool on the upload page zooms out to the whole picture as well
+- Drag to move: the background image on the page, the sidebar's picture on the sidebar,
+  and a side picture anywhere in the chat window. A button puts each back
 - Nothing on the page is blurred. Messages fade out as they reach the title bar
 - Pictures or GIFs in the empty space on either side of the chat. Each side has its own
   size, height and opacity. They work with any background, including Claude's own. A picture

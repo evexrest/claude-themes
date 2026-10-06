@@ -112,7 +112,7 @@ html[data-sidebar-image] .dframe-root[data-variant="web"]:not([data-collapsed]) 
     pointer-events: none;
     background-image: var(--sidebar-image);
     background-size: var(--sidebar-image-size, cover);
-    background-position: center;
+    background-position: var(--sidebar-image-position, center);
     background-repeat: no-repeat;
     opacity: var(--sidebar-image-opacity);
 }

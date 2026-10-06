@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The editor compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.15.0";
+const filesVersion = "0.16.0";
 
 const defaults = {
     enabled: true,
@@ -23,6 +23,10 @@ const defaults = {
     // fills the page with it, cutting off what does not fit, and above 1 it is that
     // many times bigger. The presets are plain colour washes and are not affected.
     imageZoom: null,
+    // How far the main picture has been dragged from where its layout puts it, as a
+    // share of the width and of the height of its space. 0 is not at all.
+    imageShiftX: 0,
+    imageShiftY: 0,
     panelOpacity: 0.6,
     // The sidebar is "joined" to the main background, has a picture of its "own"
     // (a preset, or one of the saved images when `sidebarPreset` is null), or is
@@ -33,6 +37,10 @@ const defaults = {
     sidebarOpacity: 0.8,
     // The same for the sidebar's own picture, which fills the sidebar unless it is set.
     sidebarZoom: 1,
+    // How far the sidebar's own picture has been dragged, as a share of the sidebar's
+    // width and height.
+    sidebarShiftX: 0,
+    sidebarShiftY: 0,
     frameLayout: "separate",
     frameSidebar: "none",
     frameMain: "none",
@@ -61,6 +69,11 @@ const defaults = {
     stickerSize: 180,
     stickerPosition: 85,
     stickerOpacity: 1,
+    // How far each side's picture has been dragged sideways from its usual place in
+    // the empty space, in pixels. Null and 0 both mean not at all.
+    stickerLeftShift: null,
+    stickerRightShift: null,
+    stickerShift: 0,
     // Chat text. A null colour and the "default" font leave Claude's own alone.
     // `codeColor` is for the words Claude marks like `this`, normally crimson.
     textColor: null,
