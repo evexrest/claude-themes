@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Claude Themes",
-    "version": "0.17.0",
+    "version": "0.18.0",
     "description": "Backgrounds, frames, side pictures, text colour and fonts for claude.ai. Unofficial, not made by Anthropic.",
     "icons": {
         "16": "icons/icon-16.png",

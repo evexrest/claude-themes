@@ -9,6 +9,17 @@ let settings = defaults;
 // True on a page that is left exactly as Claude draws it: anything that is not a
 // chat. See onChatPage.
 let plainPage = false;
+
+// True when this ought to be a chat, going by its address, but has none of the
+// parts a chat is known by: claude.ai has probably been rebuilt since this version
+// was written. The page is then left as Claude draws it, and the editor says why.
+let unfamiliar = false;
+
+// The address this page had when it was last looked at, and when that began.
+let address = location.pathname;
+let addressSince = Date.now();
+// How long a page is given to finish loading before its address stops counting.
+const loadingTime = 6000;
 let wallpaper = null;
 let frameUrl = null;
 
@@ -211,17 +222,34 @@ function sizePictures() {
 // The main page's theme is for chats. claude.ai's other pages (Projects, Artifacts,
 // Scheduled, Customize and the rest) are built from solid panels of their own, which
 // a background shows through in patches, so those pages are left as Claude draws
-// them. A chat is a page with a message box in it. While a page is still loading
-// there is nothing to look at yet, and its address decides.
+// them. A chat is a page with a message box in it.
+//
+// While a page is still loading there is nothing to look at yet, and its address
+// decides, so that a chat does not flash plain before its theme appears. That
+// lasts a few seconds only. A page that still has no message box after that is
+// not themed whatever its address says: the theme goes only where the page is
+// built the way this version knows, and anywhere else Claude's own page is shown
+// whole rather than a half-themed one.
 function onChatPage() {
+    if (location.pathname !== address) {
+        address = location.pathname;
+        addressSince = Date.now();
+    }
     const pane = ".dframe-pane-primary ";
+    const chatAddress = /^\/($|new($|\/)|chat\/)/.test(address);
+    unfamiliar = false;
+
     if (document.querySelector(pane + '[data-cds="Page"]')) {
         return false;
     }
     if (document.querySelector(pane + '[data-cds="ChatComposer"], [data-testid="chat-column-body"]')) {
         return true;
     }
-    return /^\/($|new($|\/)|chat\/)/.test(location.pathname);
+    if (chatAddress && Date.now() - addressSince < loadingTime) {
+        return true;
+    }
+    unfamiliar = chatAddress && document.readyState === "complete";
+    return false;
 }
 
 // Whether the settings ask for a background on the main page at all.
@@ -494,6 +522,7 @@ function tellEditor() {
     editorFrame.contentWindow.postMessage({
         claudeThemes: "layout",
         plainPage: plainPage,
+        unfamiliar: unfamiliar,
         boxes: {
             // Only an open sidebar: the theme leaves a collapsed one alone.
             sidebar: boxOf(document.querySelector('.dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar')),

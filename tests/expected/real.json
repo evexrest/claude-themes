@@ -46,11 +46,24 @@
   "remembered": "{\"height\":314,\"left\":210,\"top\":337,\"width\":998}",
   "pageUnderneathUnmoved": "288/296"
  },
+ "themeButtons": {
+  "fileHasSettings": true,
+  "saveSaid": "Saved as claude-theme.json in your downloads folder.",
+  "resetAsksInsideTheEditor": true,
+  "fileWritten": "format 1"
+ },
  "done": "clicked",
  "windowsRememberedNextTime": "210,337,998,314",
  "afterDone": {
   "editor": false,
   "stillThemed": true
+ },
+ "kindsOfPage": {
+  "aChat": "on",
+  "aListPage": "off",
+  "aChatStillLoading": "on",
+  "aChatThatNeverGotItsMessageBox": "off",
+  "aChatAgain": "on"
  },
  "iconOpensThenCloses": {
   "afterFirstClick": 1,

@@ -1,4 +1,9 @@
 {
+ "welcome": {
+  "shownTheFirstTime": true,
+  "goneAfterGotIt": true,
+  "remembered": true
+ },
  "start": {
   "enabled": true,
   "showing": "Dusk",
@@ -403,11 +408,68 @@
   "previewWallpaper": null,
   "previewFrame": null
  },
+ "removeImageAsksFirst": {
+  "shown": true,
+  "text": "Remove this image from your saved images?",
+  "yes": "Remove",
+  "afterCancel": "5 to 5",
+  "boxGone": true
+ },
  "removeImage": {
   "images": "5 to 4",
   "fileGone": true,
   "tiles": 4,
   "undoOff": true
+ },
+ "themeFile": {
+  "format": 1,
+  "madeWith": true,
+  "settings": true,
+  "leavesOutTheLists": true,
+  "pictures": "main,right",
+  "mainIsThePicture": true
+ },
+ "resetEverything": {
+  "asked": true,
+  "preset": "dusk",
+  "textColor": null,
+  "zoom": null,
+  "right": null,
+  "frame": "none",
+  "picturesKept": true
+ },
+ "themeLoaded": {
+  "told": "Theme loaded. Undo goes back to the one you had.",
+  "preset": null,
+  "pictureKeptUnderANewId": true,
+  "addedToLibrary": 1,
+  "zoom": 0.5,
+  "textColor": "#123456",
+  "sidebarMode": "plain",
+  "sidePictureToo": true,
+  "shift": 25,
+  "frame": "brush"
+ },
+ "themeLoadUndoneInOneStep": {
+  "preset": "dusk",
+  "textColor": null
+ },
+ "notAThemeFile": [
+  "That file is not a theme file.",
+  "That file is not a theme file.",
+  "That theme was made with a newer version of Claude Themes. Update the extension to load it."
+ ],
+ "strangeThemeFile": {
+  "told": "Theme loaded. Undo goes back to the one you had.",
+  "textColor": null,
+  "opacity": "number",
+  "enabled": true,
+  "unknown": false,
+  "imagesStillAList": true,
+  "preset": "dusk",
+  "imageId": null,
+  "panelOpacity": 0.4,
+  "sidebarTextColor": "#ABCDEF"
  },
  "iconOnAClaudeTab": {
   "asked": "5:toggle-editor",

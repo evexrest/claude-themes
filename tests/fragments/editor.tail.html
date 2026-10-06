@@ -7,6 +7,9 @@
   // The preview starts in the computer's own light or dark mode. Start every run in
   // light, so the colours read below do not depend on the time of day.
   el("mode-light").click();
+  // ----- the note shown the first time the editor is opened -----
+  r.welcome = { shownTheFirstTime: !el("welcome").hidden }; el("welcome-done").click(); await wait(40);
+  r.welcome.goneAfterGotIt = el("welcome").hidden; r.welcome.remembered = store.welcomed;
   const pressed = (sel) => [...document.querySelectorAll(sel)].map((b) => b.getAttribute("aria-pressed") === "true" ? 1 : 0).join("");
   const set = (id, v) => { el(id).value = v; el(id).dispatchEvent(new Event("input")); };
   const panels = () => ["main", "sidebar", "side"].filter((p) => !el("panel-" + p).hidden).join(",");
@@ -218,8 +221,29 @@
   el("enabled").click(); await wait(80);
 
   // ----- removing a saved picture -----
-  const before = store.images.length; el("images").querySelector(".remove").click(); await wait(120);
+  const before = store.images.length; el("images").querySelector(".remove").click(); await wait(60);
+  const question = { shown: !el("ask").hidden, text: el("ask-text").textContent, yes: el("ask-yes").textContent };
+  el("ask-no").click(); await wait(80);
+  r.removeImageAsksFirst = { ...question, afterCancel: before + " to " + store.images.length, boxGone: el("ask").hidden };
+  el("images").querySelector(".remove").click(); await wait(60); el("ask-yes").click(); await wait(150);
   r.removeImage = { images: before + " to " + store.images.length, fileGone: !("image-a" in store), tiles: el("images").children.length, undoOff: el("undo").disabled };
+
+  // ----- a theme saved to a file and loaded again, and everything reset -----
+  await chrome.storage.local.set({ "image-th": shaped(40, 20), "sticker-ts": shaped(20, 20), images: [...store.images, { id: "th", thumb: shaped(40, 20) }], stickers: [...store.stickers, { id: "ts", thumb: shaped(20, 20) }] }); await wait(80);
+  await chrome.storage.local.set({ preset: null, imageId: "th", imageZoom: 0.5, textColor: "#123456", sidebarMode: "plain", stickerRight: "ts", stickerRightShift: 25, frameMain: "brush" }); await wait(150);
+  const kept = await themeFile();
+  r.themeFile = { format: kept.claudeThemes, madeWith: kept.madeWith === filesVersion, settings: Object.keys(kept.settings).length === Object.keys(defaults).length - 2, leavesOutTheLists: !("images" in kept.settings) && !("stickers" in kept.settings), pictures: Object.keys(kept.pictures).sort().join(","), mainIsThePicture: kept.pictures.main === store["image-th"] };
+  el("theme-reset").click(); await wait(60); const resetAsked = !el("ask").hidden; el("ask-yes").click(); await wait(150);
+  r.resetEverything = { asked: resetAsked, preset: store.preset, textColor: store.textColor ?? null, zoom: store.imageZoom ?? null, right: store.stickerRight ?? null, frame: store.frameMain, picturesKept: store.images.some((i) => i.id === "th") && "image-th" in store };
+  const imagesBefore = store.images.length;
+  const told = await loadTheme(JSON.stringify(kept)); await wait(200);
+  r.themeLoaded = { told, preset: store.preset, pictureKeptUnderANewId: store.imageId !== "th" && store["image-" + store.imageId] === store["image-th"], addedToLibrary: store.images.length - imagesBefore, zoom: store.imageZoom, textColor: store.textColor, sidebarMode: store.sidebarMode, sidePictureToo: store.stickerRight !== "ts" && store["sticker-" + store.stickerRight] === store["sticker-ts"], shift: store.stickerRightShift, frame: store.frameMain };
+  el("undo").click(); await wait(120);
+  r.themeLoadUndoneInOneStep = { preset: store.preset, textColor: store.textColor ?? null };
+  r.notAThemeFile = [await loadTheme("hello"), await loadTheme("{}"), await loadTheme(JSON.stringify({ claudeThemes: 99, settings: {} }))];
+  const odd = await loadTheme(JSON.stringify({ claudeThemes: 1, settings: { textColor: "red; background: url(x)", opacity: "lots", enabled: "yes", unknownThing: 1, images: [{ id: "x" }], preset: null, imageId: "missing", panelOpacity: 0.4, sidebarTextColor: "#ABCDEF" }, pictures: { main: "https://example.com/x.png" } })); await wait(150);
+  r.strangeThemeFile = { told: odd, textColor: store.textColor ?? null, opacity: typeof store.opacity, enabled: store.enabled, unknown: "unknownThing" in store, imagesStillAList: Array.isArray(store.images) && store.images.every((i) => i.id !== "x"), preset: store.preset, imageId: store.imageId ?? null, panelOpacity: store.panelOpacity, sidebarTextColor: store.sidebarTextColor };
+  el("undo").click(); await wait(120);
 
   // ----- the toolbar icon -----
   await new Promise((ok) => { const s = document.createElement("script"); s.src = "background.js"; s.onload = ok; document.head.appendChild(s); });

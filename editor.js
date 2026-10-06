@@ -431,6 +431,41 @@ function tile(kind, id, name, background) {
 }
 
 // A tile with a small cross to remove it.
+// Ask a yes-or-no question in a small box of the editor's own, and wait for the
+// answer: true for yes. The browser's own question box is not used, because Chrome
+// can refuse to show one from a page that is framed inside another site's page,
+// which is how the editor sits on claude.ai. `yes` is the wording of the yes button.
+function ask(question, yes) {
+    return new Promise((answer) => {
+        const box = byId("ask");
+        byId("ask-text").textContent = question;
+        byId("ask-yes").textContent = yes;
+        box.hidden = false;
+        byId("ask-yes").focus();
+
+        const finish = (said) => {
+            box.hidden = true;
+            byId("ask-yes").removeEventListener("click", agreed);
+            byId("ask-no").removeEventListener("click", refused);
+            document.removeEventListener("keydown", escaped, true);
+            answer(said);
+        };
+        const agreed = () => finish(true);
+        const refused = () => finish(false);
+        // Esc answers no, and goes no further: it must not close the editor too.
+        const escaped = (event) => {
+            if (event.key === "Escape") {
+                event.stopPropagation();
+                event.preventDefault();
+                finish(false);
+            }
+        };
+        byId("ask-yes").addEventListener("click", agreed);
+        byId("ask-no").addEventListener("click", refused);
+        document.addEventListener("keydown", escaped, true);
+    });
+}
+
 function removable(button, title, remove) {
     const cell = document.createElement("div");
     cell.className = "cell";
@@ -446,7 +481,7 @@ function removable(button, title, remove) {
 }
 
 async function removeImage(id) {
-    if (!confirm("Remove this image from your saved images?")) {
+    if (!(await ask("Remove this image from your saved images?", "Remove"))) {
         return;
     }
     const change = { images: state.images.filter((image) => image.id !== id) };
@@ -468,7 +503,7 @@ async function removeImage(id) {
 }
 
 async function removeSticker(id) {
-    if (!confirm("Remove this picture from your saved pictures?")) {
+    if (!(await ask("Remove this picture from your saved pictures?", "Remove"))) {
         return;
     }
     const change = { stickers: state.stickers.filter((sticker) => sticker.id !== id) };
@@ -1490,7 +1525,8 @@ function startOnPage() {
     window.addEventListener("message", (event) => {
         if (event.source === window.parent && event.data && event.data.claudeThemes === "layout") {
             pageBoxes = event.data.boxes;
-            byId("not-a-chat").hidden = event.data.plainPage !== true;
+            byId("unfamiliar").hidden = event.data.unfamiliar !== true;
+            byId("not-a-chat").hidden = event.data.plainPage !== true || event.data.unfamiliar === true;
             layout();
         }
     });

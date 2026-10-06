@@ -499,6 +499,7 @@ body.moving {
 /* Notes that sit under the bar. */
 #stale,
 #not-a-chat,
+#unfamiliar,
 #refresh,
 #toast {
     position: fixed;
@@ -511,6 +512,7 @@ body.moving {
 
 #stale,
 #not-a-chat,
+#unfamiliar,
 #refresh {
     z-index: 1000;
     width: min(520px, 100vw - 24px);
@@ -922,4 +924,84 @@ input[type="text"] {
 
 #side-choices {
     margin-bottom: 14px;
+}
+
+/* ---------- The first-time note, the theme's own buttons, and a question ---------- */
+
+#welcome {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border: 1px solid #d97757;
+    border-radius: 10px;
+    background: #2a1d17;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+#welcome p {
+    flex: 1;
+    margin: 0;
+}
+
+#welcome .go {
+    flex: none;
+}
+
+.theme-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.theme-buttons .wide {
+    flex: 1 1 140px;
+    width: auto;
+    margin: 0;
+}
+
+/* Over everything in the editor, with the rest dimmed until it is answered. */
+#ask {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+#ask .card {
+    box-sizing: border-box;
+    width: min(380px, 100vw - 32px);
+    padding: 18px 18px 14px;
+    border-radius: 12px;
+    background: #20201f;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    color: #e8e6e1;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+#ask p {
+    margin: 0 0 14px;
+}
+
+#ask .answers {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+#ask button {
+    padding: 7px 14px;
+    border: 0;
+    border-radius: 8px;
+}
+
+#ask #ask-no {
+    background: #2c2c2a;
+    color: #e8e6e1;
 }

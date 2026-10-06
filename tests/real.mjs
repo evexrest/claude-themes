@@ -11,7 +11,7 @@
 // usage: node tests/real.mjs
 // Prints what it found as JSON and saves pictures as tests/real-*.png.
 import { spawn, execFileSync } from "node:child_process";
-import { writeFileSync, readFileSync, rmSync, mkdirSync } from "node:fs";
+import { writeFileSync, readFileSync, rmSync, mkdirSync, existsSync } from "node:fs";
 import { createServer } from "node:https";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -69,6 +69,9 @@ const run = async (session, expression) => {
   return out.error || (out.exceptionDetails ? "threw: " + (out.exceptionDetails.exception?.description || out.exceptionDetails.text) : out.result.value);
 };
 const targets = async () => (await send("Target.getTargets")).targetInfos;
+// Anything the extension saves as a file goes into the throwaway folder, not the real Downloads.
+const downloads = resolve(profile, "saved-files"); mkdirSync(downloads, { recursive: true });
+await send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: downloads });
 const picture = async (session, name) => { const shot = await send("Page.captureScreenshot", { format: "png" }, session); if (shot.data) writeFileSync(resolve(tests, name), Buffer.from(shot.data, "base64")); };
 
 const found = {};
@@ -136,12 +139,34 @@ try {
     await picture(page, "real-page-dark.png");
     await run(page, `document.documentElement.classList.remove("dark"); document.documentElement.style.colorScheme = ""`);
 
+    // The theme's own buttons, in the editor as it really runs: framed inside the Claude page.
+    found.themeButtons = await run(editor, `(async () => { const file = await themeFile(); document.getElementById("theme-save").click(); await new Promise((r) => setTimeout(r, 300)); const said = document.getElementById("toast").textContent; document.getElementById("theme-reset").click(); await new Promise((r) => setTimeout(r, 100)); const asked = !document.getElementById("ask").hidden; document.getElementById("ask-no").click(); return { fileHasSettings: Object.keys(file.settings).length > 30, saveSaid: said, resetAsksInsideTheEditor: asked }; })()`);
+    await sleep(500);
+    const savedTheme = resolve(downloads, "claude-theme.json");
+    found.themeButtons.fileWritten = existsSync(savedTheme) ? "format " + JSON.parse(readFileSync(savedTheme, "utf8")).claudeThemes : "no file";
     found.done = await run(editor, `document.getElementById("done").click(), "clicked"`); await sleep(600);
     // Open it again: the windows are where they were left.
     await clickIconOn("claude"); await sleep(2000);
     const again = (await targets()).find((t) => t.url.startsWith(base + "editor.html?on=page"));
     if (again) { const second = await attach(again.targetId); await sleep(500); found.windowsRememberedNextTime = await run(second, `(() => { const b = document.getElementById("library").getBoundingClientRect(); return [b.left, b.top, b.width, b.height].map(Math.round).join(","); })()`); await run(second, `document.getElementById("done").click()`); await sleep(500); }
     found.afterDone = await run(page, `({ editor: !!document.getElementById("claude-themes-editor"), stillThemed: !!document.querySelector('.claude-sticker[data-side="right"]') })`);
+  }
+
+  // ----- pages that are not chats, and a chat that is no longer built as expected -----
+  {
+    const themed = () => run(page, `document.documentElement.getAttribute("data-wallpaper") || "off"`);
+    await run(icon, `chrome.storage.local.set({ preset: "ocean" }).then(() => "set")`); await sleep(500);
+    found.kindsOfPage = { aChat: await themed() };
+    // Going to a list page the way claude.ai does: the address changes and the page is rebuilt, with no reload.
+    await run(page, `(() => { window.kept = document.querySelector('[data-cds="ChatComposer"]'); window.keptIn = kept.parentNode; window.keptBefore = kept.nextSibling; kept.remove(); const list = document.createElement("div"); list.id = "list"; list.setAttribute("data-cds", "Page"); document.querySelector(".dframe-pane-primary").appendChild(list); history.pushState({}, "", "/cowork/projects"); return "gone"; })()`); await sleep(400);
+    found.kindsOfPage.aListPage = await themed();
+    // Back to a chat's address, with no message box on the page: fine while it could still be loading, then left alone.
+    await run(page, `(() => { document.getElementById("list").remove(); history.pushState({}, "", "/chat/demo"); return "back"; })()`); await sleep(1500);
+    found.kindsOfPage.aChatStillLoading = await themed();
+    await sleep(6500);
+    found.kindsOfPage.aChatThatNeverGotItsMessageBox = await themed();
+    await run(page, `(() => { keptIn.insertBefore(kept, keptBefore); return "restored"; })()`); await sleep(500);
+    found.kindsOfPage.aChatAgain = await themed();
   }
 
   // ----- the icon, from here and from elsewhere -----
