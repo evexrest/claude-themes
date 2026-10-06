@@ -149,6 +149,9 @@ try {
     const round = (b) => [b.left, b.top, b.width, b.height].map(Math.round).join(",");
     const mouse = (type, x, y) => send("Input.dispatchMouseEvent", { type, x, y, button: "left", buttons: type === "mouseReleased" ? 0 : 1, clickCount: 1 }, page);
     const dragWithMouse = async (from, across, down) => { const x = from.left + from.width / 2, y = from.top + from.height / 2; await mouse("mouseMoved", x, y); await mouse("mousePressed", x, y); for (let step = 1; step <= 8; step++) { await mouse("mouseMoved", x + across * step / 8, y + down * step / 8); await sleep(20); } await mouse("mouseReleased", x + across, y + down); await sleep(250); };
+    // Drag where the two pictures on the right overlap: the mouse picks up the one in front, and only that one moves.
+    await dragWithMouse({ left: 1399, top: 599, width: 2, height: 2 }, -60, -100);
+    found.draggingWhereTwoOverlap = { inStorage: await run(editor, inStorage), handles: await run(editor, handles), onThePage: await run(page, onThePage) };
     const first = round(await boxOf("#library"));
     await dragWithMouse(await boxOf("#library .titlebar b"), -220, -260);
     const moved = round(await boxOf("#library"));

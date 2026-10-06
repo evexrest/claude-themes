@@ -84,6 +84,19 @@
   "right 1310,567,180,144 layer -1 opacity 1",
   "right 1310,495,180,144 layer -2 opacity 1"
  ],
+ "draggingWhereTwoOverlap": {
+  "inStorage": "left old 140/30/0.9/0, right dropped 180/73/1/0, right dropped 180/68/1/-60",
+  "handles": [
+   "left 338,227,140,175",
+   "right 1250,465,180,144 outlined",
+   "right 1310,495,180,144"
+  ],
+  "onThePage": [
+   "left 338,227,140,175 layer -3 opacity 0.9",
+   "right 1250,465,180,144 layer -1 opacity 1",
+   "right 1310,495,180,144 layer -2 opacity 1"
+  ]
+ },
  "windowsWithARealMouse": {
   "libraryFirst": "520,505,656,296",
   "afterDraggingTitleBar": "300,245,656,296",

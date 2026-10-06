@@ -43,7 +43,8 @@ The description already says "Unofficial, not made by Anthropic".
 > - Backgrounds: ten built in, or your own pictures and animated GIFs
 > - Stretch, zoom and drag a background to fit the chat window or the whole window
 > - A separate background, text colour, font and border for the sidebar
-> - Pictures and GIFs beside the chat, each with its own size, place and opacity
+> - Several pictures and GIFs on each side of the chat, each with its own size, place and
+>   opacity, and you choose which is in front
 > - Ink and pop-out borders that never move or resize anything
 > - Save a whole theme to a file, with its pictures, to back it up or share it
 > - Works in light and dark mode, and warns you when your text colour is hard to read

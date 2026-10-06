@@ -39,6 +39,10 @@ build your own:
 3. Change it in the Settings window. Drag a picture on the page to move it.
 4. **Done**, Esc, or the toolbar icon again closes the editor. Undo takes back any step.
 
+The space on each side of the chat takes several pictures. Each click or drop adds one
+more. Where two overlap, the Settings window shows which is in front and has buttons to
+change that.
+
 ![The sidebar selected, with a background of its own](docs/screenshots/editor-sidebar.png)
 
 ## What it does
@@ -75,9 +79,12 @@ build your own:
   Scheduled, Customize and so on) are left exactly as Claude draws them; the sidebar keeps
   its own picture and text colour there
 - Nothing on the page is blurred. Messages fade out as they reach the title bar
-- Pictures or GIFs in the empty space on either side of the chat. Each side has its own
-  size, height and opacity. They work with any background, including Claude's own. A picture
-  bigger than the empty space carries on behind the chat, never on top of it
+- Pictures or GIFs in the empty space on either side of the chat, several to a side and 20
+  in all. Each has its own size, height and opacity. They work with any background,
+  including Claude's own. A picture bigger than the empty space carries on behind the chat,
+  never on top of it
+- Layers for those pictures. Where two overlap, you choose which is in front, with Bring
+  forward, Send back, To the front and To the back
 - Text colour and font for the chat, for backgrounds that make the normal text hard to
   read, and a separate colour for the words Claude marks out (normally crimson)
 - A warning when the text is hard to read on the background in light mode, dark mode or
@@ -130,7 +137,7 @@ what changed in each version.
 | File | What it does |
 |---|---|
 | `manifest.json` | Tells Chrome what the extension is and which pages it runs on |
-| `settings.js` | The default settings and the lists of backgrounds, frames and fonts |
+| `settings.js` | The default settings, the lists of backgrounds, frames and fonts, and reading the saved settings, including those an earlier version left |
 | `content.js` | Runs on claude.ai, reads the saved settings, shows the background, the sidebar's picture, the side pictures, frames and text style, and lays the editor over the page |
 | `theme.css` | Styles the picture layers, makes the page see-through, draws the frames, recolours the text |
 | `background.js` | Tells the Claude tab to open or close the editor when the toolbar icon is clicked |
@@ -138,7 +145,7 @@ what changed in each version.
 | `preview.html`, `preview.css` | A stand-in for the Claude page, for when the editor has to open in a tab of its own (a Claude tab that has not been refreshed since the extension was reloaded). It uses claude.ai's class names, so `theme.css` and `content.js` style it exactly as they style the real page |
 | `options.html`, `options.js`, `options.css` | The upload page, opened from the editor: crop an image for the screen or the sidebar and add it to your saved images |
 | `frame-upload.js` | The upload page: read and save your own frame picture |
-| `stickers.js` | The upload page: save a picture or GIF for beside the chat |
+| `stickers.js` | The upload page: save a picture or GIF and add it beside the chat |
 | `themes.js` | The editor: the ready-made themes, saving the theme to a file, loading one, resetting everything, the first-time note, and the foot of the Library |
 | `readable.js` | The editor: works out whether the text can be read on the background, and shows the warning |
 | `icons/` | The extension's icon, as a drawing (`icon.svg`) and at the four sizes Chrome uses |

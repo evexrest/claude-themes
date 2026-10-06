@@ -18,7 +18,7 @@
     const star = (() => { const c = document.createElement("canvas"); c.width = 150; c.height = 150; const x = c.getContext("2d"); x.translate(75, 78); x.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 30 : 68, a = Math.PI * i / 5 - Math.PI / 2; x.lineTo(r * Math.cos(a), r * Math.sin(a)); } x.closePath(); x.fillStyle = "#3fa7a3"; x.fill(); x.lineJoin = "round"; x.lineWidth = 7; x.strokeStyle = "#14373a"; x.stroke(); return c.toDataURL("image/png"); })();
     store.stickers.push({ id: "s3", thumb: star }); store["sticker-s3"] = star;
     const put = (key, id, more) => ({ key, id, side: "left", size: 170, position: 85, opacity: 1, shift: 0, ...more });
-    store.placed = [put("p1", "s1", { position: 58, shift: -22 }), put("p2", "s2", { position: 74, shift: 26 }), put("p3", "s3", { size: 150, position: 90 })];
+    store.placed = [put("p1", "s1", { position: 56, shift: -24 }), put("p2", "s2", { position: 72, shift: 28 }), put("p3", "s3", { size: 160, position: 80, shift: -6 })];
   }
   if (q.get("frame")) store.frameMain = q.get("frame");
   if (q.get("text")) store.textColor = q.get("text");
