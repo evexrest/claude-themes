@@ -37,12 +37,20 @@
  },
  "leftSelected": {
   "panels": "side",
-  "title": "Picture on the left",
+  "title": "Pictures on the left",
   "selected": "zone-left",
   "gripShown": true,
-  "gripRightHidden": true,
+  "grips": 1,
+  "outlined": "A",
   "gripOverPicture": "0,0,0,0",
-  "sideChoices": "010"
+  "itsSettingsShown": true,
+  "emptyNoteHidden": true
+ },
+ "rightSelectedWithNoPicture": {
+  "title": "Pictures on the right",
+  "emptyNote": "No picture on this side yet. Click one under Side pictures in the Library, or drop one from your computer onto this side.",
+  "itsSettingsShown": false,
+  "bare": "true/false"
  },
  "backToMain": {
   "panels": "main",
@@ -73,23 +81,35 @@
   "showing": "one of your images",
   "images": "10"
  },
- "stickerGoesToTheSideLastSelected": {
-  "left": "s2",
-  "right": null,
+ "sidePictureIsAddedToTheSideLastSelected": {
+  "placed": "A left s1, B left s2",
+  "heights": "85,73",
   "selected": "zone-left",
   "panels": "side",
-  "previewRight": false
+  "inPreview": 2,
+  "grips": 2,
+  "outlined": "B",
+  "library": "11"
  },
  "historyOn": {
   "undoOff": false,
   "redoOff": true
  },
  "undone": {
-  "left": "s1",
+  "placed": "A left s1",
+  "inPreview": 1,
+  "outlined": "A",
   "redoOff": false
  },
  "redone": {
-  "left": "s2"
+  "placed": "A left s1, B left s2",
+  "inPreview": 2,
+  "outlined": "B"
+ },
+ "theSamePictureTwice": {
+  "placed": "A left s1, B left s2, C left s2",
+  "heights": "85,73,61",
+  "inPreview": 3
  },
  "sliderMoved": {
   "opacity": 0.62,
@@ -233,14 +253,15 @@
   "stickers": 3,
   "identicalFile": true,
   "thumb": "data:image/png",
-  "right": true,
-  "left": "s2",
+  "placed": "A left s1, B left s2, C left s2, D right <id>",
+  "showsTheDroppedFile": true,
   "selected": "zone-right",
   "tiles": 3,
   "said": "Added. It is kept under Side pictures."
  },
  "dropTwoOnLeft": {
   "stickers": 5,
+  "placed": "A left s1, B left s2, C left s2, D right <id>, E left <id>",
   "firstUsed": true,
   "said": "Added 2 pictures. They are kept under Side pictures."
  },
@@ -274,23 +295,23 @@
  "dragPresetBesideChatIsRefused": {
   "during": "dragging dragging-image",
   "taken": false,
-  "left": "<id>",
+  "placed": 5,
   "preset": null
  },
- "dragSidePictureToLeft": {
+ "dragSidePictureToRight": {
   "during": "dragging dragging-sticker",
   "taken": true,
-  "left": "s1",
-  "selected": "zone-left"
+  "placed": "A left s1, B left s2, C left s2, D right <id>, E left <id>, F right s1",
+  "selected": "zone-right"
  },
  "dragSidePictureOntoMainIsRefused": {
   "taken": false,
   "imageId": true,
-  "right": true
+  "placed": 6
  },
  "dragPictureUp": {
   "position": "50 to 40",
-  "rightStill": "shared 50",
+  "theOtherStill": 50,
   "movedUpInPreview": 64,
   "expected": 65,
   "slider": "40",
@@ -298,17 +319,17 @@
  },
  "dragCorner": {
   "size": "120 to 185",
-  "rightStill": "shared 120",
+  "theOtherStill": 120,
   "widthInPreview": "120 to 185",
   "slider": "185"
  },
  "bothDragsUndone": {
-  "size": "shared 120",
-  "position": "shared 50"
+  "size": 120,
+  "position": 50
  },
  "gripsThereWithoutSelecting": {
-  "left": true,
-  "outlined": false
+  "grips": 2,
+  "outlined": "(none)"
  },
  "dragPictureSideways": {
   "shift": 44,
@@ -316,7 +337,7 @@
   "movedInPreview": 44,
   "nowSelected": "zone-left",
   "resetHidden": false,
-  "rightStill": "not set"
+  "theOtherStill": 0
  },
  "draggedFarLeftStopsAtTheEdge": {
   "pictureLeft": 308,
@@ -327,44 +348,77 @@
   "sameAsBefore": true,
   "resetHidden": true
  },
- "eachSideHasItsOwn": {
-  "left": {
-   "size": 300,
-   "opacity": 0.4,
-   "widthInPreview": 300,
-   "seeThrough": "0.4"
-  },
-  "rightSlidersShowedItsOwn": {
-   "size": "120",
-   "opacity": "100",
-   "label": "120px"
-  },
-  "right": {
-   "size": 90,
-   "position": 10,
-   "opacity": "shared 1",
-   "widthInPreview": 90
-  },
-  "leftUntouched": "300/300",
-  "button": "Make the left one match"
+ "aPictureAddedElsewhereIsNotChosen": {
+  "placed": "A left s1, B left s2, C right s2",
+  "outlined": "A",
+  "slider": "120"
  },
- "leftSlidersShowItsOwn": {
-  "size": "300",
-  "opacity": "40",
-  "button": "Make the right one match"
+ "slidersChangeTheChosenOne": {
+  "A": "300/50/0.4/0",
+  "B": "120/20/1/0",
+  "C": "120/50/1/0",
+  "widthsInPreview": "300/120/120",
+  "seeThrough": "0.4/1"
  },
- "makeTheOtherMatch": {
-  "right": "300/50/0.4",
-  "left": "300/shared 50/0.4",
-  "widths": "300/300",
-  "said": "The picture on the right now has the same size, height and opacity."
+ "pressingAPictureChoosesIt": {
+  "twoUnderThePointer": true,
+  "landedOn": "B",
+  "outlined": "B",
+  "sliders": "120/20/100",
+  "label": "120px",
+  "gripLayers": "1,2,3"
  },
- "matchUndoneInOneStep": "90/10/shared",
- "deleteKeyTakesItOff": {
-  "left": null,
+ "eachPictureHasItsOwn": {
+  "A": "300/50/0.4/0",
+  "B": "90/10/1/0",
+  "C": "120/50/1/0",
+  "widthsInPreview": "300/90/120"
+ },
+ "eachSliderIsItsOwnStepOfUndo": {
+  "A": "300/50/0.4/0",
+  "B": "120/20/1/0"
+ },
+ "theOtherSidesSliders": {
+  "outlined": "C",
+  "sliders": "120/50/100"
+ },
+ "deleteKeyTakesTheChosenOneOff": {
+  "placed": "A left s1, C right s2",
   "stillInLibrary": true,
-  "gripShown": false,
-  "sideChoices": "100"
+  "inPreview": 2,
+  "grips": 2,
+  "outlined": "A"
+ },
+ "andThenTheNext": {
+  "placed": "C right s2",
+  "outlined": "(none)",
+  "emptyNoteShown": true,
+  "itsSettingsShown": false
+ },
+ "deleteOnAnEmptySideDoesNothing": "C right s2",
+ "bothBroughtBackByUndo": {
+  "placed": "A left s1, B left s2, C right s2",
+  "inPreview": 3
+ },
+ "noMoreThanTwenty": {
+  "placed": 20,
+  "stillTheSame": true,
+  "said": "There are already 20 pictures beside the chat, which is the most there can be. Take one off to add another.",
+  "inPreview": 20,
+  "grips": 20,
+  "droppedFile": {
+   "keptInTheLibrary": 1,
+   "placed": 20,
+   "said": "Kept under Side pictures, but not put on the page. There are already 20 pictures beside the chat, which is the most there can be. Take one off to add another."
+  },
+  "roomForOneAgain": {
+   "placed": 20,
+   "last": "left s2"
+  },
+  "allTakenOff": {
+   "inPreview": 0,
+   "grips": 0
+  }
  },
  "textColour": {
   "textColor": "#ffffff",
@@ -421,20 +475,32 @@
   "tiles": 4,
   "undoOff": true
  },
+ "removeSidePicture": {
+  "asked": "Remove this picture from your saved pictures? It will be taken off the page too.",
+  "saved": "6 to 5",
+  "fileGone": true,
+  "placed": "B left s1",
+  "inPreview": 1,
+  "undoOff": true,
+  "askedWhenItIsNotOnThePage": "Remove this picture from your saved pictures?"
+ },
  "themeFile": {
-  "format": 1,
+  "format": 2,
   "madeWith": true,
   "settings": true,
   "leavesOutTheLists": true,
-  "pictures": "main,right",
-  "mainIsThePicture": true
+  "pictures": "main,side",
+  "mainIsThePicture": true,
+  "sidePictures": "ts,tu",
+  "eachIsItsFile": true,
+  "placed": "left ts, right tu, right ts"
  },
  "resetEverything": {
   "asked": true,
   "preset": "dusk",
   "textColor": null,
   "zoom": null,
-  "right": null,
+  "placed": 0,
   "frame": "none",
   "picturesKept": true
  },
@@ -446,19 +512,37 @@
   "zoom": 0.5,
   "textColor": "#123456",
   "sidebarMode": "plain",
-  "sidePictureToo": true,
-  "shift": 25,
-  "frame": "brush"
+  "frame": "brush",
+  "placed": "left ts 140/85/1/25, right tu 180/40/0.6/0, right ts 180/70/1/0",
+  "sidePicturesAddedToLibrary": 2,
+  "underNewIds": true,
+  "twoCopiesShareOne": true,
+  "newKeys": true,
+  "fields": "key,id,side,size,position,opacity,shift",
+  "inPreview": 3
  },
  "themeLoadUndoneInOneStep": {
   "preset": "dusk",
-  "textColor": null
+  "textColor": null,
+  "placed": "(none)"
  },
  "notAThemeFile": [
   "That file is not a theme file.",
   "That file is not a theme file.",
   "That theme was made with a newer version of Claude Themes. Update the extension to load it."
  ],
+ "themeFileFromAnEarlierVersion": {
+  "told": "Theme loaded. Undo goes back to the one you had.",
+  "preset": "ocean",
+  "placed": "left ts 90/60/0.8/12, right tu 150/60/0.8/0",
+  "sidePicturesAddedToLibrary": 2,
+  "fields": "key,id,side,size,position,opacity,shift",
+  "keysAreNew": true,
+  "oldSettingsNotSaved": 0,
+  "inPreview": 2,
+  "withOnlyARightPicture": "right tu 150/60/0.8/0",
+  "withoutTheRightPicturesFile": "left ts 90/60/0.8/12"
+ },
  "strangeThemeFile": {
   "told": "Theme loaded. Undo goes back to the one you had.",
   "textColor": null,
@@ -469,7 +553,28 @@
   "preset": "dusk",
   "imageId": null,
   "panelOpacity": 0.4,
-  "sidebarTextColor": "#ABCDEF"
+  "sidebarTextColor": "#ABCDEF",
+  "sidePicturesLeftAlone": true
+ },
+ "sidePicturesFromAStranger": {
+  "told": "Theme loaded. Undo goes back to the one you had.",
+  "inTheFile": 67,
+  "taken": 20,
+  "fields": "key,id,side,size,position,opacity,shift",
+  "heights": "99,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18",
+  "sides": "llrlrlrlrlrlrlrlrlrl",
+  "allShow": "ts",
+  "keysAllDifferent": true,
+  "sidePicturesAddedToLibrary": 1,
+  "inPreview": 20,
+  "withoutTheirPictures": {
+   "placed": "left ts 100/7/1/0",
+   "sidePicturesAddedToLibrary": 1
+  },
+  "notAList": {
+   "leftAlone": true,
+   "restOfTheFileTaken": "forest"
+  }
  },
  "colourSums": {
   "blackOnWhite": 21,
@@ -555,7 +660,7 @@
    "font": "serif",
    "frameMain": "double",
    "sidebarMode": "joined",
-   "sidePictureOff": true,
+   "sidePicturesOff": true,
    "marked": "000000100",
    "told": "Paperback is on. Undo goes back to the look you had.",
    "libraryKept": true,
@@ -568,13 +673,13 @@
    "imageId": "th",
    "textColor": "#123456",
    "frameMain": "custom",
-   "left": "ts"
+   "placed": "left ts 180/85/1/0"
   }
  },
  "withoutAMouse": {
-  "controls": 169,
+  "controls": 171,
   "withNoName": [],
-  "choices": 110,
+  "choices": 108,
   "choicesThatDoNotSayWhetherTheyAreOn": [],
   "takenOutOfTheTabOrder": [],
   "removeButtonsSay": [

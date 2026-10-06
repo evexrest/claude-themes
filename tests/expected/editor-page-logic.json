@@ -28,17 +28,32 @@
  },
  "leftSelected": {
   "grip": "318,600,180,225",
+  "grips": "p1 318,600,180,225 outlined",
   "panel": true,
   "dock": "on-page"
  },
  "rightSelected": {
   "dock": "on-page dock-left",
-  "inspector": "12,72,312,538",
-  "grip": "hidden"
+  "inspector": "12,72,312,195",
+  "grips": "p1 318,600,180,225"
  },
  "dragOnThePage": {
-  "position": "85 to 57",
-  "sharedUntouched": "default"
+  "position": "85 to 57"
+ },
+ "aPictureThePageHasNotMeasuredYet": "p1 318,600,180,225 outlined; p2 hidden",
+ "aGripOverEachPicture": {
+  "grips": "p1 318,600,180,225 outlined; p2 350,500,120,150",
+  "whereBothAre": "p2",
+  "whereOnlyTheFirstIs": "p1",
+  "handles": "nwse-resize,nwse-resize"
+ },
+ "draggingTheSecondOne": {
+  "shifts": "p1 0, p2 32",
+  "grips": "p1 318,600,180,225; p2 350,500,120,150 outlined"
+ },
+ "takenOffAgain": {
+  "grips": "p1 318,600,180,225 outlined",
+  "inTheEditor": 1
  },
  "whileDragging": {
   "classes": "on-page dragging dragging-files",
@@ -79,7 +94,7 @@
  },
  "inspectorMoved": {
   "box": "788,172,312,629",
-  "staysPutWhenRightIsSelected": "788,172,312,538",
+  "staysPutWhenRightIsSelected": "788,172,312,195",
   "classes": "on-page dock-left"
  },
  "barMoved": "682,312,644,48",
@@ -112,7 +127,7 @@
  },
  "unmovedSettingsStillDodge": {
   "classes": "on-page dock-left",
-  "box": "12,72,312,538"
+  "box": "12,72,312,195"
  },
  "dotsDoNotDrag": true,
  "closing": "close close",

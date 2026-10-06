@@ -53,27 +53,16 @@ const defaults = {
     frameSlice: null,
     // Pictures in the empty space beside the chat. `stickers` is the list of saved
     // ones, as { id, thumb }; each file is stored separately, under stickerKey(id).
-    // `stickerLeft` and `stickerRight` hold the id shown on each side, or null.
     stickers: [],
-    stickerLeft: null,
-    stickerRight: null,
-    // Each side's picture has a size, a height on the page and an opacity of its
-    // own. Null means that side's has never been set, and the three shared values
-    // below are used: they are where these were kept before each side had its own.
-    stickerLeftSize: null,
-    stickerLeftPosition: null,
-    stickerLeftOpacity: null,
-    stickerRightSize: null,
-    stickerRightPosition: null,
-    stickerRightOpacity: null,
-    stickerSize: 180,
-    stickerPosition: 85,
-    stickerOpacity: 1,
-    // How far each side's picture has been dragged sideways from its usual place in
-    // the empty space, in pixels. Null and 0 both mean not at all.
-    stickerLeftShift: null,
-    stickerRightShift: null,
-    stickerShift: 0,
+    // The ones that are on the page, from the back to the front: where two overlap,
+    // the one later in the list is drawn over the other. Each is
+    // { key, id, side, size, position, opacity, shift }. `key` is this placed
+    // picture's own name, and `id` the saved picture it shows; one saved picture can
+    // be placed more than once. `side` is "left" or "right": the empty space its
+    // usual place is worked out from. `size` is its width in pixels, `position` its
+    // height on the page from 0 (the top) to 100 (the bottom), and `shift` how far it
+    // has been dragged sideways from its usual place, in pixels.
+    placed: [],
     // Chat text. A null colour and the "default" font leave Claude's own alone.
     // `codeColor` is for the words Claude marks like `this`, normally crimson.
     textColor: null,
@@ -110,16 +99,69 @@ function newId() {
     return Date.now().toString(36) + (idsMade++).toString(36);
 }
 
-// The name of one of a side picture's own settings. `side` is "left" or "right"
-// and `what` is "Size", "Position" or "Opacity".
-function sideKey(side, what) {
-    return (side === "left" ? "stickerLeft" : "stickerRight") + what;
+// The most pictures there can be beside the chat at once.
+const mostPlaced = 20;
+
+// What a picture is given when it is first placed, and the least and the most each
+// of its numbers may be. The editor's sliders, a drag on the page and a theme file
+// all keep to these.
+const placedStart = { size: 180, position: 85, opacity: 1, shift: 0 };
+const placedLimits = { size: [60, 800], position: [0, 100], opacity: [0.1, 1], shift: [-10000, 10000] };
+
+// The list with one more picture, put on one side in front of all the others, or
+// null when there is no room for another. Where that side has pictures already, it
+// starts a little higher than the one in front of them, so that it is not hidden
+// exactly behind it.
+function placedWith(list, id, side) {
+    if (list.length >= mostPlaced) {
+        return null;
+    }
+    const front = list.findLast((item) => item.side === side);
+    // 12 higher. From the top it goes round to the bottom.
+    const position = front ? (front.position + 100 - 12) % 100 : placedStart.position;
+    return [...list, { key: newId(), id: id, side: side, ...placedStart, position: position }];
 }
 
-// That setting's value: the side's own if it has one, otherwise the shared one.
-function sideValue(settings, side, what) {
-    const own = settings[sideKey(side, what)];
-    return own === null || own === undefined ? settings["sticker" + what] : own;
+// Before 0.20.0 each side had one picture, kept in settings of its own:
+// `stickerLeft` and `stickerRight` held the two ids, each side had a Size, a
+// Position, an Opacity and a Shift, and where one of those had never been set, a
+// value shared by both sides stood in for it. These are those settings' names.
+const oldSideSettings = [
+    "stickerLeft", "stickerLeftSize", "stickerLeftPosition", "stickerLeftOpacity", "stickerLeftShift",
+    "stickerRight", "stickerRightSize", "stickerRightPosition", "stickerRightOpacity", "stickerRightShift",
+    "stickerSize", "stickerPosition", "stickerOpacity", "stickerShift"
+];
+
+// Those settings as the list they would be now: the left picture, then the right.
+function placedFromOld(kept) {
+    const placed = [];
+    for (const side of ["Left", "Right"]) {
+        const item = { key: side.toLowerCase(), id: kept["sticker" + side], side: side.toLowerCase() };
+        for (const what of ["Size", "Position", "Opacity", "Shift"]) {
+            const name = what.toLowerCase();
+            item[name] = kept["sticker" + side + what] ?? kept["sticker" + what] ?? placedStart[name];
+        }
+        if (item.id) {
+            placed.push(item);
+        }
+    }
+    return placed;
+}
+
+// The saved settings, with the default for any that has never been saved. Every
+// page reads them through here, because this is the one place that still knows the
+// old settings: until a list of placed pictures has been saved, the list is made
+// from them. Nothing is written. The list is saved the first time it changes.
+async function readSettings() {
+    const kept = await chrome.storage.local.get([...Object.keys(defaults), ...oldSideSettings]);
+    const settings = {};
+    for (const key of Object.keys(defaults)) {
+        settings[key] = key in kept ? kept[key] : defaults[key];
+    }
+    if (!("placed" in kept)) {
+        settings.placed = placedFromOld(kept);
+    }
+    return settings;
 }
 
 // Fonts that are already on most computers, so nothing has to be downloaded.

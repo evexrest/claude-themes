@@ -39,6 +39,21 @@
   r.tooBig = status.textContent;
   give(new File(["nope"], "bad.gif", { type: "image/gif" })); await until(() => status.textContent !== "");
   r.broken = { status: status.textContent, editorHidden: editor.hidden };
+  // ----- a picture for beside the chat: each press of a button adds it once more, and it is saved once -----
+  // Someone who installed a version before 0.20.0 has one picture a side in the old settings, and no list yet.
+  Object.assign(store, { stickers: [{ id: "old", thumb: "t" }], "sticker-old": GIF2, stickerRight: "old", stickerSize: 140, stickerRightPosition: 30 });
+  const giveSide = (file) => { const dt = new DataTransfer(); dt.items.add(file); const input = document.getElementById("sticker-file"); input.files = dt.files; input.dispatchEvent(new Event("change")); };
+  const beside = () => (store.placed || []).map((p) => p.side + " " + (p.id === "old" ? "old" : store["sticker-" + p.id] === GIF1 ? "new" : "?") + " " + [p.size, p.position, p.opacity, p.shift].join("/")).join(", ") || "(no list)";
+  giveSide(new File([gifBytes], "wave.gif", { type: "image/gif" })); await until(() => !stickerEditor.hidden && stickerPreview.naturalWidth > 0);
+  r.sidePictureChosen = { shown: !stickerEditor.hidden, buttons: [...stickerEditor.querySelectorAll("button")].map((b) => b.textContent).join(" | "), nothingSavedYet: beside() };
+  document.getElementById("sticker-left").click(); await wait(300);
+  r.sidePictureAddedOnTheLeft = { placed: beside(), saved: store.stickers.length, thumb: store.stickers[1].thumb.slice(0, 14), themeOn: store.enabled, status: stickerStatus.textContent };
+  document.getElementById("sticker-right").click(); await wait(300); document.getElementById("sticker-left").click(); await wait(300);
+  r.sidePictureAddedTwiceMore = { placed: beside(), saved: store.stickers.length, keysAllDifferent: new Set(store.placed.map((p) => p.key)).size === store.placed.length, fields: [...new Set(store.placed.map((p) => Object.keys(p).join(",")))].join(" | ") };
+  const full = store.placed; await chrome.storage.local.set({ placed: Array.from({ length: 20 }, (_, i) => ({ ...full[0], key: "k" + i })) });
+  giveSide(new File([gifBytes], "wave.gif", { type: "image/gif" })); await until(() => stickerStatus.textContent === ""); await wait(100);
+  document.getElementById("sticker-right").click(); await wait(300);
+  r.sidePictureWhenThereIsNoRoom = { placed: store.placed.length, saved: store.stickers.length, status: stickerStatus.textContent };
   document.getElementById("out").textContent = "RESULT" + JSON.stringify(r, null, 1) + "END";
 })().catch((e) => { document.getElementById("out").textContent = "RESULT" + JSON.stringify("error " + e.stack) + "END"; });
 </script>

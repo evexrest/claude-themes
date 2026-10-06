@@ -1,7 +1,7 @@
 // Runs on every claude.ai page. Reads the saved settings, shows the background, the
 // sidebar's picture and the pictures beside the chat, draws the frames and sets the
 // chat text's colour and font. `defaults`, `presets`, `frameValues`, `fontFamily`,
-// `hslParts`, `imageKey`, `stickerKey` and `sideValue` come from settings.js.
+// `hslParts`, `imageKey`, `stickerKey` and `readSettings` come from settings.js.
 
 const root = document.documentElement;
 let settings = defaults;
@@ -31,12 +31,13 @@ const layers = {
     sidebar: { url: null, loads: 0, width: 0, height: 0 }
 };
 
-// The pictures beside the chat, one for each side. `setting` names the setting
-// that holds the picture's id; `element` is its <img> once it has been made.
-const stickers = {
-    left: { setting: "stickerLeft", element: null, url: null, loads: 0 },
-    right: { setting: "stickerRight", element: null, url: null, loads: 0 }
-};
+// The pictures beside the chat. `stickers` holds the <img> of each one that is
+// placed, under its key, with the id of the saved picture it shows. `stickerFiles`
+// holds each of those saved pictures, under its id, as an address an <img> can
+// show: `url` is null until the file has been fetched. Two placed copies of one
+// picture share it.
+const stickers = new Map();
+const stickerFiles = new Map();
 
 // Space kept clear around a side picture, and the least room worth using.
 const stickerGap = 12;
@@ -302,47 +303,67 @@ function applySidebar(sourceChanged) {
     sizePictures();
 }
 
-// Fetch one side's picture from storage and put it in that side's <img>.
-async function loadSticker(side) {
-    const slot = stickers[side];
-    const id = settings[slot.setting];
-    const turn = ++slot.loads;
-    let url = null;
-
-    if (id) {
-        const key = stickerKey(id);
-        const saved = await chrome.storage.local.get(key);
-        // A newer choice was made while this one was loading.
-        if (turn !== slot.loads) {
-            return;
-        }
-        if (saved[key]) {
-            url = URL.createObjectURL(dataUrlToBlob(saved[key]));
-        }
+// Fetch one saved side picture from storage, and show it in every <img> that is
+// waiting for it.
+async function loadStickerFile(id) {
+    const file = { url: null };
+    stickerFiles.set(id, file);
+    const key = stickerKey(id);
+    const saved = await chrome.storage.local.get(key);
+    // Every picture that showed it was taken away while it was loading, or it is gone.
+    if (stickerFiles.get(id) !== file || !saved[key]) {
+        return;
     }
-
-    if (slot.url) {
-        URL.revokeObjectURL(slot.url);
-    }
-    slot.url = url;
-
-    if (url && !slot.element) {
-        slot.element = document.createElement("img");
-        slot.element.className = "claude-sticker";
-        slot.element.alt = "";
-        // The editor finds each side's picture in its preview by this.
-        slot.element.dataset.side = side;
-        // The picture's height is only known once it has loaded.
-        slot.element.addEventListener("load", placeStickers);
-    }
-    if (slot.element) {
-        if (url) {
-            slot.element.src = url;
-        } else {
-            slot.element.removeAttribute("src");
+    file.url = URL.createObjectURL(dataUrlToBlob(saved[key]));
+    for (const slot of stickers.values()) {
+        if (slot.id === id) {
+            slot.element.src = file.url;
         }
     }
     placeStickers();
+}
+
+// Make the pictures on the page match the list: an <img> for each placed picture,
+// and none for one that has been taken away. A picture that is still in the list
+// keeps its <img>, whatever else about it has changed. placeStickers does this
+// first, every time, so the two cannot fall out of step.
+function matchStickers() {
+    const placed = new Map(settings.placed.map((item) => [item.key, item]));
+    for (const [key, slot] of stickers) {
+        if (!placed.has(key) || placed.get(key).id !== slot.id) {
+            slot.element.remove();
+            stickers.delete(key);
+        }
+    }
+    for (const [id, file] of stickerFiles) {
+        if (!settings.placed.some((item) => item.id === id)) {
+            if (file.url) {
+                URL.revokeObjectURL(file.url);
+            }
+            stickerFiles.delete(id);
+        }
+    }
+
+    for (const item of settings.placed) {
+        if (!stickerFiles.has(item.id)) {
+            loadStickerFile(item.id);
+        }
+        if (!stickers.has(item.key)) {
+            const element = document.createElement("img");
+            element.className = "claude-sticker";
+            element.alt = "";
+            // The editor finds each picture in its preview by its key.
+            element.dataset.key = item.key;
+            element.dataset.side = item.side;
+            // The picture's height is only known once it has loaded.
+            element.addEventListener("load", placeStickers);
+            const url = stickerFiles.get(item.id).url;
+            if (url) {
+                element.src = url;
+            }
+            stickers.set(item.key, { element: element, id: item.id });
+        }
+    }
 }
 
 // Put each side picture beside the chat: in the empty space between the edge of
@@ -359,24 +380,22 @@ function placeStickers() {
     const columnBox = column ? column.getBoundingClientRect() : null;
     const home = pane ? pane.closest(".dframe-content") || pane.parentElement : null;
 
-    for (const side of ["left", "right"]) {
-        const slot = stickers[side];
-        if (!slot.element) {
-            continue;
-        }
+    matchStickers();
+    settings.placed.forEach((item, index) => {
+        const element = stickers.get(item.key).element;
 
         let room = 0;
-        if (settings.enabled && slot.url && home && columnBox && columnBox.width > 0) {
-            room = side === "left" ? columnBox.left - paneBox.left : paneBox.right - columnBox.right;
+        if (settings.enabled && stickerFiles.get(item.id).url && home && columnBox && columnBox.width > 0) {
+            room = item.side === "left" ? columnBox.left - paneBox.left : paneBox.right - columnBox.right;
             room -= stickerGap * 2;
         }
 
         if (room < stickerSmallest) {
-            slot.element.style.display = "none";
-            continue;
+            element.style.display = "none";
+            return;
         }
-        if (slot.element.parentNode !== home) {
-            home.appendChild(slot.element);
+        if (element.parentNode !== home) {
+            home.appendChild(element);
         }
 
         // Keep clear of the bar along the top of the chat window.
@@ -385,27 +404,26 @@ function placeStickers() {
 
         // As wide as asked for, but never wider than the chat window, and never
         // so wide that the picture's own shape would make it taller than the window.
-        let width = Math.min(sideValue(settings, side, "Size"), paneBox.width - stickerGap * 2);
-        if (slot.element.naturalWidth && slot.element.naturalHeight) {
-            width = Math.min(width, height * slot.element.naturalWidth / slot.element.naturalHeight);
+        let width = Math.min(item.size, paneBox.width - stickerGap * 2);
+        if (element.naturalWidth && element.naturalHeight) {
+            width = Math.min(width, height * element.naturalWidth / element.naturalHeight);
         }
         width = Math.max(width, 1);
 
         // Centred in the empty space when it fits, from the window's edge when it does not.
         const spare = Math.max(0, room - width) / 2;
-        let start = side === "left"
+        let start = item.side === "left"
             ? paneBox.left + stickerGap + spare
             : paneBox.right - stickerGap - spare - width;
 
         // Then moved sideways by however far it has been dragged, but never out of
         // the chat window.
-        const shift = sideValue(settings, side, "Shift") || 0;
-        if (shift !== 0) {
-            start = Math.min(Math.max(start + shift, paneBox.left + stickerGap), paneBox.right - stickerGap - width);
+        if (item.shift !== 0) {
+            start = Math.min(Math.max(start + item.shift, paneBox.left + stickerGap), paneBox.right - stickerGap - width);
         }
 
-        const share = sideValue(settings, side, "Position") / 100;
-        const style = slot.element.style;
+        const share = item.position / 100;
+        const style = element.style;
         style.display = "block";
         style.left = start + "px";
         style.width = width + "px";
@@ -413,18 +431,12 @@ function placeStickers() {
         // `share` of the way down: 0 touches the top, 1 touches the bottom.
         style.top = top + height * share + "px";
         style.transform = `translateY(${-share * 100}%)`;
-        style.opacity = sideValue(settings, side, "Opacity");
-    }
-}
-
-function applyStickers(leftChanged, rightChanged) {
-    if (leftChanged) {
-        loadSticker("left");
-    }
-    if (rightChanged) {
-        loadSticker("right");
-    }
-    placeStickers();
+        style.opacity = item.opacity;
+        // The list runs from the back to the front, and every picture stays below
+        // the page's own contents: the front one at -1, the rest under it. A layer
+        // is changed here and never by moving the <img>, which would start a GIF again.
+        style.zIndex = index - settings.placed.length;
+    });
 }
 
 // One frame goes around the sidebar, the chat window, or the whole window ("all").
@@ -528,8 +540,8 @@ function tellEditor() {
             sidebar: boxOf(document.querySelector('.dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar')),
             pane: boxOf(document.querySelector(".dframe-pane-primary")),
             column: boxOf(document.querySelector('[data-cds="ChatComposer"]')),
-            left: boxOf(stickers.left.element),
-            right: boxOf(stickers.right.element)
+            // Each picture beside the chat, under its key.
+            placed: Object.fromEntries([...stickers].map(([key, slot]) => [key, boxOf(slot.element)]))
         }
     }, editorOrigin);
 }
@@ -616,13 +628,13 @@ function checkPage() {
 }
 
 async function start() {
-    settings = await chrome.storage.local.get(defaults);
+    settings = await readSettings();
     plainPage = !onChatPage();
     applyBackground(true);
     applySidebar(true);
     applyFrames(true);
     applyText();
-    applyStickers(true, true);
+    placeStickers();
 
     chrome.storage.onChanged.addListener((changes) => {
         for (const key of Object.keys(changes)) {
@@ -636,7 +648,7 @@ async function start() {
         applySidebar("sidebarMode" in changes || "sidebarPreset" in changes || "sidebarImageId" in changes);
         applyFrames("frameImage" in changes);
         applyText();
-        applyStickers("stickerLeft" in changes, "stickerRight" in changes);
+        placeStickers();
     });
 
     // If the page removes our element or attributes while it loads, put them back.

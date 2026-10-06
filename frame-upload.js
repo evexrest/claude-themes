@@ -92,7 +92,7 @@ document.getElementById("border-save").addEventListener("click", async () => {
 });
 
 document.getElementById("border-remove").addEventListener("click", async () => {
-    const saved = await chrome.storage.local.get(defaults);
+    const saved = await readSettings();
     const change = { frameImage: null, frameSlice: null };
     // Anything that was using the removed frame goes back to no border.
     for (const key of ["frameSidebar", "frameMain", "frameAll"]) {

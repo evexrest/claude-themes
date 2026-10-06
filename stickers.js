@@ -8,7 +8,7 @@ const maxStickerBytes = 12 * 1024 * 1024;
 // The chosen file as text that can be stored, exactly as it is, so a GIF keeps moving.
 let stickerData = null;
 // The id the chosen file was saved under, once it has been, so that putting the
-// same picture on both sides saves it only once.
+// same picture on the page more than once saves it only once.
 let stickerId = null;
 
 document.getElementById("sticker-file").addEventListener("change", (event) => {
@@ -51,35 +51,40 @@ function stickerThumbnail() {
     return small.toDataURL("image/png");
 }
 
-// Keep the picture and show it on one side. `key` is "stickerLeft" or "stickerRight".
-async function saveSticker(key, sideName) {
-    const change = { [key]: stickerId, enabled: true };
+// Keep the picture, and put it on one side of the chat ("left" or "right"), in
+// front of any pictures that are there already.
+async function saveSticker(side) {
+    const saved = await readSettings();
+    const id = stickerId || newId();
+    const change = {};
 
     if (!stickerId) {
-        const id = Date.now().toString(36);
-        const saved = await chrome.storage.local.get({ stickers: [] });
         change[stickerKey(id)] = stickerData;
         change.stickers = [...saved.stickers, { id: id, thumb: stickerThumbnail() }];
-        change[key] = id;
+    }
+    const placed = placedWith(saved.placed, id, side);
+    if (placed) {
+        change.placed = placed;
+        change.enabled = true;
     }
 
     try {
         await chrome.storage.local.set(change);
-        stickerId = change[key];
-        stickerStatus.textContent = "Saved, and showing on the " + sideName +
-            ". Move and resize it in the editor, which the toolbar icon opens.";
+        stickerId = id;
+        stickerStatus.textContent = placed
+            ? "Saved, and added on the " + side + ". Move and resize it in the editor, which the toolbar icon opens."
+            : "Saved to your side pictures, but not put on the page: there are already " + mostPlaced +
+                " pictures beside the chat, which is the most there can be. Take one off in the editor first.";
     } catch (error) {
         stickerStatus.textContent = "Could not save: " + error.message;
     }
 }
 
-document.getElementById("sticker-left").addEventListener("click", () => {
-    saveSticker("stickerLeft", "left");
-});
-
-document.getElementById("sticker-right").addEventListener("click", () => {
-    saveSticker("stickerRight", "right");
-});
+for (const side of ["left", "right"]) {
+    document.getElementById("sticker-" + side).addEventListener("click", () => {
+        saveSticker(side);
+    });
+}
 
 // A link to this page ending in #sides comes straight to this part.
 if (location.hash === "#sides") {

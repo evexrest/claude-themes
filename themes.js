@@ -1,24 +1,24 @@
 // Part of the editor: saving the whole theme to a file, loading one, putting
 // everything back to Claude's own, and the note shown the first time the editor is
 // opened. Loaded after editor.js, whose `state`, `save`, `say`, `ask`, `byId`,
-// `openPicture`, `drawn` and `showLibrary` it uses, with `defaults`, `imageKey`,
-// `stickerKey` and `newId` from settings.js.
+// `sides`, `openPicture`, `drawn` and `showLibrary` it uses, with `defaults`,
+// `imageKey`, `stickerKey`, `newId`, `mostPlaced`, `placedLimits` and
+// `placedFromOld` from settings.js.
 
 // A theme file is plain JSON:
-//   { claudeThemes: 1, madeWith: "0.18.0", settings: { ... }, pictures: { ... } }
+//   { claudeThemes: 2, madeWith: "0.20.0", settings: { ... }, pictures: { ... } }
 // `settings` holds every setting of the look. `pictures` holds the files that look
-// uses, as stored text, under the names the settings call them by: "main",
-// "sidebar", "left" and "right". The two lists of saved pictures are not settings
-// of the look and are left out.
-const themeFormat = 1;
+// uses, as stored text: the two backgrounds under "main" and "sidebar", and under
+// "side" the pictures beside the chat, each under the id the settings call it by.
+// The two lists of saved pictures are not settings of the look and are left out.
+//
+// Format 1 is from before 0.20.0, when each side had one picture. Its settings are
+// the old ones (see placedFromOld in settings.js) and its two side pictures are
+// under "left" and "right". It still loads.
+const themeFormat = 2;
 const notInAThemeFile = ["images", "stickers"];
-// Where a theme's pictures go: which setting names each one, and which kind it is.
-const themePictures = {
-    main: { setting: "imageId", kind: "image" },
-    sidebar: { setting: "sidebarImageId", kind: "image" },
-    left: { setting: "stickerLeft", kind: "sticker" },
-    right: { setting: "stickerRight", kind: "sticker" }
-};
+// The setting that names each of the two backgrounds' pictures.
+const themePictures = { main: "imageId", sidebar: "sidebarImageId" };
 const largestPicture = 36 * 1024 * 1024;
 
 // The theme as it is now, ready to be written to a file.
@@ -33,19 +33,23 @@ async function themeFile() {
     // Only the pictures that are showing: a background that is a preset has none.
     const showing = {
         main: state.preset === null,
-        sidebar: state.sidebarMode === "own" && state.sidebarPreset === null,
-        left: true,
-        right: true
+        sidebar: state.sidebarMode === "own" && state.sidebarPreset === null
     };
     const pictures = {};
+    const kept = async (key) => (await chrome.storage.local.get(key))[key];
     for (const name of Object.keys(themePictures)) {
-        const id = state[themePictures[name].setting];
-        if (id && showing[name]) {
-            const key = themePictures[name].kind === "image" ? imageKey(id) : stickerKey(id);
-            const kept = await chrome.storage.local.get(key);
-            if (kept[key]) {
-                pictures[name] = kept[key];
-            }
+        const id = state[themePictures[name]];
+        const data = id && showing[name] ? await kept(imageKey(id)) : null;
+        if (data) {
+            pictures[name] = data;
+        }
+    }
+    // A picture that is beside the chat more than once is in the file once.
+    pictures.side = {};
+    for (const id of new Set(state.placed.map((item) => item.id))) {
+        const data = await kept(stickerKey(id));
+        if (data) {
+            pictures.side[id] = data;
         }
     }
     return { claudeThemes: themeFormat, madeWith: filesVersion, settings: settings, pictures: pictures };
@@ -54,13 +58,14 @@ async function themeFile() {
 // One setting from a theme file, checked against the setting's default: the same
 // kind of value, or nothing at all where the default is nothing. Anything else,
 // and anything this version does not know, is left out, so a file from a stranger
-// can only ever set what the editor itself could have set.
+// can only ever set what the editor itself could have set. The list of pictures
+// beside the chat is checked on its own, by soundPlaced.
 function soundSetting(key, value) {
     if (!(key in defaults) || notInAThemeFile.includes(key)) {
         return false;
     }
     if (value === null) {
-        return defaults[key] === null || /Id$|^sticker(Left|Right)$|^preset$|Preset$|Color$|^frame(Image|Slice)$/.test(key);
+        return defaults[key] === null || /Id$|^preset$|Preset$|Color$|^frame(Image|Slice)$/.test(key);
     }
     if (/Color$/.test(key)) {
         return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
@@ -81,6 +86,38 @@ function soundSetting(key, value) {
     return key === "frameSlice" && JSON.stringify(value).length < 200;
 }
 
+// The pictures beside the chat, from a theme file: no more than there can be, each
+// on a side, with every number between the least and the most the editor allows.
+// One with anything wrong is left out, and so is anything in one that this version
+// does not know. They have no keys yet: loadTheme gives each a new one. Returns
+// null when the file has no such list.
+function soundPlaced(value) {
+    if (!Array.isArray(value)) {
+        return null;
+    }
+    const sound = (item) => item !== null && typeof item === "object" &&
+        typeof item.id === "string" && item.id.length <= 200 && sides.includes(item.side) &&
+        Object.keys(placedLimits).every((what) => {
+            const [least, most] = placedLimits[what];
+            return typeof item[what] === "number" && item[what] >= least && item[what] <= most;
+        });
+    return value.filter(sound).slice(0, mostPlaced).map((item) => ({
+        id: item.id, side: item.side, size: item.size, position: item.position, opacity: item.opacity, shift: item.shift
+    }));
+}
+
+// A format 1 file's settings and pictures, as a format 2 file would hold them: the
+// picture each side had becomes one of a list, and its file is named by its side.
+function fromFormatOne(file) {
+    const settings = { ...file.settings };
+    // A file that says nothing about the sides leaves them as they are.
+    if ("stickerLeft" in settings || "stickerRight" in settings) {
+        settings.placed = placedFromOld(settings).map((item) => ({ ...item, id: item.side }));
+    }
+    const pictures = file.pictures || {};
+    return { settings: settings, pictures: { main: pictures.main, sidebar: pictures.sidebar, side: { left: pictures.left, right: pictures.right } } };
+}
+
 // Take in the text of a theme file: keep its pictures in the library, then switch
 // to its settings in one step, which Undo takes back. Returns what to tell the user.
 async function loadTheme(text) {
@@ -90,47 +127,51 @@ async function loadTheme(text) {
     } catch (error) {
         return "That file is not a theme file.";
     }
-    if (!file || file.claudeThemes !== themeFormat || typeof file.settings !== "object" || file.settings === null) {
+    if (!file || ![1, themeFormat].includes(file.claudeThemes) || typeof file.settings !== "object" || file.settings === null) {
         return file && file.claudeThemes > themeFormat
             ? "That theme was made with a newer version of Claude Themes. Update the extension to load it."
             : "That file is not a theme file.";
     }
+    const { settings, pictures } = file.claudeThemes === 1 ? fromFormatOne(file) : { settings: file.settings, pictures: file.pictures || {} };
 
     const change = {};
-    for (const key of Object.keys(file.settings)) {
-        if (soundSetting(key, file.settings[key])) {
-            change[key] = file.settings[key];
+    for (const key of Object.keys(settings)) {
+        if (soundSetting(key, settings[key])) {
+            change[key] = settings[key];
         }
     }
 
-    // Each picture is kept under a new id of its own, and the setting that named
-    // it is pointed at that. A setting whose picture did not come with the file
-    // would point at nothing, so it is emptied.
+    // Each picture is kept under a new id of its own. `keep` returns that id, or
+    // null for anything that is not a picture.
     const added = { images: [], stickers: [] };
     const files = {};
-    for (const name of Object.keys(themePictures)) {
-        const place = themePictures[name];
-        const data = file.pictures && file.pictures[name];
-        if (!(place.setting in change) || change[place.setting] === null) {
-            continue;
-        }
-        change[place.setting] = null;
+    const keep = async (data, kind) => {
         if (typeof data !== "string" || !data.startsWith("data:image/") || data.length > largestPicture) {
-            continue;
+            return null;
         }
         try {
             const picture = await openPicture(data);
             const id = newId();
-            if (place.kind === "image") {
+            if (kind === "image") {
                 files[imageKey(id)] = data;
                 added.images.push({ id: id, thumb: drawn(picture, 240, "image/jpeg", 0.7), animated: data.startsWith("data:image/gif") });
             } else {
                 files[stickerKey(id)] = data;
                 added.stickers.push({ id: id, thumb: drawn(picture, 96, "image/png") });
             }
-            change[place.setting] = id;
+            return id;
         } catch (error) {
-            // Not a picture after all: that part of the theme is left empty.
+            return null;
+        }
+    };
+
+    // The setting that named a background's picture is pointed at its new id. One
+    // whose picture did not come with the file would point at nothing, so it is
+    // emptied.
+    for (const name of Object.keys(themePictures)) {
+        const setting = themePictures[name];
+        if (setting in change && change[setting] !== null) {
+            change[setting] = await keep(pictures[name], "image");
         }
     }
     // A background with no picture falls back to a preset rather than to nothing.
@@ -139,6 +180,20 @@ async function loadTheme(text) {
     }
     if (change.sidebarPreset === null && !change.sidebarImageId) {
         change.sidebarPreset = defaults.sidebarPreset;
+    }
+
+    // The same for the pictures beside the chat, which may show one picture more
+    // than once. One whose picture did not come with the file is left out.
+    const placed = soundPlaced(settings.placed);
+    if (placed) {
+        const side = pictures.side !== null && typeof pictures.side === "object" ? pictures.side : {};
+        const ids = new Map();
+        for (const item of placed) {
+            if (!ids.has(item.id)) {
+                ids.set(item.id, await keep(Object.hasOwn(side, item.id) ? side[item.id] : null, "sticker"));
+            }
+        }
+        change.placed = placed.filter((item) => ids.get(item.id)).map((item) => ({ key: newId(), ...item, id: ids.get(item.id) }));
     }
 
     try {
@@ -241,9 +296,10 @@ function showThemes() {
             say(`${theme.name} is on. Undo goes back to the look you had.`);
         });
         row.appendChild(button);
-        // Marked while every one of its settings is as the theme left it.
+        // Marked while every one of its settings is as the theme left it. (Compared
+        // as text, because one of them is a list: no pictures beside the chat.)
         const mark = () => {
-            press(button, Object.keys(change).every((key) => state[key] === change[key]));
+            press(button, Object.keys(change).every((key) => JSON.stringify(state[key]) === JSON.stringify(change[key])));
         };
         updaters.push(mark);
         mark();

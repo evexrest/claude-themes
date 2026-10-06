@@ -2,11 +2,18 @@
  "loaded": "yes",
  "iconScript": "background.js",
  "shortcut": "_execute_action = ⌥⇧E",
+ "anEarlierVersionsSettings": "saved",
  "claudeTab": {
   "address": "https://claude.ai/chat/demo",
   "themed": "on",
   "sidebar": true,
   "editor": false
+ },
+ "itsPictureIsStillShown": {
+  "onThePage": [
+   "left 338,227,140,175 layer -1 opacity 0.9"
+  ],
+  "inStorage": "(no list saved)"
  },
  "iconClick": "clicked",
  "editorOverThePage": {
@@ -32,18 +39,41 @@
  "themeMidnight": "midnight #f5f0e6 1",
  "pageShowsMidnight": "midnight wash, text #f5f0e6",
  "themeUndone": "dusk null",
+ "listIsSavedOnceItChanges": {
+  "inStorage": "left old 140/30/0.9/0",
+  "onThePage": [
+   "left 338,227,140,175 layer -1 opacity 0.9"
+  ]
+ },
  "chooseOcean": "ocean",
  "pageShowsOcean": "radial-gradient(circle at 25% 85%, rgba(150,",
  "dropOnTheRight": {
-  "kept": 1,
-  "onTheRight": true,
-  "handleAt": "1310,567,180,144",
+  "kept": 2,
+  "inStorage": "left old 140/30/0.9/0, right dropped 180/85/1/0",
+  "handles": [
+   "left 338,227,140,175",
+   "right 1310,567,180,144 outlined"
+  ],
   "said": "Added. It is kept under Side pictures."
  },
- "pageShowsThePicture": {
-  "shown": "block",
-  "at": "1310,567,180,144"
+ "pageShowsThePicture": [
+  "left 338,227,140,175 layer -2 opacity 0.9",
+  "right 1310,567,180,144 layer -1 opacity 1"
+ ],
+ "addASecond": {
+  "inStorage": "left old 140/30/0.9/0, right dropped 180/85/1/0, right dropped 180/73/1/0",
+  "handles": [
+   "left 338,227,140,175",
+   "right 1310,567,180,144",
+   "right 1310,495,180,144 outlined"
+  ],
+  "panel": "Pictures on the right"
  },
+ "pageShowsBoth": [
+  "left 338,227,140,175 layer -3 opacity 0.9",
+  "right 1310,567,180,144 layer -2 opacity 1",
+  "right 1310,495,180,144 layer -1 opacity 1"
+ ],
  "windowsWithARealMouse": {
   "libraryFirst": "520,505,656,296",
   "afterDraggingTitleBar": "300,245,656,296",
@@ -56,13 +86,13 @@
   "fileHasSettings": true,
   "saveSaid": "Saved as claude-theme.json in your downloads folder.",
   "resetAsksInsideTheEditor": true,
-  "fileWritten": "format 1"
+  "fileWritten": "format 2"
  },
  "done": "clicked",
  "windowsRememberedNextTime": "210,245,886,406",
  "afterDone": {
   "editor": false,
-  "stillThemed": true
+  "stillThemed": 2
  },
  "kindsOfPage": {
   "aChat": "on",

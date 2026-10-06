@@ -91,11 +91,20 @@ try {
   const clickIconOn = (which) => run(icon, `(async () => { const tabs = await chrome.tabs.query({}); const claudeTab = (t) => (t.url || t.pendingUrl || "").startsWith("https://claude.ai/"); const tab = tabs.find((t) => ${JSON.stringify(which)} === "claude" ? claudeTab(t) : !claudeTab(t)); if (!tab) return "no such tab"; await chrome.tabs.update(tab.id, { active: true }); chrome.action.onClicked.dispatch(tab); return "clicked"; })()`);
   const editorFrames = async () => (await targets()).filter((t) => t.url.startsWith(base + "editor.html?on=page")).length;
 
+  // What a version before 0.20.0 left in storage: one picture for the left side, in the old settings, and no list of pictures.
+  found.anEarlierVersionsSettings = await run(icon, `(async () => { const c = new OffscreenCanvas(120, 150), x = c.getContext("2d"); x.fillStyle = "#2f6b3f"; x.beginPath(); x.arc(60, 75, 55, 0, 7); x.fill();
+    const blob = await c.convertToBlob({ type: "image/png" }); const data = await new Promise((ok) => { const reader = new FileReader(); reader.onload = () => ok(reader.result); reader.readAsDataURL(blob); });
+    await chrome.storage.local.set({ stickers: [{ id: "old", thumb: data }], "sticker-old": data, stickerLeft: "old", stickerLeftSize: 140, stickerPosition: 30, stickerOpacity: 0.9 }); return "saved"; })()`);
+  // The pictures beside the chat, as the page shows them and as storage holds them.
+  const onThePage = `[...document.querySelectorAll(".claude-sticker")].map((p) => { const b = p.getBoundingClientRect(); return p.dataset.side + " " + (p.style.display === "none" ? "hidden" : [b.left, b.top, b.width, b.height].map(Math.round).join(",")) + " layer " + p.style.zIndex + " opacity " + p.style.opacity; })`;
+  const inStorage = `chrome.storage.local.get(["placed", "stickers"]).then((kept) => "placed" in kept ? kept.placed.map((p) => p.side + " " + (p.id === "old" ? "old" : p.id === kept.stickers[kept.stickers.length - 1].id ? "dropped" : "?") + " " + [p.size, p.position, p.opacity, p.shift].join("/")).join(", ") || "(none)" : "(no list saved)")`;
+
   // ----- a Claude tab -----
   const claudeTab = await send("Target.createTarget", { url: "https://claude.ai/chat/demo" });
   const page = await attach(claudeTab.targetId);
   await sleep(2500);
   found.claudeTab = await run(page, `({ address: location.href, themed: document.documentElement.getAttribute("data-wallpaper"), sidebar: !!document.querySelector(".dframe-sidebar"), editor: !!document.getElementById("claude-themes-editor") })`);
+  found.itsPictureIsStillShown = { onThePage: await run(page, onThePage), inStorage: await run(icon, inStorage) };
 
   found.iconClick = await clickIconOn("claude"); await sleep(2500);
   found.editorOverThePage = await run(page, `(() => { const f = document.getElementById("claude-themes-editor"); if (!f) return "no editor on the page"; const b = f.getBoundingClientRect(), s = getComputedStyle(f);
@@ -107,21 +116,28 @@ try {
     const editor = await attach(frameTarget.targetId);
     await sleep(600);
     const at = `(id) => { const e = document.getElementById(id); return e.hidden ? "hidden" : [e.style.left, e.style.top, e.style.width, e.style.height].map((v) => Math.round(parseFloat(v))).join(","); }`;
+    // The grips over the pictures beside the chat, in the order they were made.
+    const handles = `[...document.querySelectorAll(".grip")].map((e) => e.dataset.side + " " + (e.hidden ? "hidden" : [e.style.left, e.style.top, e.style.width, e.style.height].map((v) => Math.round(parseFloat(v))).join(",")) + (e.classList.contains("selected") ? " outlined" : ""))`;
     found.insideTheEditor = await run(editor, `(() => { const at = ${at}; return { mode: document.body.className, themeOn: document.getElementById("enabled").checked, sidebar: at("zone-sidebar"), main: at("zone-main"), left: at("zone-left"), right: at("zone-right"),
       seeThrough: getComputedStyle(document.body).backgroundColor, backgrounds: document.getElementById("presets").children.length, themes: document.getElementById("themes").children.length, foot: document.getElementById("about").textContent.replace(/\\s+/g, " ").trim().replace(/\\d+\\.\\d+\\.\\d+/, "<version>"), oldCopyNotice: !document.getElementById("stale").hidden }; })()`);
 
     found.themeMidnight = await run(editor, `(async () => { document.querySelector('#themes .tile[data-theme="midnight"]').click(); await new Promise((r) => setTimeout(r, 500)); const kept = await chrome.storage.local.get(["preset", "textColor", "opacity"]); return kept.preset + " " + kept.textColor + " " + kept.opacity; })()`);
     found.pageShowsMidnight = await run(page, `(document.getElementById("claude-wallpaper").style.backgroundImage.includes("5, 7, 13") ? "midnight wash" : "another background") + ", text " + getComputedStyle(document.documentElement).getPropertyValue("--ct-text").trim()`);
     found.themeUndone = await run(editor, `(async () => { document.getElementById("undo").click(); await new Promise((r) => setTimeout(r, 500)); const kept = await chrome.storage.local.get({ preset: "dusk", textColor: null }); return kept.preset + " " + kept.textColor; })()`);
+    // The ready-made theme took every side picture off and Undo put the old one back: the list is saved from now on.
+    found.listIsSavedOnceItChanges = { inStorage: await run(icon, inStorage), onThePage: await run(page, onThePage) };
     found.chooseOcean = await run(editor, `(async () => { document.querySelector('.tile[data-id="ocean"]').click(); await new Promise((r) => setTimeout(r, 500)); return (await chrome.storage.local.get(["preset"])).preset; })()`);
     found.pageShowsOcean = await run(page, `document.getElementById("claude-wallpaper").style.backgroundImage.slice(0, 44)`);
 
     found.dropOnTheRight = await run(editor, `(async () => { const c = document.createElement("canvas"); c.width = 300; c.height = 240; const x = c.getContext("2d"); x.fillStyle = "#d97757"; x.beginPath(); x.arc(150, 120, 110, 0, 7); x.fill();
       const file = new File([await new Promise((ok) => c.toBlob(ok, "image/png"))], "drop.png", { type: "image/png" }); const dt = new DataTransfer(); dt.items.add(file);
       const zone = document.getElementById("zone-right"); for (const type of ["dragenter", "dragover", "drop"]) zone.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: dt }));
-      await new Promise((r) => setTimeout(r, 1500)); const saved = await chrome.storage.local.get(["stickers", "stickerRight"]); const at = ${at};
-      return { kept: saved.stickers.length, onTheRight: saved.stickerRight === saved.stickers[0].id, handleAt: at("grip-right"), said: document.getElementById("toast").textContent }; })()`);
-    found.pageShowsThePicture = await run(page, `(() => { const p = document.querySelector('.claude-sticker[data-side="right"]'); if (!p) return "no picture on the page"; const b = p.getBoundingClientRect(); return { shown: p.style.display, at: [b.left, b.top, b.width, b.height].map(Math.round).join(",") }; })()`);
+      await new Promise((r) => setTimeout(r, 1500)); return { kept: (await chrome.storage.local.get("stickers")).stickers.length, inStorage: await ${inStorage}, handles: ${handles}, said: document.getElementById("toast").textContent }; })()`);
+    found.pageShowsThePicture = await run(page, onThePage);
+    // A second one on the same side: clicking a saved side picture adds it in front, a little higher.
+    found.addASecond = await run(editor, `(async () => { const tiles = document.querySelectorAll("#stickers .tile"); tiles[tiles.length - 1].click(); await new Promise((r) => setTimeout(r, 1200));
+      return { inStorage: await ${inStorage}, handles: ${handles}, panel: document.getElementById("side-title").textContent }; })()`);
+    found.pageShowsBoth = await run(page, onThePage);
     await picture(page, "real-page.png");
 
     // Move and resize a window with the mouse itself, as a person would.
@@ -154,7 +170,7 @@ try {
     await clickIconOn("claude"); await sleep(2000);
     const again = (await targets()).find((t) => t.url.startsWith(base + "editor.html?on=page"));
     if (again) { const second = await attach(again.targetId); await sleep(500); found.windowsRememberedNextTime = await run(second, `(() => { const b = document.getElementById("library").getBoundingClientRect(); return [b.left, b.top, b.width, b.height].map(Math.round).join(","); })()`); await run(second, `document.getElementById("done").click()`); await sleep(500); }
-    found.afterDone = await run(page, `({ editor: !!document.getElementById("claude-themes-editor"), stillThemed: !!document.querySelector('.claude-sticker[data-side="right"]') })`);
+    found.afterDone = await run(page, `({ editor: !!document.getElementById("claude-themes-editor"), stillThemed: document.querySelectorAll('.claude-sticker[data-side="right"]').length })`);
   }
 
   // ----- pages that are not chats, and a chat that is no longer built as expected -----

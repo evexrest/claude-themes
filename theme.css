@@ -76,10 +76,11 @@ html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-c
     --cds-scroll-fade-strip-color: transparent;
 }
 
-/* The pictures beside the chat. content.js creates one for each side, puts it in
-   the page area and works out where the empty space is. They are drawn above the
-   page area's own background and below everything in it, so a picture bigger than
-   the empty space carries on behind the chat and never sits on top of it. */
+/* The pictures beside the chat. content.js creates one for each, puts it in the
+   page area and works out where the empty space is. They are drawn above the page
+   area's own background and below everything in it, so a picture bigger than the
+   empty space carries on behind the chat and never sits on top of it. content.js
+   gives each its own layer, all of them below zero: -1 for the one in front. */
 .claude-sticker {
     position: fixed;
     z-index: -1;

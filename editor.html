@@ -170,9 +170,8 @@
                         <span class="drop">Drop here for the right side</span>
                     </div>
 
-                    <!-- Over a side picture when its side is selected: drag to move, corner to resize. -->
-                    <div class="grip" id="grip-left" data-side="left" hidden><i class="handle"></i></div>
-                    <div class="grip" id="grip-right" data-side="right" hidden><i class="handle"></i></div>
+                    <!-- editor.js adds a grip here over each picture beside the chat: drag to
+                         move, corner to resize. -->
                 </div>
             </div>
 
@@ -361,39 +360,47 @@
                 <button class="wide" id="choose-frame-side">Upload your own frame</button>
             </div>
 
-            <!-- A picture beside the chat, on the left or the right -->
+            <!-- The pictures beside the chat, on the left or the right -->
 
             <div class="panel" id="panel-side" hidden>
                 <h2 id="side-title"></h2>
-                <div class="tiles small" id="side-choices"></div>
 
-                <p class="note first">
-                    Drag the picture on the screen to move it anywhere in the chat window,
-                    and drag its corner to resize it. Wherever it overlaps the chat it lies
-                    behind it, under the text and the message box.
+                <p class="note first" id="side-empty">
+                    No picture on this side yet. Click one under Side pictures in the
+                    Library, or drop one from your computer onto this side.
                 </p>
-                <button class="wide" id="sticker-shift-reset">Put it back beside the chat</button>
 
-                <label class="slider" for="sticker-size">
-                    Size
-                    <span id="sticker-size-value"></span>
-                </label>
-                <input type="range" id="sticker-size" min="60" max="800">
+                <!-- The picture that is chosen on this side. -->
+                <div id="side-chosen">
+                    <p class="note first">
+                        Click a picture on the screen to choose it. Drag it to move it
+                        anywhere in the chat window, and drag its corner to resize it.
+                        Wherever it overlaps the chat it lies behind it, under the text and
+                        the message box.
+                    </p>
+                    <button class="wide" id="sticker-shift-reset">Put it back beside the chat</button>
 
-                <label class="slider" for="sticker-position">
-                    Height on the page
-                    <span id="sticker-position-value"></span>
-                </label>
-                <input type="range" id="sticker-position" min="0" max="100">
+                    <!-- editor.js sets the ends of these three, from placedLimits. -->
+                    <label class="slider" for="sticker-size">
+                        Size
+                        <span id="sticker-size-value"></span>
+                    </label>
+                    <input type="range" id="sticker-size">
 
-                <label class="slider" for="sticker-opacity">
-                    Opacity
-                    <span id="sticker-opacity-value"></span>
-                </label>
-                <input type="range" id="sticker-opacity" min="10" max="100">
+                    <label class="slider" for="sticker-position">
+                        Height on the page
+                        <span id="sticker-position-value"></span>
+                    </label>
+                    <input type="range" id="sticker-position">
 
-                <p class="note">These three are for this side's picture only.</p>
-                <button class="wide" id="side-match"></button>
+                    <label class="slider" for="sticker-opacity">
+                        Opacity
+                        <span id="sticker-opacity-value"></span>
+                    </label>
+                    <input type="range" id="sticker-opacity">
+
+                    <p class="note">These three are for the chosen picture only.</p>
+                </div>
             </div>
             </div>
         </aside>

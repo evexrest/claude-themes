@@ -187,7 +187,8 @@ body.dragging .grip {
     pointer-events: none;
 }
 
-/* Over a selected side picture: drag it to move it, drag the corner to resize it. */
+/* Over each picture beside the chat: drag it to move the picture, drag the corner
+   to resize it. editor.js makes one for each and stacks them as the pictures are. */
 .grip {
     position: absolute;
     box-sizing: border-box;
@@ -196,7 +197,7 @@ body.dragging .grip {
     touch-action: none;
 }
 
-/* A side picture can be dragged whether or not its side is selected. Its outline
+/* A side picture can be dragged whether or not it is the chosen one. Its outline
    and its corner show when it is, or when the mouse is over it. */
 .grip:hover,
 .grip.selected {
@@ -228,12 +229,12 @@ body.dragging .grip {
     background: #fff;
 }
 
-#grip-left .handle {
+.grip[data-side="left"] .handle {
     right: -2px;
     cursor: nwse-resize;
 }
 
-#grip-right .handle {
+.grip[data-side="right"] .handle {
     left: -2px;
     cursor: nesw-resize;
 }
@@ -967,10 +968,6 @@ input[type="text"] {
 
 input[type="text"] {
     margin-top: 8px;
-}
-
-#side-choices {
-    margin-bottom: 14px;
 }
 
 /* A warning that the text may be hard to read (readable.js). */

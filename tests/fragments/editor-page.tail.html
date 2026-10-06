@@ -9,7 +9,10 @@
   const classes = () => [...document.body.classList].join(" ");
   const heard = []; addEventListener("message", (e) => { if (e.data && e.data.claudeThemes !== "layout") heard.push(e.data.claudeThemes); });
   const tell = async (boxes) => { postMessage({ claudeThemes: "layout", boxes }, "*"); await wait(60); };
-  const page = { sidebar: { left: 0, top: 0, width: 288, height: 900 }, pane: { left: 296, top: 0, width: 1216, height: 900 }, column: { left: 520, top: 812, width: 768, height: 88 }, left: { left: 318, top: 600, width: 180, height: 225 }, right: null };
+  const page = { sidebar: { left: 0, top: 0, width: 288, height: 900 }, pane: { left: 296, top: 0, width: 1216, height: 900 }, column: { left: 520, top: 812, width: 768, height: 88 }, placed: { p1: { left: 318, top: 600, width: 180, height: 225 } } };
+  // The grip over one picture beside the chat, by the picture's key, and all of them from the back to the front.
+  const gripAt = (key) => { const e = grips.get(key); return !e || e.hidden ? "hidden" : [e.style.left, e.style.top, e.style.width, e.style.height].map((v) => Math.round(parseFloat(v))).join(","); };
+  const gripsNow = () => store.placed.map((p) => p.key + " " + gripAt(p.key) + (grips.get(p.key)?.classList.contains("selected") ? " outlined" : "")).join("; ") || "(none)";
 
   r.start = { classes: classes(), previewGone: !el("preview"), done: !el("done").hidden, lightDarkSwitch: !el("mode-light").parentElement.hidden, openClaude: !el("open-claude").hidden,
     zonesBeforeThePageSpeaks: ["main", "sidebar", "left", "right"].map((z) => at("zone-" + z)).join(" | "), enabled: el("enabled").checked, tiles: el("presets").children.length };
@@ -19,16 +22,27 @@
   r.panels = { bar: box("bar"), library: box("library"), inspector: box("inspector"), window: innerWidth + "x" + innerHeight, pageBackground: getComputedStyle(document.body).backgroundColor, stageBackground: getComputedStyle(el("stage")).backgroundImage, panelBackground: getComputedStyle(el("library")).backgroundColor };
 
   el("zone-left").click(); await wait(60);
-  r.leftSelected = { grip: at("grip-left"), panel: !el("panel-side").hidden, dock: classes() };
+  r.leftSelected = { grip: gripAt("p1"), grips: gripsNow(), panel: !el("panel-side").hidden, dock: classes() };
   el("zone-right").click(); await wait(60);
-  r.rightSelected = { dock: classes(), inspector: box("inspector"), grip: at("grip-right") };
+  r.rightSelected = { dock: classes(), inspector: box("inspector"), grips: gripsNow() };
   el("zone-left").click(); await wait(60);
 
   // moving the real page's picture: the page says where it is, the editor saves the new height
   const point = (target, type, x, y) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, clientX: x, clientY: y }));
-  const before = store.stickerPosition ?? 85;
-  point(el("grip-left"), "pointerdown", 400, 700); point(el("grip-left"), "pointermove", 400, 500); point(el("grip-left"), "pointerup", 400, 500); await wait(60);
-  r.dragOnThePage = { position: before + " to " + store.stickerLeftPosition, sharedUntouched: store.stickerPosition ?? "default" };
+  const before = store.placed[0].position;
+  point(grips.get("p1"), "pointerdown", 400, 700); point(grips.get("p1"), "pointermove", 400, 500); point(grips.get("p1"), "pointerup", 400, 500); await wait(60);
+  r.dragOnThePage = { position: before + " to " + store.placed[0].position };
+
+  // a second picture on the page: no grip until the page says where it is, then one over each, the front one's on top
+  await chrome.storage.local.set({ placed: [...store.placed, { key: "p2", id: "s2", side: "left", size: 120, position: 60, opacity: 1, shift: 0 }] }); await wait(60);
+  r.aPictureThePageHasNotMeasuredYet = gripsNow();
+  await tell({ ...page, placed: { ...page.placed, p2: { left: 350, top: 500, width: 120, height: 150 } } });
+  const keyUnder = (x, y) => { const under = document.elementFromPoint(x, y); return [...grips].filter(([, grip]) => grip === under).map(([key]) => key).join("") || under.id || under.className; };
+  r.aGripOverEachPicture = { grips: gripsNow(), whereBothAre: keyUnder(400, 620), whereOnlyTheFirstIs: keyUnder(330, 800), handles: ["p1", "p2"].map((key) => getComputedStyle(grips.get(key).querySelector(".handle")).cursor).join(",") };
+  point(grips.get("p2"), "pointerdown", 400, 620); point(grips.get("p2"), "pointermove", 430, 620); point(grips.get("p2"), "pointerup", 430, 620); await wait(60);
+  r.draggingTheSecondOne = { shifts: store.placed.map((p) => p.key + " " + p.shift).join(", "), grips: gripsNow() };
+  await chrome.storage.local.set({ placed: store.placed.filter((p) => p.key !== "p2") }); await tell(page); await wait(200);
+  r.takenOffAgain = { grips: gripsNow(), inTheEditor: document.querySelectorAll(".grip").length };
 
   // dropping a file straight onto the page's sidebar
   const canvas = document.createElement("canvas"); canvas.width = 400; canvas.height = 300; canvas.getContext("2d").fillRect(0, 0, 400, 300);
@@ -42,8 +56,8 @@
   r.droppedOnTheSidebar = { images: store.images.length - n, sidebarMode: store.sidebarMode, usesIt: store.sidebarImageId === store.images[store.images.length - 1].id, classes: classes() };
 
   // a page with no sidebar and no message box (a settings page, or the sidebar collapsed)
-  await tell({ sidebar: null, pane: page.pane, column: null, left: null, right: null });
-  r.pageWithoutParts = ["main", "sidebar", "left", "right"].map((z) => at("zone-" + z)).join(" | ") + " grip " + at("grip-left");
+  await tell({ sidebar: null, pane: page.pane, column: null, placed: {} });
+  r.pageWithoutParts = ["main", "sidebar", "left", "right"].map((z) => at("zone-" + z)).join(" | ") + " grip " + gripAt("p1");
   await tell(page);
 
   // ----- the windows: moved by the title bar, resized by the edges, like any window -----

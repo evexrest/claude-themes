@@ -6,8 +6,9 @@
 // selected. They can be moved, resized, folded away and closed like any window.
 // Every change to the theme is saved straight away, and the page picks it up from
 // storage. `defaults`, `presets`,
-// `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey`, `newId`, `sideKey`,
-// `sideValue` and `filesVersion` come from settings.js.
+// `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey`, `newId`,
+// `readSettings`, `mostPlaced`, `placedLimits`, `placedWith` and `filesVersion`
+// come from settings.js.
 
 const preview = document.getElementById("preview");
 const screenBox = document.getElementById("screen");
@@ -23,10 +24,10 @@ const maxSavedWidth = 2560;
 const maxMovingBytes = 25 * 1024 * 1024;
 const maxStickerBytes = 12 * 1024 * 1024;
 
-// The parts of the screen that can be selected, and the setting that holds each
-// side's picture.
+// The parts of the screen that can be selected, and the two of them that are the
+// empty space beside the chat.
 const parts = ["main", "sidebar", "left", "right"];
-const sideKeys = { left: "stickerLeft", right: "stickerRight" };
+const sides = ["left", "right"];
 
 // The preview is drawn at the size of a real browser window, then shrunk to fit.
 // The address can ask for another size: editor.html?w=1512&h=860.
@@ -40,6 +41,8 @@ let state = { ...defaults };
 let part = "main";
 // The side a side picture goes to when neither side is selected.
 let lastSide = "right";
+// The key of the picture that was last chosen on each side. See chosenOn.
+const chosen = { left: null, right: null };
 let scale = 1;
 // Over the real page: where its parts are, as content.js last measured them.
 let pageBoxes = null;
@@ -82,18 +85,22 @@ function say(text) {
 
 // Save a change. `how` says what Undo should make of it: "step" is one step,
 // "flow" is one of many small changes from a slider or a drag, which together
-// make one step, and "none" is left out.
-function save(change, how = "step") {
+// make one step, and "none" is left out. `what` says what a flow is changing,
+// where the names of the settings do not: the pictures beside the chat are all
+// kept in one setting.
+function save(change, how = "step", what = "") {
     if (how !== "none") {
-        remember(change, how === "flow");
+        remember(change, how === "flow", what);
     }
     Object.assign(state, change);
     // Chrome can refuse to store a change (a full disk, a profile it cannot write to).
     // The page only ever shows what is stored, so the editor reads that back. Earlier
     // steps may have been refused too, so Undo starts again from here.
     chrome.storage.local.set(change).catch(async (error) => {
-        const asked = Object.fromEntries(Object.keys(change).map((key) => [key, defaults[key]]));
-        Object.assign(state, await chrome.storage.local.get(asked));
+        const kept = await readSettings();
+        for (const key of Object.keys(change)) {
+            state[key] = kept[key];
+        }
         forgetHistory();
         sync();
         say("Chrome could not save that change, so it was put back. " + error.message);
@@ -101,8 +108,8 @@ function save(change, how = "step") {
     sync();
 }
 
-function remember(change, flowing) {
-    const keys = Object.keys(change).sort().join(" ");
+function remember(change, flowing, what) {
+    const keys = Object.keys(change).sort().join(" ") + " " + what;
     const now = Date.now();
     const last = steps[steps.length - 1];
 
@@ -151,11 +158,54 @@ function forgetHistory() {
 // Select a part of the screen.
 function choose(name) {
     part = name;
-    if (name in sideKeys) {
+    if (sides.includes(name)) {
         lastSide = name;
     }
     sync();
     layout();
+}
+
+// The pictures on one side of the chat, from the back to the front.
+function placedOn(side) {
+    return state.placed.filter((item) => item.side === side);
+}
+
+// The picture that is chosen on one side: the one its sliders and the Delete key
+// work on. It is the one last picked there, or the one in front when that one has
+// gone or none has been picked. Null when the side has no picture.
+function chosenOn(side) {
+    const here = placedOn(side);
+    return here.find((item) => item.key === chosen[side]) || here[here.length - 1] || null;
+}
+
+// Change one of the pictures beside the chat. They are saved together, as one
+// list, so Undo is told which picture, and which of its values, a slider or a
+// drag is changing.
+function changePlaced(key, change, how = "step") {
+    const list = state.placed.map((item) => item.key === key ? { ...item, ...change } : item);
+    save({ placed: list }, how, key + " " + Object.keys(change).join(" "));
+}
+
+// Take one picture off the page. It stays in the library.
+function removePlaced(key) {
+    save({ placed: state.placed.filter((item) => item.key !== key) });
+}
+
+// What to say when there is no room beside the chat for another picture.
+const noRoom = `There are already ${mostPlaced} pictures beside the chat, which is the most there can be. Take one off to add another.`;
+
+// Put a saved side picture beside the chat, on one side and in front of the
+// others, and choose it. Returns false when there is no room for another.
+function placePicture(id, side) {
+    const list = placedWith(state.placed, id, side);
+    if (!list) {
+        say(noRoom);
+        return false;
+    }
+    chosen[side] = list[list.length - 1].key;
+    save({ placed: list, enabled: true });
+    choose(side);
+    return true;
 }
 
 // ---------- The controls on the right ----------
@@ -222,18 +272,24 @@ function readShape(id) {
     small.src = image.thumb;
 }
 
-// The same for one of a side picture's own settings (`what` is "Size", "Position"
-// or "Opacity"): the slider shows and changes it for whichever side is selected.
+// The same for one of the numbers of a picture beside the chat (`what` is "size",
+// "position" or "opacity"): the slider shows and changes it for the picture that is
+// chosen on the selected side, between the least and the most it may be.
 function sideSlider(id, what, shown, stored, slid) {
     const input = byId(id);
     const label = byId(id + "-value");
+    [input.min, input.max] = placedLimits[what].map(slid);
 
     input.addEventListener("input", () => {
-        save({ [sideKey(part, what)]: stored(Number(input.value)) }, "flow");
+        const item = chosenOn(part);
+        if (item) {
+            changePlaced(item.key, { [what]: stored(Number(input.value)) }, "flow");
+        }
     });
     updaters.push(() => {
-        if (part in sideKeys) {
-            input.value = slid(sideValue(state, part, what));
+        const item = chosenOn(part);
+        if (item) {
+            input.value = slid(item[what]);
             label.textContent = shown(Number(input.value));
         }
     });
@@ -386,15 +442,14 @@ function usedOn(place, kind, id) {
 }
 
 // Put a picture from the library onto a part of the screen. A side picture goes
-// beside the chat; anything else is a background, for the sidebar or the main page.
+// beside the chat, as one more picture there; anything else is a background, for
+// the sidebar or the main page, in place of the one it had. Returns false when it
+// could not be put there.
 function usePicture(kind, id, zone) {
     if (kind === "sticker") {
-        const side = zone in sideKeys ? zone : lastSide;
-        // A different picture starts in the usual place.
-        const back = state[sideKeys[side]] === id ? {} : { [sideKey(side, "Shift")]: null };
-        save({ [sideKeys[side]]: id, enabled: true, ...back });
-        choose(side);
-    } else if (zone === "sidebar") {
+        return placePicture(id, sides.includes(zone) ? zone : lastSide);
+    }
+    if (zone === "sidebar") {
         if (id === "none") {
             save({ sidebarMode: "plain" });
         } else if (kind === "preset") {
@@ -410,6 +465,7 @@ function usePicture(kind, id, zone) {
         save(kind === "preset" ? { preset: id, enabled: true } : { preset: null, imageId: id, enabled: true, ...zoom });
         choose("main");
     }
+    return true;
 }
 
 // One picture in the library. It can be clicked, or dragged onto the screen.
@@ -518,16 +574,16 @@ async function removeImage(id) {
 }
 
 async function removeSticker(id) {
-    if (!(await ask("Remove this picture from your saved pictures?", "Remove"))) {
+    const shows = (item) => item.id === id;
+    const question = "Remove this picture from your saved pictures?" + (state.placed.some(shows) ? " It will be taken off the page too." : "");
+    if (!(await ask(question, "Remove"))) {
         return;
     }
     const change = { stickers: state.stickers.filter((sticker) => sticker.id !== id) };
 
-    // Take it off whichever side was showing it.
-    for (const key of Object.values(sideKeys)) {
-        if (state[key] === id) {
-            change[key] = null;
-        }
+    // Every copy of it that is on the page goes too.
+    if (state.placed.some(shows)) {
+        change.placed = state.placed.filter((item) => !shows(item));
     }
     forgetHistory();
     save(change, "none");
@@ -562,30 +618,10 @@ function showLibrary() {
     stickerRow.replaceChildren();
     for (const sticker of state.stickers) {
         const button = tile("sticker", sticker.id, "", `url("${sticker.thumb}")`);
-        button.title = "Click to use it, or drag it beside the chat";
+        button.title = "Click to add it beside the chat, or drag it there";
         stickerRow.appendChild(removable(button, "Remove this picture", () => removeSticker(sticker.id)));
     }
     byId("stickers-empty").hidden = state.stickers.length > 0;
-
-    // The same pictures again in the side's own panel, with "None" first.
-    const sideRow = byId("side-choices");
-    sideRow.replaceChildren();
-    for (const sticker of [{ id: null, thumb: null }, ...state.stickers]) {
-        const button = document.createElement("button");
-        button.className = "tile";
-        button.dataset.side = sticker.id === null ? "" : sticker.id;
-        press(button, false);
-        if (sticker.thumb) {
-            button.style.backgroundImage = `url("${sticker.thumb}")`;
-            button.setAttribute("aria-label", "Saved side picture " + (state.stickers.indexOf(sticker) + 1));
-        } else {
-            button.textContent = "None";
-        }
-        button.addEventListener("click", () => {
-            save({ [sideKeys[part]]: sticker.id, enabled: true });
-        });
-        sideRow.appendChild(button);
-    }
 }
 
 // ---------- Adding pictures from the computer ----------
@@ -671,8 +707,9 @@ async function addFiles(files, zone, use) {
         say("Only pictures can be added: PNG, JPEG, GIF or WebP files.");
         return;
     }
-    const beside = zone in sideKeys;
+    const beside = sides.includes(zone);
     let kept = 0;
+    let used = true;
     let problem = "";
     say(pictures.length > 1 ? `Adding ${pictures.length} pictures…` : "Adding the picture…");
 
@@ -680,7 +717,7 @@ async function addFiles(files, zone, use) {
         try {
             const id = beside ? await keepSticker(file) : await keepImage(file);
             if (use && kept === 0) {
-                usePicture(beside ? "sticker" : "image", id, zone);
+                used = usePicture(beside ? "sticker" : "image", id, zone);
             }
             kept++;
         } catch (error) {
@@ -691,6 +728,8 @@ async function addFiles(files, zone, use) {
     const shelf = beside ? "Side pictures" : "Your images";
     if (problem) {
         say(kept > 0 ? `${problem} The others were added.` : problem);
+    } else if (!used) {
+        say(`Kept under ${shelf}, but not put on the page. ${noRoom}`);
     } else {
         say(kept > 1 ? `Added ${kept} pictures. They are kept under ${shelf}.` : `Added. It is kept under ${shelf}.`);
     }
@@ -718,7 +757,7 @@ function takes(zone) {
     if (!dragged) {
         return false;
     }
-    return dragged.kind === "files" || (dragged.kind === "sticker") === (zone in sideKeys);
+    return dragged.kind === "files" || (dragged.kind === "sticker") === sides.includes(zone);
 }
 
 function watchDrops() {
@@ -814,9 +853,10 @@ function inPreview(selector) {
 }
 
 // Where the parts of the page are: the sidebar, the chat window (`pane`), the
-// column the messages sit in, and each side's picture where one is showing. Each
-// is { left, top, width, height } or null. Over the real page, content.js measures
-// them and sends them here; in a tab, they are measured in the preview.
+// column the messages sit in and, in `placed`, each picture beside the chat, under
+// its key. Each is { left, top, width, height }, or null when it is not showing.
+// Over the real page, content.js measures them and sends them here; in a tab, they
+// are measured in the preview.
 function measure() {
     if (onPage) {
         return pageBoxes;
@@ -828,12 +868,16 @@ function measure() {
         const found = element.getBoundingClientRect();
         return { left: found.left, top: found.top, width: found.width, height: found.height };
     };
+    const page = preview.contentDocument;
+    const placed = {};
+    for (const element of page ? page.querySelectorAll(".claude-sticker") : []) {
+        placed[element.dataset.key] = box(element);
+    }
     return {
         sidebar: box(inPreview(".dframe-sidebar")),
         pane: box(inPreview(".dframe-pane-primary")),
         column: box(inPreview('[data-cds="ChatComposer"]')),
-        left: box(inPreview('.claude-sticker[data-side="left"]')),
-        right: box(inPreview('.claude-sticker[data-side="right"]'))
+        placed: placed
     };
 }
 
@@ -893,11 +937,25 @@ function layout() {
         width: pane.left + pane.width - column.left - column.width, height: pane.height - 48
     });
 
-    for (const side of Object.keys(sideKeys)) {
-        const shown = state.enabled && state[sideKeys[side]] !== null;
-        cover(byId("grip-" + side), shown && boxes[side]);
-        byId("grip-" + side).classList.toggle("selected", part === side);
+    // A grip over each picture beside the chat. They are stacked as the pictures
+    // are, so that a press lands on the one in front.
+    const shown = boxes.placed || {};
+    for (const [key, grip] of grips) {
+        if (!state.placed.some((item) => item.key === key)) {
+            grip.remove();
+            grips.delete(key);
+        }
     }
+    state.placed.forEach((item, index) => {
+        if (!grips.has(item.key)) {
+            grips.set(item.key, makeGrip(item.key));
+        }
+        const grip = grips.get(item.key);
+        cover(grip, state.enabled && shown[item.key]);
+        grip.style.zIndex = index + 1;
+        grip.dataset.side = item.side;
+        grip.classList.toggle("selected", part === item.side && chosenOn(item.side) === item);
+    });
     showStage(boxes.sidebar);
 }
 
@@ -985,19 +1043,38 @@ function watchPan(name, xKey, yKey) {
     }
 }
 
+// The grip over each picture beside the chat, under the picture's key.
+const grips = new Map();
+
+function makeGrip(key) {
+    const grip = document.createElement("div");
+    grip.className = "grip";
+    grip.hidden = true;
+    const handle = document.createElement("i");
+    handle.className = "handle";
+    grip.appendChild(handle);
+    byId("overlay").appendChild(grip);
+    watchGrip(grip, key);
+    return grip;
+}
+
 // Dragging a side picture on the screen moves it, up and down and sideways within
 // the chat window; dragging the corner nearest the chat resizes it.
-function watchGrip(grip) {
-    const side = grip.dataset.side;
+function watchGrip(grip, key) {
     let start = null;
 
     grip.addEventListener("pointerdown", (event) => {
-        // A picture can be picked up straight away; that selects its side.
-        if (part !== side) {
-            choose(side);
+        const item = state.placed.find((other) => other.key === key);
+        // Taken off the page a moment ago; its grip is about to go too.
+        if (!item) {
+            return;
         }
+        // A picture can be picked up straight away; that chooses it, and selects its side.
+        const side = item.side;
+        chosen[side] = key;
+        choose(side);
         const boxes = measure() || {};
-        const box = boxes[side];
+        const box = (boxes.placed || {})[key];
         const pane = boxes.pane;
         const column = boxes.column;
         if (!box || !pane || !column) {
@@ -1016,6 +1093,7 @@ function watchGrip(grip) {
             top: box.top,
             left: box.left,
             width: box.width,
+            side: side,
             resizing: event.target.classList.contains("handle"),
             highest: pane.top + 56,
             spare: pane.height - 56 - 12 - box.height,
@@ -1043,9 +1121,9 @@ function watchGrip(grip) {
 
         if (start.resizing) {
             // A picture that fits its space is centred there, so it grows on both sides.
-            const towardsChat = side === "left" ? across : -across;
+            const towardsChat = start.side === "left" ? across : -across;
             const grown = start.width < start.room ? towardsChat * 2 : towardsChat;
-            save({ [sideKey(side, "Size")]: clamp(Math.round(start.width + grown), 60, 800) }, "flow");
+            changePlaced(key, { size: clamp(Math.round(start.width + grown), ...placedLimits.size) }, "flow");
         } else {
             // Sideways anywhere in the chat window; up and down as far as there is
             // room. A direction it has not been moved in is left as it was.
@@ -1053,14 +1131,14 @@ function watchGrip(grip) {
             start.down = start.down || down !== 0;
             const change = {};
             if (start.across) {
-                change[sideKey(side, "Shift")] = Math.round(clamp(start.left + across, start.leftmost, start.rightmost) - start.usual);
+                change.shift = Math.round(clamp(start.left + across, start.leftmost, start.rightmost) - start.usual);
             }
             if (start.down && start.spare > 0) {
                 const share = (start.top + down - start.highest) / start.spare;
-                change[sideKey(side, "Position")] = clamp(Math.round(share * 100), 0, 100);
+                change.position = clamp(Math.round(share * 100), ...placedLimits.position);
             }
             if (Object.keys(change).length > 0) {
-                save(change, "flow");
+                changePlaced(key, change, "flow");
             }
         }
     });
@@ -1308,17 +1386,20 @@ function sync() {
         press(byId("part-" + name), name === part);
         byId("zone-" + name).classList.toggle("selected", name === part);
     }
-    for (const side of Object.keys(sideKeys)) {
-        byId("zone-" + side).classList.toggle("bare", state[sideKeys[side]] === null);
+    for (const side of sides) {
+        byId("zone-" + side).classList.toggle("bare", placedOn(side).length === 0);
     }
     // Over the real page the settings float; they move to the left when the
     // right-hand side is selected, so they never cover the part being changed.
     document.body.classList.toggle("dock-left", part === "right");
     byId("panel-main").hidden = part !== "main";
     byId("panel-sidebar").hidden = part !== "sidebar";
-    byId("panel-side").hidden = !(part in sideKeys);
-    byId("side-title").textContent = part === "left" ? "Picture on the left" : "Picture on the right";
-    byId("side-match").textContent = part === "left" ? "Make the right one match" : "Make the left one match";
+    // A side's settings are those of the picture that is chosen there.
+    const picked = chosenOn(part);
+    byId("panel-side").hidden = !sides.includes(part);
+    byId("side-title").textContent = part === "left" ? "Pictures on the left" : "Pictures on the right";
+    byId("side-empty").hidden = picked !== null;
+    byId("side-chosen").hidden = picked === null;
 
     byId("main-now").textContent = backgroundName(state.preset, state.imageId);
     byId("side-now").textContent = backgroundName(state.sidebarPreset, state.sidebarImageId);
@@ -1330,7 +1411,7 @@ function sync() {
     }
     byId("shift-reset").hidden = state.imageShiftX === 0 && state.imageShiftY === 0;
     byId("side-shift-reset").hidden = state.sidebarShiftX === 0 && state.sidebarShiftY === 0;
-    byId("sticker-shift-reset").hidden = !(part in sideKeys) || !sideValue(state, part, "Shift");
+    byId("sticker-shift-reset").hidden = picked === null || picked.shift === 0;
 
     // The main page's frame goes around the chat window ("separate", which leaves
     // the sidebar free to have its own) or around the whole window ("combined").
@@ -1350,22 +1431,18 @@ function sync() {
         const kind = button.dataset.kind;
         const id = button.dataset.id;
         if (kind === "sticker") {
-            press(button, part in sideKeys ? state[sideKeys[part]] === id : state.stickerLeft === id || state.stickerRight === id);
+            // On the selected side, or on either side when neither is selected.
+            press(button, state.placed.some((item) => item.id === id && (item.side === part || !sides.includes(part))));
         } else {
             press(button, usedOn(part === "sidebar" ? "sidebar" : "main", kind, id));
-        }
-    }
-    if (part in sideKeys) {
-        for (const button of byId("side-choices").children) {
-            press(button, (state[sideKeys[part]] || "") === button.dataset.side);
         }
     }
 
     const goes = {
         main: "the main page's background",
         sidebar: "the sidebar's picture",
-        left: "the picture on the left",
-        right: "the picture on the right"
+        left: "a picture on the left",
+        right: "a picture on the right"
     };
     byId("browse-for").textContent = "The first one becomes " + goes[part] + ".";
     byId("undo").disabled = steps.length === 0;
@@ -1373,7 +1450,7 @@ function sync() {
 }
 
 async function start() {
-    state = await chrome.storage.local.get(defaults);
+    state = await readSettings();
     windows = (await chrome.storage.local.get({ editorWindows: {} })).editorWindows;
 
     // Chrome reads this page fresh from the folder each time, but keeps the page
@@ -1393,8 +1470,9 @@ async function start() {
         save({ sidebarShiftX: 0, sidebarShiftY: 0 });
     });
     byId("sticker-shift-reset").addEventListener("click", () => {
-        if (part in sideKeys) {
-            save({ [sideKey(part, "Shift")]: 0 });
+        const item = chosenOn(part);
+        if (item) {
+            changePlaced(item.key, { shift: 0 });
         }
     });
     colours("text-swatches", "text-color", "textColor", textSwatches, "#ffffff");
@@ -1413,18 +1491,9 @@ async function start() {
     slider("frame-width-side", "frameSidebarWidth", pixels, same, same);
 
     // The pictures beside the chat.
-    sideSlider("sticker-size", "Size", pixels, same, same);
-    sideSlider("sticker-position", "Position", place, same, same);
-    sideSlider("sticker-opacity", "Opacity", percent, fraction, hundredths);
-    byId("side-match").addEventListener("click", () => {
-        const other = part === "left" ? "right" : "left";
-        const change = {};
-        for (const what of ["Size", "Position", "Opacity"]) {
-            change[sideKey(other, what)] = sideValue(state, part, what);
-        }
-        save(change);
-        say("The picture on the " + other + " now has the same size, height and opacity.");
-    });
+    sideSlider("sticker-size", "size", pixels, same, same);
+    sideSlider("sticker-position", "position", place, same, same);
+    sideSlider("sticker-opacity", "opacity", percent, fraction, hundredths);
 
     showFrames();
     showLibrary();
@@ -1477,15 +1546,12 @@ async function start() {
         } else if (command && key === "y" && !typing) {
             event.preventDefault();
             redo();
-        } else if ((key === "delete" || key === "backspace") && !typing && part in sideKeys && state[sideKeys[part]] !== null) {
-            // Takes the picture off this side. It stays in the library.
-            save({ [sideKeys[part]]: null });
+        } else if ((key === "delete" || key === "backspace") && !typing && chosenOn(part)) {
+            removePlaced(chosenOn(part).key);
         }
     });
 
     watchDrops();
-    watchGrip(byId("grip-left"));
-    watchGrip(byId("grip-right"));
 
     for (const id of windowIds) {
         makeWindow(id);

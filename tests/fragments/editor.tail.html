@@ -14,7 +14,14 @@
   const set = (id, v) => { el(id).value = v; el(id).dispatchEvent(new Event("input")); };
   const panels = () => ["main", "sidebar", "side"].filter((p) => !el("panel-" + p).hidden).join(",");
   const box = (e) => { const b = e.getBoundingClientRect(); return [b.left, b.top, b.width, b.height].map(Math.round).join(","); };
-  const picture = (side) => page.querySelector(`.claude-sticker[data-side="${side}"]`);
+  // One of the pictures beside the chat: its <img> in the preview, its grip in the editor, and what is saved about it.
+  const picture = (key) => [...page.querySelectorAll(".claude-sticker")].find((e) => e.dataset.key === key) || null;
+  const item = (key) => store.placed.find((p) => p.key === key);
+  const P = (key, id, side, more = {}) => ({ key, id, side, size: 180, position: 85, opacity: 1, shift: 0, ...more });
+  // The saved list, back to front, as "A left s1, B left s2": each placed picture gets a letter the first time it is seen.
+  const letters = new Map(); const letter = (key) => { if (!letters.has(key)) letters.set(key, String.fromCharCode(65 + letters.size)); return letters.get(key); };
+  const placedNow = () => store.placed.map((p) => letter(p.key) + " " + p.side + " " + p.id).join(", ") || "(none)";
+  const outlined = () => store.placed.filter((p) => grips.get(p.key) && grips.get(p.key).classList.contains("selected")).map((p) => letter(p.key)).join(",") || "(none)";
   const tileFor = (kind, id) => document.querySelector(`#library .tile[data-kind="${kind}"][data-id="${id}"]`);
   const selected = () => [...document.querySelectorAll(".zone.selected")].map((z) => z.id).join(",");
   const classes = () => [...document.body.classList].join(" ");
@@ -26,15 +33,18 @@
     previewSidebar: box(page.querySelector(".dframe-sidebar")), previewPane: box(page.querySelector(".dframe-pane-primary")), previewColumn: box(page.querySelector('[data-cds="ChatComposer"]')),
     zoneSidebarWidthInPreview: Math.round(parseFloat(el("zone-sidebar").style.width) / shrink), zoneLeftWidthInPreview: Math.round(parseFloat(el("zone-left").style.width) / shrink),
     tiles: { presets: el("presets").children.length, images: el("images").children.length, stickers: el("stickers").children.length },
-    previewWallpaper: page.documentElement.getAttribute("data-wallpaper"), previewLeftPicture: picture("left") ? box(picture("left")) : null, windows: ["bar", "library", "inspector"].map((w) => w + " " + getComputedStyle(el(w)).position + (el(w).querySelector(".titlebar") ? " titled" : "")).join(", ") };
+    previewWallpaper: page.documentElement.getAttribute("data-wallpaper"), previewLeftPicture: picture("p1") ? box(picture("p1")) : null, windows: ["bar", "library", "inspector"].map((w) => w + " " + getComputedStyle(el(w)).position + (el(w).querySelector(".titlebar") ? " titled" : "")).join(", ") };
 
   // ----- selecting parts of the screen -----
   el("zone-sidebar").click();
   r.sidebarSelected = { panels: panels(), parts: pressed(".parts button"), selected: selected(), browse: el("browse-for").textContent };
   el("zone-left").click(); await wait(200);
-  const grip = el("grip-left"), gb = grip.getBoundingClientRect(), sb = el("screen").getBoundingClientRect(), pb = picture("left").getBoundingClientRect();
-  r.leftSelected = { panels: panels(), title: el("side-title").textContent, selected: selected(), gripShown: !grip.hidden, gripRightHidden: el("grip-right").hidden,
-    gripOverPicture: [gb.left - sb.left - pb.left * shrink, gb.top - sb.top - pb.top * shrink, gb.width - pb.width * shrink, gb.height - pb.height * shrink].map((n) => Math.round(n)).join(","), sideChoices: pressed("#side-choices .tile") };
+  const grip = grips.get("p1"), gb = grip.getBoundingClientRect(), sb = el("screen").getBoundingClientRect(), pb = picture("p1").getBoundingClientRect();
+  r.leftSelected = { panels: panels(), title: el("side-title").textContent, selected: selected(), gripShown: !grip.hidden, grips: document.querySelectorAll(".grip").length, outlined: outlined(),
+    gripOverPicture: [gb.left - sb.left - pb.left * shrink, gb.top - sb.top - pb.top * shrink, gb.width - pb.width * shrink, gb.height - pb.height * shrink].map((n) => Math.round(n)).join(","), itsSettingsShown: !el("side-chosen").hidden, emptyNoteHidden: el("side-empty").hidden };
+  el("zone-right").click(); await wait(60);
+  r.rightSelectedWithNoPicture = { title: el("side-title").textContent, emptyNote: el("side-empty").hidden ? "" : el("side-empty").textContent.replace(/\s+/g, " ").trim(), itsSettingsShown: !el("side-chosen").hidden, bare: el("zone-right").classList.contains("bare") + "/" + el("zone-left").classList.contains("bare") };
+  el("zone-left").click(); await wait(60);
   el("part-main").click();
   r.backToMain = { panels: panels(), selected: selected(), gripShown: !grip.hidden };
 
@@ -47,15 +57,17 @@
   r.claudeOwnSidebar = { sidebarMode: store.sidebarMode, mainStill: store.preset };
   el("zone-main").click(); tileFor("image", "a").click(); await wait(40);
   r.imageOnMain = { preset: store.preset, imageId: store.imageId, showing: el("main-now").textContent, images: pressed("#images .tile") };
-  tileFor("sticker", "s2").click(); await wait(200);
-  r.stickerGoesToTheSideLastSelected = { left: store.stickerLeft, right: store.stickerRight ?? null, selected: selected(), panels: panels(), previewRight: !!picture("right") };
+  letter("p1"); tileFor("sticker", "s2").click(); await wait(200);
+  r.sidePictureIsAddedToTheSideLastSelected = { placed: placedNow(), heights: store.placed.map((p) => p.position).join(","), selected: selected(), panels: panels(), inPreview: page.querySelectorAll(".claude-sticker").length, grips: document.querySelectorAll(".grip").length, outlined: outlined(), library: pressed("#stickers .tile") };
 
   // ----- undo and redo -----
   r.historyOn = { undoOff: el("undo").disabled, redoOff: el("redo").disabled };
-  el("undo").click(); await wait(30);
-  r.undone = { left: store.stickerLeft, redoOff: el("redo").disabled };
-  el("redo").click(); await wait(30);
-  r.redone = { left: store.stickerLeft };
+  el("undo").click(); await wait(200);
+  r.undone = { placed: placedNow(), inPreview: page.querySelectorAll(".claude-sticker").length, outlined: outlined(), redoOff: el("redo").disabled };
+  el("redo").click(); await wait(200);
+  r.redone = { placed: placedNow(), inPreview: page.querySelectorAll(".claude-sticker").length, outlined: outlined() };
+  tileFor("sticker", "s2").click(); await wait(200);
+  r.theSamePictureTwice = { placed: placedNow(), heights: store.placed.map((p) => p.position).join(","), inPreview: page.querySelectorAll(".claude-sticker").length };
   el("part-main").click(); const opacityBefore = store.opacity ?? 0.5;
   set("opacity", 30); set("opacity", 40); set("opacity", 62); await wait(30);
   r.sliderMoved = { opacity: store.opacity, label: el("opacity-value").textContent };
@@ -134,10 +146,10 @@
 
   n = store.stickers.length; dropOn(el("zone-right"), [gif()]); await until(() => store.stickers.length > n);
   const beside = store.stickers[store.stickers.length - 1];
-  r.dropBesideChat = { stickers: store.stickers.length, identicalFile: store["sticker-" + beside.id] === GIF1, thumb: beside.thumb.slice(0, 14), right: store.stickerRight === beside.id, left: store.stickerLeft, selected: selected(), tiles: el("stickers").children.length, said: el("toast").textContent };
+  r.dropBesideChat = { stickers: store.stickers.length, identicalFile: store["sticker-" + beside.id] === GIF1, thumb: beside.thumb.slice(0, 14), placed: placedNow(), showsTheDroppedFile: store.placed[store.placed.length - 1].id === beside.id, selected: selected(), tiles: el("stickers").children.length, said: el("toast").textContent };
 
   n = store.stickers.length; dropOn(el("zone-left"), [gif(), gif()]); await until(() => store.stickers.length > n + 1);
-  r.dropTwoOnLeft = { stickers: store.stickers.length, firstUsed: store.stickerLeft === store.stickers[n].id, said: el("toast").textContent };
+  r.dropTwoOnLeft = { stickers: store.stickers.length, placed: placedNow(), firstUsed: store.placed[store.placed.length - 1].id === store.stickers[n].id, said: el("toast").textContent };
 
   n = store.images.length; dropOn(el("zone-main"), [new File(["hello"], "notes.txt", { type: "text/plain" })]); await wait(150);
   r.dropNotAPicture = { images: store.images.length === n, said: el("toast").textContent, after: classes() };
@@ -156,51 +168,75 @@
   const toSidebar = dragTile(tileFor("preset", "forest"), el("zone-sidebar")); await wait(60);
   r.dragPresetToSidebar = { ...toSidebar, sidebarMode: store.sidebarMode, sidebarPreset: store.sidebarPreset, after: classes() };
   const toSide = dragTile(tileFor("preset", "aurora"), el("zone-left")); await wait(60);
-  r.dragPresetBesideChatIsRefused = { ...toSide, left: store.stickerLeft === store.stickers[n] || store.stickerLeft, preset: store.preset };
-  const besideChat = dragTile(tileFor("sticker", "s1"), el("zone-left")); await wait(200);
-  r.dragSidePictureToLeft = { ...besideChat, left: store.stickerLeft, selected: selected() };
+  r.dragPresetBesideChatIsRefused = { ...toSide, placed: store.placed.length, preset: store.preset };
+  const besideChat = dragTile(tileFor("sticker", "s1"), el("zone-right")); await wait(200);
+  r.dragSidePictureToRight = { ...besideChat, placed: placedNow(), selected: selected() };
   const wrong = dragTile(tileFor("sticker", "s2"), el("zone-main")); await wait(60);
-  r.dragSidePictureOntoMainIsRefused = { taken: wrong.taken, imageId: store.imageId === usedBefore, right: store.stickerRight === beside.id };
+  r.dragSidePictureOntoMainIsRefused = { taken: wrong.taken, imageId: store.imageId === usedBefore, placed: store.placed.length };
 
   // ----- moving and resizing a side picture on the screen -----
-  await chrome.storage.local.set({ stickerSize: 120, stickerPosition: 50 }); el("part-left").click(); await wait(300);
+  await chrome.storage.local.set({ placed: [P("a1", "s1", "left", { size: 120, position: 50 }), P("b1", "s2", "right", { size: 120, position: 50 })] }); el("part-left").click(); await wait(300);
   const point = (target, type, x, y) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, clientX: x, clientY: y }));
-  const g = () => el("grip-left").getBoundingClientRect();
-  let at = g(); const placeBefore = store.stickerPosition; const topBefore = picture("left").getBoundingClientRect().top;
-  point(el("grip-left"), "pointerdown", at.left + 10, at.top + 10); point(el("grip-left"), "pointermove", at.left + 10, at.top + 10 - 60); point(el("grip-left"), "pointerup", at.left + 10, at.top - 50); await wait(250);
-  r.dragPictureUp = { position: placeBefore + " to " + store.stickerLeftPosition, rightStill: store.stickerRightPosition ?? "shared " + store.stickerPosition, movedUpInPreview: Math.round(topBefore - picture("left").getBoundingClientRect().top), expected: Math.round(60 / shrink), slider: el("sticker-position").value, gripFollowed: Math.round(g().top - at.top) };
-  at = g(); const handle = el("grip-left").querySelector(".handle"); const widthBefore = picture("left").getBoundingClientRect().width;
+  const g = () => grips.get("a1").getBoundingClientRect();
+  let at = g(); const topBefore = picture("a1").getBoundingClientRect().top;
+  point(grips.get("a1"), "pointerdown", at.left + 10, at.top + 10); point(grips.get("a1"), "pointermove", at.left + 10, at.top + 10 - 60); point(grips.get("a1"), "pointerup", at.left + 10, at.top - 50); await wait(250);
+  r.dragPictureUp = { position: "50 to " + item("a1").position, theOtherStill: item("b1").position, movedUpInPreview: Math.round(topBefore - picture("a1").getBoundingClientRect().top), expected: Math.round(60 / shrink), slider: el("sticker-position").value, gripFollowed: Math.round(g().top - at.top) };
+  at = g(); const handle = grips.get("a1").querySelector(".handle"); const widthBefore = picture("a1").getBoundingClientRect().width;
   point(handle, "pointerdown", at.right, at.bottom); point(handle, "pointermove", at.right + 30, at.bottom); point(handle, "pointerup", at.right + 30, at.bottom); await wait(250);
-  r.dragCorner = { size: "120 to " + store.stickerLeftSize, rightStill: store.stickerRightSize ?? "shared " + store.stickerSize, widthInPreview: Math.round(widthBefore) + " to " + Math.round(picture("left").getBoundingClientRect().width), slider: el("sticker-size").value };
+  r.dragCorner = { size: "120 to " + item("a1").size, theOtherStill: item("b1").size, widthInPreview: Math.round(widthBefore) + " to " + Math.round(picture("a1").getBoundingClientRect().width), slider: el("sticker-size").value };
   el("undo").click(); await wait(60); el("undo").click(); await wait(60);
-  r.bothDragsUndone = { size: store.stickerLeftSize ?? "shared " + store.stickerSize, position: store.stickerLeftPosition ?? "shared " + store.stickerPosition };
+  r.bothDragsUndone = { size: item("a1").size, position: item("a1").position };
 
   // ----- dragging a side picture sideways, and picking it up without selecting its side first -----
   el("part-main").click(); await wait(150);
-  r.gripsThereWithoutSelecting = { left: !el("grip-left").hidden, outlined: el("grip-left").classList.contains("selected") };
-  at = g(); const leftBefore = picture("left").getBoundingClientRect().left;
-  point(el("grip-left"), "pointerdown", at.left + 10, at.top + 10); point(el("grip-left"), "pointermove", at.left + 50, at.top + 10); point(el("grip-left"), "pointerup", at.left + 50, at.top + 10); await wait(250);
-  r.dragPictureSideways = { shift: store.stickerLeftShift, expected: Math.round(40 / shrink), movedInPreview: Math.round(picture("left").getBoundingClientRect().left - leftBefore), nowSelected: selected(), resetHidden: el("sticker-shift-reset").hidden, rightStill: store.stickerRightShift ?? "not set" };
-  at = g(); point(el("grip-left"), "pointerdown", at.left + 10, at.top + 10); point(el("grip-left"), "pointermove", at.left - 5000, at.top + 10); point(el("grip-left"), "pointerup", at.left - 5000, at.top + 10); await wait(250);
-  r.draggedFarLeftStopsAtTheEdge = { pictureLeft: Math.round(picture("left").getBoundingClientRect().left), paneLeft: Math.round(page.querySelector(".dframe-pane-primary").getBoundingClientRect().left) };
+  r.gripsThereWithoutSelecting = { grips: [...document.querySelectorAll(".grip")].filter((e) => !e.hidden).length, outlined: outlined() };
+  at = g(); const leftBefore = picture("a1").getBoundingClientRect().left;
+  point(grips.get("a1"), "pointerdown", at.left + 10, at.top + 10); point(grips.get("a1"), "pointermove", at.left + 50, at.top + 10); point(grips.get("a1"), "pointerup", at.left + 50, at.top + 10); await wait(250);
+  r.dragPictureSideways = { shift: item("a1").shift, expected: Math.round(40 / shrink), movedInPreview: Math.round(picture("a1").getBoundingClientRect().left - leftBefore), nowSelected: selected(), resetHidden: el("sticker-shift-reset").hidden, theOtherStill: item("b1").shift };
+  at = g(); point(grips.get("a1"), "pointerdown", at.left + 10, at.top + 10); point(grips.get("a1"), "pointermove", at.left - 5000, at.top + 10); point(grips.get("a1"), "pointerup", at.left - 5000, at.top + 10); await wait(250);
+  r.draggedFarLeftStopsAtTheEdge = { pictureLeft: Math.round(picture("a1").getBoundingClientRect().left), paneLeft: Math.round(page.querySelector(".dframe-pane-primary").getBoundingClientRect().left) };
   el("sticker-shift-reset").click(); await wait(250);
-  r.pictureBackBesideTheChat = { shift: store.stickerLeftShift, sameAsBefore: Math.round(picture("left").getBoundingClientRect().left) === Math.round(leftBefore), resetHidden: el("sticker-shift-reset").hidden };
-  // each side has sliders of its own
+  r.pictureBackBesideTheChat = { shift: item("a1").shift, sameAsBefore: Math.round(picture("a1").getBoundingClientRect().left) === Math.round(leftBefore), resetHidden: el("sticker-shift-reset").hidden };
+
+  // ----- several on one side: the sliders, and the Delete key, are for the chosen one -----
+  letters.clear(); ["a1", "a2", "b1"].forEach(letter);
+  await chrome.storage.local.set({ placed: [item("a1"), P("a2", "s2", "left", { size: 120, position: 20 }), item("b1")] }); await wait(250);
+  const numbers = (key) => [item(key).size, item(key).position, item(key).opacity, item(key).shift].join("/");
+  r.aPictureAddedElsewhereIsNotChosen = { placed: placedNow(), outlined: outlined(), slider: el("sticker-size").value };
   set("sticker-size", 300); set("sticker-opacity", 40); await wait(250);
-  const leftNow = { size: store.stickerLeftSize, opacity: store.stickerLeftOpacity, widthInPreview: Math.round(picture("left").getBoundingClientRect().width), seeThrough: picture("left").style.opacity };
-  el("part-right").click(); await wait(250);
-  const rightShows = { size: el("sticker-size").value, opacity: el("sticker-opacity").value, label: el("sticker-size-value").textContent };
+  r.slidersChangeTheChosenOne = { A: numbers("a1"), B: numbers("a2"), C: numbers("b1"), widthsInPreview: ["a1", "a2", "b1"].map((key) => Math.round(picture(key).getBoundingClientRect().width)).join("/"), seeThrough: picture("a1").style.opacity + "/" + picture("a2").style.opacity };
+  // pressing another picture on the screen chooses it: where two overlap, the one in front
+  const tap = (key) => { const b = grips.get(key).getBoundingClientRect(), x = b.left + 4, y = b.bottom - 4; const under = document.elementFromPoint(x, y); point(under, "pointerdown", x, y); point(under, "pointerup", x, y); return [...grips].filter(([, grip]) => grip === under || grip.contains(under)).map(([key]) => letter(key)).join(""); };
+  const cornerOfBIsOverA = (() => { const a = grips.get("a1").getBoundingClientRect(), b = grips.get("a2").getBoundingClientRect(); return b.left + 4 > a.left && b.left + 4 < a.right && b.bottom - 4 > a.top && b.bottom - 4 < a.bottom; })();
+  const pressedOn = tap("a2"); await wait(250);
+  r.pressingAPictureChoosesIt = { twoUnderThePointer: cornerOfBIsOverA, landedOn: pressedOn, outlined: outlined(), sliders: [el("sticker-size").value, el("sticker-position").value, el("sticker-opacity").value].join("/"), label: el("sticker-size-value").textContent, gripLayers: ["a1", "a2", "b1"].map((key) => grips.get(key).style.zIndex).join(",") };
   set("sticker-size", 90); set("sticker-position", 10); await wait(250);
-  r.eachSideHasItsOwn = { left: leftNow, rightSlidersShowedItsOwn: rightShows, right: { size: store.stickerRightSize, position: store.stickerRightPosition, opacity: store.stickerRightOpacity ?? "shared " + (store.stickerOpacity ?? 1), widthInPreview: Math.round(picture("right").getBoundingClientRect().width) },
-    leftUntouched: store.stickerLeftSize + "/" + Math.round(picture("left").getBoundingClientRect().width), button: el("side-match").textContent };
-  el("part-left").click(); await wait(60);
-  r.leftSlidersShowItsOwn = { size: el("sticker-size").value, opacity: el("sticker-opacity").value, button: el("side-match").textContent };
-  el("side-match").click(); await wait(250);
-  r.makeTheOtherMatch = { right: [store.stickerRightSize, store.stickerRightPosition, store.stickerRightOpacity].join("/"), left: [store.stickerLeftSize, store.stickerLeftPosition ?? "shared " + store.stickerPosition, store.stickerLeftOpacity].join("/"), widths: Math.round(picture("left").getBoundingClientRect().width) + "/" + Math.round(picture("right").getBoundingClientRect().width), said: el("toast").textContent };
-  el("undo").click(); await wait(100);
-  r.matchUndoneInOneStep = [store.stickerRightSize, store.stickerRightPosition, store.stickerRightOpacity ?? "shared"].join("/");
-  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Backspace", bubbles: true })); await wait(200);
-  r.deleteKeyTakesItOff = { left: store.stickerLeft, stillInLibrary: store.stickers.some((s) => s.id === "s1"), gripShown: !el("grip-left").hidden, sideChoices: pressed("#side-choices .tile").slice(0, 3) };
+  r.eachPictureHasItsOwn = { A: numbers("a1"), B: numbers("a2"), C: numbers("b1"), widthsInPreview: ["a1", "a2", "b1"].map((key) => Math.round(picture(key).getBoundingClientRect().width)).join("/") };
+  el("undo").click(); await wait(100); el("undo").click(); await wait(100);
+  r.eachSliderIsItsOwnStepOfUndo = { A: numbers("a1"), B: numbers("a2") };
+  el("redo").click(); await wait(100); el("redo").click(); await wait(100);
+  el("part-right").click(); await wait(250);
+  r.theOtherSidesSliders = { outlined: outlined(), sliders: [el("sticker-size").value, el("sticker-position").value, el("sticker-opacity").value].join("/") };
+  el("part-left").click(); await wait(100);
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Backspace", bubbles: true })); await wait(250);
+  r.deleteKeyTakesTheChosenOneOff = { placed: placedNow(), stillInLibrary: store.stickers.some((s) => s.id === "s2"), inPreview: page.querySelectorAll(".claude-sticker").length, grips: document.querySelectorAll(".grip").length, outlined: outlined() };
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true })); await wait(250);
+  r.andThenTheNext = { placed: placedNow(), outlined: outlined(), emptyNoteShown: !el("side-empty").hidden, itsSettingsShown: !el("side-chosen").hidden };
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true })); await wait(100);
+  r.deleteOnAnEmptySideDoesNothing = placedNow();
+  el("undo").click(); await wait(100); el("undo").click(); await wait(250);
+  r.bothBroughtBackByUndo = { placed: placedNow(), inPreview: page.querySelectorAll(".claude-sticker").length };
+
+  // ----- no more than twenty -----
+  await chrome.storage.local.set({ placed: Array.from({ length: 20 }, (_, i) => P("f" + i, "s1", i % 2 ? "left" : "right", { size: 60, position: i * 5 })) }); await wait(250);
+  tileFor("sticker", "s2").click(); await wait(100);
+  r.noMoreThanTwenty = { placed: store.placed.length, stillTheSame: store.placed.every((p) => p.id === "s1"), said: el("toast").textContent, inPreview: page.querySelectorAll(".claude-sticker").length, grips: document.querySelectorAll(".grip").length };
+  n = store.stickers.length; dropOn(el("zone-left"), [gif()]); await until(() => store.stickers.length > n);
+  r.noMoreThanTwenty.droppedFile = { keptInTheLibrary: store.stickers.length - n, placed: store.placed.length, said: el("toast").textContent };
+  await chrome.storage.local.set({ placed: store.placed.slice(0, 19) }); await wait(100); tileFor("sticker", "s2").click(); await wait(200);
+  r.noMoreThanTwenty.roomForOneAgain = { placed: store.placed.length, last: store.placed[19].side + " " + store.placed[19].id };
+  await chrome.storage.local.set({ placed: [] }); await wait(250);
+  r.noMoreThanTwenty.allTakenOff = { inPreview: page.querySelectorAll(".claude-sticker").length, grips: document.querySelectorAll(".grip").length };
 
   // ----- the rest of the settings -----
   el("part-main").click(); document.querySelectorAll("#text-swatches .swatch")[1].click(); await wait(80);
@@ -227,22 +263,62 @@
   r.removeImageAsksFirst = { ...question, afterCancel: before + " to " + store.images.length, boxGone: el("ask").hidden };
   el("images").querySelector(".remove").click(); await wait(60); el("ask-yes").click(); await wait(150);
   r.removeImage = { images: before + " to " + store.images.length, fileGone: !("image-a" in store), tiles: el("images").children.length, undoOff: el("undo").disabled };
+  // a saved side picture: every copy of it on the page goes with it
+  letters.clear(); await chrome.storage.local.set({ placed: [P("c1", "s2", "left"), P("c2", "s1", "left"), P("c3", "s2", "right")] }); await wait(250); placedNow();
+  const savedBefore = store.stickers.length;
+  tileFor("sticker", "s2").parentElement.querySelector(".remove").click(); await wait(60);
+  const stickerQuestion = el("ask-text").textContent; el("ask-yes").click(); await wait(250);
+  r.removeSidePicture = { asked: stickerQuestion, saved: savedBefore + " to " + store.stickers.length, fileGone: !("sticker-s2" in store), placed: placedNow(), inPreview: page.querySelectorAll(".claude-sticker").length, undoOff: el("undo").disabled };
+  await chrome.storage.local.set({ placed: [] }); await wait(100);
+  tileFor("sticker", "s1").parentElement.querySelector(".remove").click(); await wait(60);
+  r.removeSidePicture.askedWhenItIsNotOnThePage = el("ask-text").textContent; el("ask-no").click(); await wait(60);
 
   // ----- a theme saved to a file and loaded again, and everything reset -----
-  await chrome.storage.local.set({ "image-th": shaped(40, 20), "sticker-ts": shaped(20, 20), images: [...store.images, { id: "th", thumb: shaped(40, 20) }], stickers: [...store.stickers, { id: "ts", thumb: shaped(20, 20) }] }); await wait(80);
-  await chrome.storage.local.set({ preset: null, imageId: "th", imageZoom: 0.5, textColor: "#123456", sidebarMode: "plain", stickerRight: "ts", stickerRightShift: 25, frameMain: "brush" }); await wait(150);
+  await chrome.storage.local.set({ "image-th": shaped(40, 20), "sticker-ts": shaped(20, 20), "sticker-tu": shaped(20, 30), images: [...store.images, { id: "th", thumb: shaped(40, 20) }], stickers: [...store.stickers, { id: "ts", thumb: shaped(20, 20) }, { id: "tu", thumb: shaped(20, 30) }] }); await wait(80);
+  await chrome.storage.local.set({ preset: null, imageId: "th", imageZoom: 0.5, textColor: "#123456", sidebarMode: "plain", frameMain: "brush", placed: [P("t1", "ts", "left", { size: 140, shift: 25 }), P("t2", "tu", "right", { position: 40, opacity: 0.6 }), P("t3", "ts", "right", { position: 70 })] }); await wait(150);
   const kept = await themeFile();
-  r.themeFile = { format: kept.claudeThemes, madeWith: kept.madeWith === filesVersion, settings: Object.keys(kept.settings).length === Object.keys(defaults).length - 2, leavesOutTheLists: !("images" in kept.settings) && !("stickers" in kept.settings), pictures: Object.keys(kept.pictures).sort().join(","), mainIsThePicture: kept.pictures.main === store["image-th"] };
+  r.themeFile = { format: kept.claudeThemes, madeWith: kept.madeWith === filesVersion, settings: Object.keys(kept.settings).length === Object.keys(defaults).length - 2, leavesOutTheLists: !("images" in kept.settings) && !("stickers" in kept.settings), pictures: Object.keys(kept.pictures).sort().join(","), mainIsThePicture: kept.pictures.main === store["image-th"],
+    sidePictures: Object.keys(kept.pictures.side).sort().join(","), eachIsItsFile: kept.pictures.side.ts === store["sticker-ts"] && kept.pictures.side.tu === store["sticker-tu"], placed: kept.settings.placed.map((p) => p.side + " " + p.id).join(", ") };
   el("theme-reset").click(); await wait(60); const resetAsked = !el("ask").hidden; el("ask-yes").click(); await wait(150);
-  r.resetEverything = { asked: resetAsked, preset: store.preset, textColor: store.textColor ?? null, zoom: store.imageZoom ?? null, right: store.stickerRight ?? null, frame: store.frameMain, picturesKept: store.images.some((i) => i.id === "th") && "image-th" in store };
-  const imagesBefore = store.images.length;
+  r.resetEverything = { asked: resetAsked, preset: store.preset, textColor: store.textColor ?? null, zoom: store.imageZoom ?? null, placed: store.placed.length, frame: store.frameMain, picturesKept: store.images.some((i) => i.id === "th") && "image-th" in store && store.stickers.some((i) => i.id === "ts") && "sticker-ts" in store };
+  // What each placed picture shows, by the file it holds, and its numbers: "left ts 140/85/1/25".
+  const shows = (p) => store["sticker-" + p.id] === store["sticker-ts"] ? "ts" : store["sticker-" + p.id] === store["sticker-tu"] ? "tu" : "another";
+  const placedAs = () => store.placed.map((p) => p.side + " " + shows(p) + " " + [p.size, p.position, p.opacity, p.shift].join("/")).join(", ") || "(none)";
+  const fields = () => [...new Set(store.placed.map((p) => Object.keys(p).join(",")))].join(" | ");
+  const imagesBefore = store.images.length, stickersBefore = store.stickers.length;
   const told = await loadTheme(JSON.stringify(kept)); await wait(200);
-  r.themeLoaded = { told, preset: store.preset, pictureKeptUnderANewId: store.imageId !== "th" && store["image-" + store.imageId] === store["image-th"], addedToLibrary: store.images.length - imagesBefore, zoom: store.imageZoom, textColor: store.textColor, sidebarMode: store.sidebarMode, sidePictureToo: store.stickerRight !== "ts" && store["sticker-" + store.stickerRight] === store["sticker-ts"], shift: store.stickerRightShift, frame: store.frameMain };
+  r.themeLoaded = { told, preset: store.preset, pictureKeptUnderANewId: store.imageId !== "th" && store["image-" + store.imageId] === store["image-th"], addedToLibrary: store.images.length - imagesBefore, zoom: store.imageZoom, textColor: store.textColor, sidebarMode: store.sidebarMode, frame: store.frameMain,
+    placed: placedAs(), sidePicturesAddedToLibrary: store.stickers.length - stickersBefore, underNewIds: store.placed.every((p) => p.id !== "ts" && p.id !== "tu"), twoCopiesShareOne: store.placed[0].id === store.placed[2].id, newKeys: new Set(store.placed.map((p) => p.key)).size === 3 && store.placed.every((p) => !["t1", "t2", "t3"].includes(p.key)), fields: fields(), inPreview: page.querySelectorAll(".claude-sticker").length };
   el("undo").click(); await wait(120);
-  r.themeLoadUndoneInOneStep = { preset: store.preset, textColor: store.textColor ?? null };
+  r.themeLoadUndoneInOneStep = { preset: store.preset, textColor: store.textColor ?? null, placed: placedAs() };
   r.notAThemeFile = [await loadTheme("hello"), await loadTheme("{}"), await loadTheme(JSON.stringify({ claudeThemes: 99, settings: {} }))];
+  // a file from before 0.20.0, when each side had one picture
+  const oldFile = { claudeThemes: 1, madeWith: "0.19.1", settings: { preset: "ocean", stickerLeft: "x1", stickerRight: "x2", stickerSize: 150, stickerPosition: 60, stickerOpacity: 0.8, stickerShift: 0, stickerLeftSize: 90, stickerLeftPosition: null, stickerLeftOpacity: null, stickerLeftShift: 12, stickerRightSize: null, stickerRightPosition: null, stickerRightOpacity: null, stickerRightShift: null }, pictures: { left: store["sticker-ts"], right: store["sticker-tu"] } };
+  const stickersBeforeOld = store.stickers.length; const toldOld = await loadTheme(JSON.stringify(oldFile)); await wait(200);
+  r.themeFileFromAnEarlierVersion = { told: toldOld, preset: store.preset, placed: placedAs(), sidePicturesAddedToLibrary: store.stickers.length - stickersBeforeOld, fields: fields(), keysAreNew: store.placed.every((p) => p.key !== "left" && p.key !== "right"), oldSettingsNotSaved: Object.keys(store).filter((k) => /^sticker(Left|Right|Size|Position|Opacity|Shift)/.test(k)).length, inPreview: page.querySelectorAll(".claude-sticker").length };
+  await loadTheme(JSON.stringify({ ...oldFile, settings: { ...oldFile.settings, stickerLeft: null }, pictures: { right: store["sticker-tu"] } })); await wait(150);
+  r.themeFileFromAnEarlierVersion.withOnlyARightPicture = placedAs();
+  await loadTheme(JSON.stringify({ ...oldFile, pictures: { left: store["sticker-ts"] } })); await wait(150);
+  r.themeFileFromAnEarlierVersion.withoutTheRightPicturesFile = placedAs();
+  const placedBeforeOdd = placedAs();
   const odd = await loadTheme(JSON.stringify({ claudeThemes: 1, settings: { textColor: "red; background: url(x)", opacity: "lots", enabled: "yes", unknownThing: 1, images: [{ id: "x" }], preset: null, imageId: "missing", panelOpacity: 0.4, sidebarTextColor: "#ABCDEF" }, pictures: { main: "https://example.com/x.png" } })); await wait(150);
-  r.strangeThemeFile = { told: odd, textColor: store.textColor ?? null, opacity: typeof store.opacity, enabled: store.enabled, unknown: "unknownThing" in store, imagesStillAList: Array.isArray(store.images) && store.images.every((i) => i.id !== "x"), preset: store.preset, imageId: store.imageId ?? null, panelOpacity: store.panelOpacity, sidebarTextColor: store.sidebarTextColor };
+  r.strangeThemeFile = { told: odd, textColor: store.textColor ?? null, opacity: typeof store.opacity, enabled: store.enabled, unknown: "unknownThing" in store, imagesStillAList: Array.isArray(store.images) && store.images.every((i) => i.id !== "x"), preset: store.preset, imageId: store.imageId ?? null, panelOpacity: store.panelOpacity, sidebarTextColor: store.sidebarTextColor, sidePicturesLeftAlone: placedAs() === placedBeforeOdd };
+  el("undo").click(); await wait(120);
+  // a list of side pictures from a stranger: only what the editor itself could have made is taken, and no more than twenty
+  const fine = (more) => ({ key: "k", id: "ts", side: "left", size: 100, position: 50, opacity: 1, shift: 0, ...more });
+  const faulty = [fine({ size: "100" }), fine({ size: 5000 }), fine({ size: 59 }), fine({ position: -1 }), fine({ position: 101 }), fine({ opacity: 0 }), fine({ opacity: 1.5 }), fine({ shift: 1e9 }), fine({ shift: null }), fine({ side: "top" }), fine({ id: 7 }), null, "text", 5, [], {}];
+  const stranger = { claudeThemes: 2, settings: { placed: [fine({ position: 99, evil: "<img src=x onerror=alert(1)>", key: { toString: null }, zIndex: 999999 }), ...faulty, ...Array.from({ length: 50 }, (_, i) => fine({ position: i, side: i % 2 ? "right" : "left" }))] }, pictures: { side: { ts: store["sticker-ts"], unused: store["sticker-tu"] } } };
+  let stickersBeforeStranger = store.stickers.length; const toldStranger = await loadTheme(JSON.stringify(stranger)); await wait(250);
+  r.sidePicturesFromAStranger = { told: toldStranger, inTheFile: stranger.settings.placed.length, taken: store.placed.length, fields: fields(), heights: store.placed.map((p) => p.position).join(","), sides: store.placed.map((p) => p.side[0]).join(""), allShow: [...new Set(store.placed.map(shows))].join(","), keysAllDifferent: new Set(store.placed.map((p) => p.key)).size === store.placed.length && store.placed.every((p) => typeof p.key === "string"), sidePicturesAddedToLibrary: store.stickers.length - stickersBeforeStranger, inPreview: page.querySelectorAll(".claude-sticker").length };
+  el("undo").click(); await wait(120);
+  // one whose picture did not come with the file is left out
+  stickersBeforeStranger = store.stickers.length;
+  await loadTheme(JSON.stringify({ claudeThemes: 2, settings: { placed: [fine({ id: "notInTheFile" }), fine({ id: "notAPicture" }), fine({ id: "__proto__" }), fine({ id: "toString" }), fine({ position: 7 })] }, pictures: { side: { ts: store["sticker-ts"], notAPicture: "https://example.com/x.png" } } })); await wait(150);
+  r.sidePicturesFromAStranger.withoutTheirPictures = { placed: placedAs(), sidePicturesAddedToLibrary: store.stickers.length - stickersBeforeStranger };
+  el("undo").click(); await wait(120);
+  const placedBeforeNotAList = placedAs();
+  await loadTheme(JSON.stringify({ claudeThemes: 2, settings: { placed: "all of them", preset: "forest" }, pictures: { side: "x" } })); await wait(120);
+  r.sidePicturesFromAStranger.notAList = { leftAlone: placedAs() === placedBeforeNotAList, restOfTheFileTaken: store.preset };
   el("undo").click(); await wait(120);
 
   // ----- a warning when the text is hard to read on the background -----
@@ -283,17 +359,17 @@
   r.builtInThemes = { names: builtInThemes.map((t) => t.name).join(", "), tiles: el("themes").children.length, contrastOnThreeQuartersOfTheBackground: worst, contrastAtTheWorstSpot: worstSpot, allReadWell: Object.values(worst).every((n) => n >= 4.5) && Object.values(worstSpot).every((n) => n >= 4.5),
     settingsAThemeFileCouldNotHold: builtInThemes.flatMap((t) => Object.entries(t.settings).filter(([k, v]) => !soundSetting(k, v)).map(([k]) => t.id + "." + k)),
     backgroundsThatDoNotExist: builtInThemes.filter((t) => !presets.some((p) => p.id === t.settings.preset)).map((t) => t.id) };
-  await chrome.storage.local.set({ preset: null, imageId: "th", stickerLeft: "ts", frameMain: "custom", frameImage: colourImage("#ff0000"), frameSlice: [1, 1, 1, 1], textColor: "#123456", sidebarMode: "plain" }); await wait(150);
+  await chrome.storage.local.set({ preset: null, imageId: "th", placed: [P("t1", "ts", "left")], frameMain: "custom", frameImage: colourImage("#ff0000"), frameSlice: [1, 1, 1, 1], textColor: "#123456", sidebarMode: "plain" }); await wait(150);
   const themeTile = (id) => document.querySelector(`#themes .tile[data-theme="${id}"]`), libraryBefore = store.images.length + "," + store.stickers.length;
   r.themeTiles = { noneMarkedOnACustomLook: pressed("#themes .tile") };
   themeTile("paperback").click(); await wait(150);
-  r.themeTiles.paperback = { preset: store.preset, opacity: store.opacity, textColor: store.textColor, font: store.font, frameMain: store.frameMain, sidebarMode: store.sidebarMode, sidePictureOff: store.stickerLeft === null, marked: pressed("#themes .tile"), told: el("toast").textContent,
+  r.themeTiles.paperback = { preset: store.preset, opacity: store.opacity, textColor: store.textColor, font: store.font, frameMain: store.frameMain, sidebarMode: store.sidebarMode, sidePicturesOff: store.placed.length === 0 && page.querySelectorAll(".claude-sticker").length === 0, marked: pressed("#themes .tile"), told: el("toast").textContent,
     libraryKept: store.images.length + "," + store.stickers.length === libraryBefore && "image-th" in store, uploadedFrameKept: store.frameImage === colourImage("#ff0000") && JSON.stringify(store.frameSlice) === "[1,1,1,1]",
     previewText: getComputedStyle(page.documentElement).getPropertyValue("--ct-text").trim() };
   set("opacity", 80); await wait(60);
   r.themeTiles.unmarkedOnceChanged = pressed("#themes .tile");
   el("undo").click(); await wait(60); el("undo").click(); await wait(150);
-  r.themeTiles.undoneInOneStep = { preset: store.preset, imageId: store.imageId, textColor: store.textColor, frameMain: store.frameMain, left: store.stickerLeft };
+  r.themeTiles.undoneInOneStep = { preset: store.preset, imageId: store.imageId, textColor: store.textColor, frameMain: store.frameMain, placed: placedAs() };
   await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
 
   // ----- every control has a name and can be reached and seen without a mouse -----

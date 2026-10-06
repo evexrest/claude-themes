@@ -77,5 +77,28 @@
  "broken": {
   "status": "That file could not be opened as an image.",
   "editorHidden": true
+ },
+ "sidePictureChosen": {
+  "shown": true,
+  "buttons": "Add it on the left | Add it on the right",
+  "nothingSavedYet": "(no list)"
+ },
+ "sidePictureAddedOnTheLeft": {
+  "placed": "right old 140/30/1/0, left new 180/85/1/0",
+  "saved": 2,
+  "thumb": "data:image/png",
+  "themeOn": true,
+  "status": "Saved, and added on the left. Move and resize it in the editor, which the toolbar icon opens."
+ },
+ "sidePictureAddedTwiceMore": {
+  "placed": "right old 140/30/1/0, left new 180/85/1/0, right new 180/18/1/0, left new 180/73/1/0",
+  "saved": 2,
+  "keysAllDifferent": true,
+  "fields": "key,id,side,size,position,opacity,shift"
+ },
+ "sidePictureWhenThereIsNoRoom": {
+  "placed": 20,
+  "saved": 3,
+  "status": "Saved to your side pictures, but not put on the page: there are already 20 pictures beside the chat, which is the most there can be. Take one off in the editor first."
  }
 }

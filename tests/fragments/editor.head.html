@@ -12,7 +12,7 @@
   store["image-a"] = colourImage("#c0392b", 240, 150); store["image-b"] = GIF1;
   store.preset = q.get("preset") || "dusk";
   store.stickers = [{ id: "s1", thumb: GIF1 }, { id: "s2", thumb: GIF2 }]; store["sticker-s1"] = GIF1; store["sticker-s2"] = GIF2;
-  store.stickerLeft = q.get("left") === "none" ? null : "s1"; store.stickerSize = Number(q.get("size") || 180);
+  store.placed = q.get("left") === "none" ? [] : [{ key: "p1", id: "s1", side: "left", size: Number(q.get("size") || 180), position: 85, opacity: 1, shift: 0 }];
   if (q.get("frame")) store.frameMain = q.get("frame");
   if (q.get("text")) store.textColor = q.get("text");
   if (q.get("side")) store.sidebarMode = q.get("side");

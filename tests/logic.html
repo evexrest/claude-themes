@@ -6,6 +6,9 @@
   store.images = [{ id: "a", thumb: "x" }, { id: "b", thumb: "y" }];
   store["image-a"] = colourImage("#ff0000"); store["image-b"] = colourImage("#00ff00");
   store.preset = null; store.imageId = "a"; store.textColor = "#ffffff"; store.font = "hand";
+  // What someone who installed a version before 0.20.0 has: one picture for each side, in settings of their own, and no list.
+  store.stickers = [{ id: "a", thumb: "t" }, { id: "b", thumb: "t" }]; store["sticker-a"] = GIF1; store["sticker-b"] = GIF2;
+  Object.assign(store, { stickerLeft: "a", stickerRight: "b", stickerSize: 100, stickerPosition: 100, stickerRightSize: 140, stickerRightOpacity: 0.5, stickerLeftShift: 30 });
 </script>
 <script src="../settings.js"></script>
 <script src="../content.js"></script>
@@ -120,54 +123,78 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   results.rowClaudesOwn = rowLook();
   await chrome.storage.local.set({ preset: "dusk" }); await wait(80);
   // ----- side pictures -----
-  const st = (side) => { const e = document.querySelectorAll(".claude-sticker")[side]; if (!e) return null; const b = e.getBoundingClientRect(); return { shown: e.style.display !== "none", left: Math.round(b.left), right: Math.round(b.right), top: Math.round(b.top), bottom: Math.round(b.bottom), width: Math.round(b.width), opacity: e.style.opacity, type: e.src ? "blob" : "none", pe: getComputedStyle(e).pointerEvents }; };
+  const pic = (key) => [...document.querySelectorAll(".claude-sticker")].find((e) => e.dataset.key === key) || null;
+  const st = (key) => { const e = pic(key); if (!e) return null; const b = e.getBoundingClientRect(); return { side: e.dataset.side, shown: e.style.display !== "none", left: Math.round(b.left), right: Math.round(b.right), top: Math.round(b.top), bottom: Math.round(b.bottom), width: Math.round(b.width), opacity: e.style.opacity, layer: getComputedStyle(e).zIndex, type: e.src ? "blob" : "none", pe: getComputedStyle(e).pointerEvents }; };
   const box = () => { const p = pane.getBoundingClientRect(), c = document.querySelector('[data-cds="ChatComposer"]').getBoundingClientRect(); return { paneLeft: Math.round(p.left), colLeft: Math.round(c.left), colRight: Math.round(c.right), paneRight: Math.round(p.right), paneTop: Math.round(p.top), paneBottom: Math.round(p.bottom) }; };
-  store["sticker-a"] = GIF1; store["sticker-b"] = GIF2; store.stickers = [{ id: "a", thumb: "t" }, { id: "b", thumb: "t" }];
+  // the settings an earlier version saved (at the top of this page) still show its two pictures, each with what it had, and nothing is written
+  results.fromAnEarlierVersion = { left: st("left"), right: st("right"), listSaved: "placed" in store };
+  // once a list is saved, the list is what counts
+  let list = [];
+  const show = async (next, ms = 200) => { list = next; await chrome.storage.local.set({ placed: list }); await wait(ms); };
+  const alter = (changes, ms = 60) => show(list.map((p) => ({ ...p, ...(changes[p.key] || changes.all || {}) })), ms);
+  const one = (key, id, side, more = {}) => ({ key, id, side, size: 100, position: 100, opacity: 1, shift: 0, ...more });
+  await show([]);
   results.noStickers = document.querySelectorAll(".claude-sticker").length;
-  await chrome.storage.local.set({ stickerLeft: "a", stickerRight: "b", stickerSize: 100, stickerPosition: 100 }); await wait(200);
-  results.stickers = { box: box(), left: st(0), right: st(1), size: size() };
+  await show([one("l", "a", "left"), one("r", "b", "right")]);
+  results.stickers = { box: box(), left: st("l"), right: st("r"), size: size() };
   // dragged sideways: by that much, and never out of the chat window
-  const edges = () => ({ left: st(0).left, leftsRight: st(0).right, right: st(1).left, rightsRight: st(1).right });
+  const edges = () => ({ left: st("l").left, leftsRight: st("l").right, right: st("r").left, rightsRight: st("r").right });
   results.stickersUsualPlace = edges();
-  await chrome.storage.local.set({ stickerLeftShift: 30, stickerRightShift: -45 }); await wait(60);
+  await alter({ l: { shift: 30 }, r: { shift: -45 } });
   results.stickersDragged = edges();
-  await chrome.storage.local.set({ stickerLeftShift: 5000, stickerRightShift: -5000 }); await wait(60);
+  await alter({ l: { shift: 5000 }, r: { shift: -5000 } });
   results.stickersDraggedTooFar = { ...edges(), pane: box().paneLeft + " to " + box().paneRight };
-  await chrome.storage.local.set({ stickerLeftShift: null, stickerRightShift: 0 }); await wait(60);
+  await alter({ all: { shift: 0 } });
   results.stickersPutBack = edges();
-  const blobType = await fetch(document.querySelector(".claude-sticker").src).then((r) => r.blob()).then((b) => b.type + " " + b.size);
+  const blobType = await fetch(pic("l").src).then((r) => r.blob()).then((b) => b.type + " " + b.size);
   results.stickerBlob = blobType;
-  await chrome.storage.local.set({ stickerSize: 400, stickerPosition: 0, stickerOpacity: 0.5 }); await wait(60);
-  results.heldByHeight = { left: st(0), right: st(1) };
-  // each side with its own size, height and opacity; a side that has none of its own uses the shared one
-  await chrome.storage.local.set({ stickerLeftSize: 80, stickerLeftPosition: 100, stickerLeftOpacity: 0.3, stickerRightSize: 140 }); await wait(60);
-  results.eachSideItsOwn = { left: st(0), right: st(1) };
-  await chrome.storage.local.set({ stickerLeftSize: null, stickerLeftPosition: null, stickerLeftOpacity: null, stickerRightSize: null }); await wait(60);
-  results.backToShared = { left: st(0), right: st(1), same: JSON.stringify(results.heldByHeight) === JSON.stringify({ left: st(0), right: st(1) }) };
+  // several on one side: each where its own settings put it, layered in the order of the list, the last in front
+  const names = new Map([[pane, "chat window"], [document.querySelector(".dframe-content"), "page area"]]);
+  const stack = (x, y) => { const all = [...document.querySelectorAll(".claude-sticker")]; all.forEach((e) => { e.style.pointerEvents = "auto"; }); const found = document.elementsFromPoint(x, y); all.forEach((e) => { e.style.pointerEvents = ""; }); return found.map((e) => e.dataset.key || names.get(e)).filter(Boolean).join(" > "); };
+  const layerOf = () => list.map((p) => p.key + " " + getComputedStyle(pic(p.key)).zIndex).join(", ");
+  const inPage = () => [...document.querySelectorAll(".claude-sticker")].map((e) => e.dataset.key).join(",");
+  await show([one("l", "a", "left"), one("l2", "b", "left", { position: 80 }), one("r", "b", "right")]);
+  const made = { l: pic("l"), l2: pic("l2"), r: pic("r") }, shownAs = { l: pic("l").src, l2: pic("l2").src, r: pic("r").src };
+  const untouched = () => Object.keys(made).filter((key) => pic(key) === made[key] && pic(key).src === shownAs[key]).join(",");
+  results.threePictures = { count: document.querySelectorAll(".claude-sticker").length, l: st("l"), l2: st("l2"), r: st("r"), layers: layerOf(), whereTwoOverlap: stack(449, 300), inPage: inPage(), twoOfOnePictureShareItsFile: shownAs.l2 === shownAs.r && shownAs.l !== shownAs.r };
+  await show([list[2], list[1], list[0]]);
+  results.reordered = { layers: layerOf(), whereTwoOverlap: stack(449, 300), sameElementsStillShowingTheSameFile: untouched(), inPage: inPage(), nothingMoved: JSON.stringify([st("l").left, st("l").top, st("l2").left, st("l2").top, st("r").left, st("r").top]) === JSON.stringify([results.threePictures.l.left, results.threePictures.l.top, results.threePictures.l2.left, results.threePictures.l2.top, results.threePictures.r.left, results.threePictures.r.top]) };
+  await show(list.filter((p) => p.key !== "l2"));
+  const fetched = (url) => fetch(url).then(() => "still there", () => "let go");
+  results.oneRemoved = { count: document.querySelectorAll(".claude-sticker").length, itsElement: pic("l2") ? "still there" : "gone", othersKept: untouched(), layers: layerOf(), fileStillShownByTheOther: await fetched(shownAs.r) };
+  await show(list.filter((p) => p.key !== "r"));
+  results.lastOfAPictureRemoved = { count: document.querySelectorAll(".claude-sticker").length, itsFile: await fetched(shownAs.r), theOthersFile: await fetched(shownAs.l), layers: layerOf() };
+  await show([one("l", "a", "left"), one("r", "b", "right")]);
+  await alter({ all: { size: 400, position: 0, opacity: 0.5 } });
+  results.heldByHeight = { left: st("l"), right: st("r") };
+  // each picture has its own size, height and opacity
+  await alter({ l: { size: 80, position: 100, opacity: 0.3 }, r: { size: 140 } });
+  results.eachItsOwn = { left: st("l"), right: st("r") };
+  await alter({ all: { size: 400, position: 0, opacity: 0.5 } });
   // a taller window, so the picture's height no longer holds it back: wider than the empty space, it goes behind the chat
-  const layers = () => { const e = document.querySelector(".claude-sticker"), c = document.querySelector('[data-cds="ChatComposer"]'), b = c.getBoundingClientRect(); e.style.pointerEvents = "auto"; const list = document.elementsFromPoint(b.left + 20, b.top + 10); e.style.pointerEvents = ""; return { parent: e.parentElement.className, z: getComputedStyle(e).zIndex, underTheMessageBox: list.indexOf(e) > list.indexOf(c), aboveThePageColour: list.indexOf(e) >= 0 && list.indexOf(e) < list.indexOf(e.parentElement), clicksPassThrough: getComputedStyle(e).pointerEvents }; };
+  const layers = () => { const e = pic("l"), c = document.querySelector('[data-cds="ChatComposer"]'), b = c.getBoundingClientRect(); e.style.pointerEvents = "auto"; const found = document.elementsFromPoint(b.left + 20, b.top + 10); e.style.pointerEvents = ""; return { parent: e.parentElement.className, z: getComputedStyle(e).zIndex, underTheMessageBox: found.indexOf(e) > found.indexOf(c), aboveThePageColour: found.indexOf(e) >= 0 && found.indexOf(e) < found.indexOf(e.parentElement), clicksPassThrough: getComputedStyle(e).pointerEvents }; };
   document.querySelector(".dframe-root").style.height = "1300px"; await wait(1200);
-  results.pastTheGap = { box: box(), left: st(0), right: st(1), layers: layers(), size: size() };
-  await chrome.storage.local.set({ stickerSize: 800 }); await wait(60);
-  results.biggest = { left: st(0), right: st(1) };
-  await chrome.storage.local.set({ stickerSize: 5000 }); await wait(60);
-  results.neverWiderThanTheWindow = { left: st(0), right: st(1) };
-  document.querySelector(".dframe-root").style.height = ""; await chrome.storage.local.set({ stickerSize: 400 }); await wait(1200);
+  results.pastTheGap = { box: box(), left: st("l"), right: st("r"), layers: layers(), size: size() };
+  await alter({ all: { size: 800 } });
+  results.biggest = { left: st("l"), right: st("r") };
+  await alter({ all: { size: 5000 } });
+  results.neverWiderThanTheWindow = { left: st("l"), right: st("r") };
+  document.querySelector(".dframe-root").style.height = ""; await alter({ all: { size: 400 } }, 1200);
   await chrome.storage.local.set({ preset: "none" }); await wait(60);
-  results.claudeOwnBackground = { wall: R.getAttribute("data-wallpaper"), leftShown: st(0).shown };
+  results.claudeOwnBackground = { wall: R.getAttribute("data-wallpaper"), leftShown: st("l").shown };
   document.querySelector(".dframe-root").style.width = "820px"; await wait(1200);
-  results.narrow = { box: box(), left: st(0).shown, right: st(1).shown };
+  results.narrow = { box: box(), left: st("l").shown, right: st("r").shown };
   document.querySelector(".dframe-root").style.width = ""; await wait(1200);
-  results.wideAgain = { left: st(0).shown, right: st(1).shown };
-  await chrome.storage.local.set({ stickerRight: null }); await wait(100);
-  results.rightOff = { left: st(0).shown, right: st(1).shown };
-  await chrome.storage.local.set({ stickerLeft: "b" }); await wait(150);
-  results.leftSwapped = { shown: st(0).shown, blob: await fetch(document.querySelector(".claude-sticker").src).then((r) => r.blob()).then((b) => b.size) };
+  results.wideAgain = { left: st("l").shown, right: st("r").shown };
+  await show(list.filter((p) => p.key !== "r"), 100);
+  results.rightOff = { left: st("l").shown, right: pic("r") ? "still there" : "gone" };
+  await alter({ l: { id: "b" } }, 150);
+  results.leftSwapped = { shown: st("l").shown, blob: await fetch(pic("l").src).then((r) => r.blob()).then((b) => b.size) };
   await chrome.storage.local.set({ preset: "dusk" }); await wait(60);
   // ----- pages that are not chats are left as Claude draws them -----
-  const before = await chrome.storage.local.get({ enabled: null, preset: null, imageId: null, textColor: null, sidebarTextColor: null, sidebarMode: null, sidebarPreset: null, frameLayout: null, frameMain: null, frameSidebar: null, stickerLeft: null });
-  await chrome.storage.local.set({ enabled: true, preset: "dusk", textColor: "#ffffff", sidebarTextColor: "#ffffff", sidebarMode: "own", sidebarPreset: "forest", frameLayout: "separate", frameMain: "brush", frameSidebar: "brush", stickerLeft: "a" }); await wait(250);
-  const themed = () => ({ background: R.getAttribute("data-wallpaper"), text: R.getAttribute("data-ct-text"), frame: R.getAttribute("data-frame-main"), pageColour: getComputedStyle(document.querySelector(".dframe-content")).backgroundColor, sidePicture: st(0) ? st(0).shown : null, sidebarPicture: R.getAttribute("data-sidebar-image"), sidebarText: R.getAttribute("data-ct-side-text"), sidebarFrame: R.getAttribute("data-frame-sidebar"), size: size() });
+  const before = await chrome.storage.local.get({ enabled: null, preset: null, imageId: null, textColor: null, sidebarTextColor: null, sidebarMode: null, sidebarPreset: null, frameLayout: null, frameMain: null, frameSidebar: null, placed: null });
+  await chrome.storage.local.set({ enabled: true, preset: "dusk", textColor: "#ffffff", sidebarTextColor: "#ffffff", sidebarMode: "own", sidebarPreset: "forest", frameLayout: "separate", frameMain: "brush", frameSidebar: "brush", placed: [one("l", "a", "left")] }); await wait(250);
+  const themed = () => ({ background: R.getAttribute("data-wallpaper"), text: R.getAttribute("data-ct-text"), frame: R.getAttribute("data-frame-main"), pageColour: getComputedStyle(document.querySelector(".dframe-content")).backgroundColor, sidePicture: st("l") ? st("l").shown : null, sidebarPicture: R.getAttribute("data-sidebar-image"), sidebarText: R.getAttribute("data-ct-side-text"), sidebarFrame: R.getAttribute("data-frame-sidebar"), size: size() });
   results.onAChat = themed();
   const messageBox = document.querySelector('[data-cds="ChatComposer"]'), holder = messageBox.parentNode, after = messageBox.nextSibling;
   const listPage = document.createElement("div"); listPage.setAttribute("data-cds", "Page");
@@ -182,7 +209,7 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   results.backOnAChat = themed();
   await chrome.storage.local.set(before); await wait(200);
   await chrome.storage.local.set({ sidebarMode: "own", enabled: false }); await wait(60);
-  results.disabled = { ...state(), side: R.getAttribute("data-sidebar-image"), frame: R.getAttribute("data-frame-all"), sticker: st(0).shown };
+  results.disabled = { ...state(), side: R.getAttribute("data-sidebar-image"), frame: R.getAttribute("data-frame-all"), sticker: st("l").shown };
   // ----- the editor, laid over the page -----
   const frame = () => document.getElementById("claude-themes-editor");
   const icon = (type) => { let answered; messageListeners.forEach((l) => l({ type }, {}, (a) => { answered = a; })); return answered; };
