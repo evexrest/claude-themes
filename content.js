@@ -121,7 +121,9 @@ function zoomedPicture(layer, zoom, box, seen) {
     };
 }
 
-// The part of the window in which the main picture can be seen. The picture lies
+// The part of the window in which the main picture can be seen: the chat window,
+// or the whole window. Its width and height are the resolution a stretched
+// picture is given. The picture lies
 // behind the whole window. A sidebar that is joined to it is see-through, so the
 // whole window counts; any other sidebar hides the strip it stands on, and what
 // is left is the part to its right. (On claude.ai the page area itself runs
@@ -144,10 +146,18 @@ function sizePictures() {
     if (wallpaper) {
         const box = wallpaper.getBoundingClientRect();
         const seen = seenBeside(box);
-        const zoom = settings.imageZoom === null
-            ? autoZoom(layers.main.width, layers.main.height)
-            : settings.imageZoom;
-        const drawn = zoomedPicture(layers.main, zoom, box, seen) || { size: "", position: "" };
+        const automatic = settings.imageZoom === null;
+        let drawn = null;
+        if (automatic && stretches(layers.main.width, layers.main.height)) {
+            // Stretched: exactly as wide and as tall as the space, corner to corner.
+            drawn = {
+                size: Math.ceil(seen.width) + "px " + Math.ceil(seen.height) + "px",
+                position: Math.floor(seen.left - box.left) + "px " + Math.floor(seen.top - box.top) + "px"
+            };
+        } else {
+            drawn = zoomedPicture(layers.main, automatic ? 1 : settings.imageZoom, box, seen);
+        }
+        drawn = drawn || { size: "", position: "" };
         if (wallpaper.style.backgroundSize !== drawn.size) {
             wallpaper.style.backgroundSize = drawn.size;
         }

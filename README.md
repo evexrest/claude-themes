@@ -33,11 +33,13 @@ Clicked on another tab, the icon goes to your Claude tab, or opens one.
   colour, font, frame and frame thickness
 - The sidebar can share the main background, have a picture of its own with its own
   opacity, or stay exactly as Claude draws it
-- A Zoom slider for the background image and for the sidebar's picture: from the whole
-  picture, with nothing cut off, through filling the space, up to four times that. The
-  picture grows and shrinks around its middle and never slides. Left alone, a landscape
-  background is shown whole beside the sidebar and an upright one fills the page. The
-  crop tool on the upload page zooms out to the whole picture as well
+- A landscape background is stretched to the exact size of its space: the chat window,
+  or the whole window when the sidebar is joined to it. The editor shows that size. An
+  upright picture fills the page instead
+- A Zoom slider for the background image and for the sidebar's picture, for keeping the
+  picture's own shape: from the whole picture, with nothing cut off, through filling the
+  space, up to four times that. The picture grows and shrinks around its middle and
+  never slides. The crop tool on the upload page zooms out to the whole picture as well
 - Nothing on the page is blurred. Messages fade out as they reach the title bar
 - Pictures or GIFs in the empty space on either side of the chat. Each side has its own
   size, height and opacity. They work with any background, including Claude's own. A picture

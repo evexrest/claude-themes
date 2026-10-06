@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The editor compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.14.0";
+const filesVersion = "0.15.0";
 
 const defaults = {
     enabled: true,
@@ -15,11 +15,13 @@ const defaults = {
     // stored separately, under imageKey(id).
     images: [],
     opacity: 0.5,
-    // How big a saved image is drawn on the main page. Null is automatic: a picture
-    // that is wider than it is tall is shown whole, and any other fills the page
-    // (see autoZoom). A number sets it by hand: 0 shows the whole picture, 1 fills
-    // the page with it, cutting off what does not fit, and above 1 it is that many
-    // times bigger. The presets are plain colour washes and are not affected.
+    // How a saved image is laid out on the main page. Null is automatic: a picture
+    // that is wider than it is tall is stretched to the exact size of the space it
+    // is in (the chat window, or the whole window when the sidebar is joined to
+    // it), and any other fills the page (see `stretches`). A number sets a zoom by
+    // hand and keeps the picture's own proportions: 0 shows the whole picture, 1
+    // fills the page with it, cutting off what does not fit, and above 1 it is that
+    // many times bigger. The presets are plain colour washes and are not affected.
     imageZoom: null,
     panelOpacity: 0.6,
     // The sidebar is "joined" to the main background, has a picture of its "own"
@@ -71,10 +73,11 @@ const defaults = {
     sidebarFontCustom: ""
 };
 
-// The zoom a main-page picture gets when none has been set: a landscape picture is
-// shown whole, and an upright or square one fills the page.
-function autoZoom(width, height) {
-    return width > height ? 0 : 1;
+// Whether a main-page picture is stretched to its space when no zoom has been
+// set: a landscape picture is. An upright or square one would be pulled badly out
+// of shape, so it fills the page instead.
+function stretches(width, height) {
+    return width > height;
 }
 
 // Where one saved image's full-size picture is kept.

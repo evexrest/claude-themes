@@ -4,6 +4,9 @@
   const r = {}; await wait(700);
   const el = (id) => document.getElementById(id);
   const page = el("preview").contentDocument;
+  // The preview starts in the computer's own light or dark mode. Start every run in
+  // light, so the colours read below do not depend on the time of day.
+  el("mode-light").click();
   const pressed = (sel) => [...document.querySelectorAll(sel)].map((b) => b.getAttribute("aria-pressed") === "true" ? 1 : 0).join("");
   const set = (id, v) => { el(id).value = v; el(id).dispatchEvent(new Event("input")); };
   const panels = () => ["main", "sidebar", "side"].filter((p) => !el("panel-" + p).hidden).join(",");
@@ -67,7 +70,10 @@
   await chrome.storage.local.set({ preset: null, imageId: "zw", imageZoom: null, sidebarPreset: null, sidebarImageId: "zt" }); await wait(200);
   const zoomNow = (id, key) => ({ saved: store[key] === undefined ? "(not set)" : store[key], label: el(id + "-value").textContent, slider: el(id).value });
   r.zoomShownForImages = { main: !el("zoom-main").hidden, sidebar: !el("zoom-side").hidden };
-  r.zoomAutomaticLandscape = { ...zoomNow("zoom", "imageZoom"), resetButtonHidden: el("zoom-auto").hidden };
+  r.zoomAutomaticLandscape = { ...zoomNow("zoom", "imageZoom"), resetButtonHidden: el("zoom-auto").hidden, space: el("stage-size").textContent };
+  await chrome.storage.local.set({ sidebarMode: "joined" }); await wait(200);
+  r.zoomSpaceWithAJoinedSidebar = el("stage-size").textContent;
+  await chrome.storage.local.set({ sidebarMode: "own" }); await wait(200);
   await chrome.storage.local.set({ imageId: "zt" }); await wait(200);
   r.zoomAutomaticUpright = zoomNow("zoom", "imageZoom");
   set("zoom", 0); await wait(40); r.zoomAllTheWayOut = { ...zoomNow("zoom", "imageZoom"), resetButtonHidden: el("zoom-auto").hidden };

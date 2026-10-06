@@ -167,8 +167,9 @@ function slider(id, key, shown, stored, slid) {
     });
 }
 
-// The main picture's Zoom slider. Until it has been moved the zoom is automatic,
-// worked out from the picture's shape, and the slider shows what that comes to.
+// The main picture's Zoom slider. Until it has been moved the layout is automatic,
+// worked out from the picture's shape: a landscape picture is stretched to its
+// space and any other fills the page.
 function mainZoom() {
     const input = byId("zoom");
 
@@ -181,9 +182,14 @@ function mainZoom() {
     updaters.push(() => {
         const automatic = state.imageZoom === null;
         const shape = shapes.get(state.imageId);
-        input.value = hundredths(automatic ? (shape ? autoZoom(shape.width, shape.height) : 1) : state.imageZoom);
-        byId("zoom-value").textContent = zoomed(Number(input.value)) + (automatic ? ", automatic" : "");
+        const stretched = automatic && shape && stretches(shape.width, shape.height);
+        // A stretched picture is all in view, so the slider sits at the whole-picture end.
+        input.value = automatic ? (stretched ? 0 : 100) : hundredths(state.imageZoom);
+        byId("zoom-value").textContent = automatic
+            ? (stretched ? "Stretched to fit" : "Fills") + ", automatic"
+            : zoomed(Number(input.value));
         byId("zoom-auto").hidden = automatic;
+        showStage((measure() || {}).sidebar);
         if (automatic && !shape) {
             readShape(state.imageId);
         }
@@ -831,6 +837,23 @@ function layout() {
     for (const side of Object.keys(sideKeys)) {
         const shown = part === side && state.enabled && state[sideKeys[side]] !== null;
         cover(byId("grip-" + side), shown && boxes[side]);
+    }
+    showStage(boxes.sidebar);
+}
+
+// Say how big the main picture's space is, in the note under the Zoom slider: the
+// whole window when the sidebar is joined to the main background or is closed, and
+// otherwise the chat window, which is what is left to the right of the sidebar.
+// content.js works out the same space when it lays the picture out.
+function showStage(sidebar) {
+    const width = onPage ? window.innerWidth : screenWidth;
+    const height = onPage ? window.innerHeight : screenHeight;
+    const beside = state.sidebarMode !== "joined" && sidebar && sidebar.width > 0;
+    const text = beside
+        ? "the chat window, " + Math.ceil(width - sidebar.left - sidebar.width) + " \u00d7 " + Math.ceil(height)
+        : "the whole window, " + Math.ceil(width) + " \u00d7 " + Math.ceil(height);
+    if (byId("stage-size").textContent !== text) {
+        byId("stage-size").textContent = text;
     }
 }
 
