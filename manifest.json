@@ -3,6 +3,12 @@
     "name": "Claude Themes",
     "version": "0.17.0",
     "description": "Backgrounds, frames, side pictures, text colour and fonts for claude.ai. Unofficial, not made by Anthropic.",
+    "icons": {
+        "16": "icons/icon-16.png",
+        "32": "icons/icon-32.png",
+        "48": "icons/icon-48.png",
+        "128": "icons/icon-128.png"
+    },
     "permissions": ["storage", "unlimitedStorage"],
     "host_permissions": ["https://claude.ai/*"],
     "content_scripts": [
@@ -17,7 +23,12 @@
         "service_worker": "background.js"
     },
     "action": {
-        "default_title": "Open the Claude Themes editor"
+        "default_title": "Open the Claude Themes editor",
+        "default_icon": {
+            "16": "icons/icon-16.png",
+            "32": "icons/icon-32.png",
+            "48": "icons/icon-48.png"
+        }
     },
     "web_accessible_resources": [
         {

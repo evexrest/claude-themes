@@ -1,0 +1,120 @@
+{
+ "start": {
+  "classes": "on-page",
+  "previewGone": true,
+  "done": true,
+  "lightDarkSwitch": false,
+  "openClaude": false,
+  "zonesBeforeThePageSpeaks": "hidden | hidden | hidden | hidden",
+  "enabled": true,
+  "tiles": 7
+ },
+ "zonesFollowThePage": {
+  "sidebar": "0,0,288,900",
+  "main": "296,0,1216,900",
+  "left": "296,48,224,852",
+  "right": "1288,48,224,852",
+  "middle": "904px",
+  "column": "768px"
+ },
+ "panels": {
+  "bar": "582,12,644,48",
+  "library": "520,597,768,204",
+  "inspector": "1188,72,312,729",
+  "window": "1512x813",
+  "pageBackground": "rgba(0, 0, 0, 0)",
+  "stageBackground": "none",
+  "panelBackground": "rgba(21, 21, 21, 0.9)"
+ },
+ "leftSelected": {
+  "grip": "318,600,180,225",
+  "panel": true,
+  "dock": "on-page"
+ },
+ "rightSelected": {
+  "dock": "on-page dock-left",
+  "inspector": "12,72,312,538",
+  "grip": "hidden"
+ },
+ "dragOnThePage": {
+  "position": "85 to 57",
+  "sharedUntouched": "default"
+ },
+ "whileDragging": {
+  "classes": "on-page dragging dragging-files",
+  "panelsLetItThrough": "none/none/none",
+  "zone": "dashed"
+ },
+ "droppedOnTheSidebar": {
+  "images": 1,
+  "sidebarMode": "own",
+  "usesIt": true,
+  "classes": "on-page"
+ },
+ "pageWithoutParts": "296,0,1216,900 | hidden | hidden | hidden grip hidden",
+ "windowsAtFirst": {
+  "library": "520,597,768,204",
+  "inspector": "1188,72,312,729",
+  "bar": "582,12,644,48",
+  "kept": "null",
+  "titles": "Library,Settings",
+  "edges": "8+8+0"
+ },
+ "libraryMoved": {
+  "box": "370,397,768,204",
+  "kept": "{\"left\":370,\"top\":397}",
+  "othersStayed": true
+ },
+ "libraryResizedFromCorner": {
+  "box": "370,397,888,294",
+  "kept": "{\"left\":370,\"top\":397,\"width\":888,\"height\":294}"
+ },
+ "leftEdgeMovesOnlyTheLeft": "430,397,828,294",
+ "topEdgeMovesOnlyTheTop": "430,357,828,334",
+ "neverSmallerThan": "1038,571,220,120",
+ "contentFollowsTheSize": {
+  "box": "1038,571,520,280",
+  "shelfTops": "44,268,268",
+  "contentScrolls": "auto"
+ },
+ "inspectorMoved": {
+  "box": "788,172,312,629",
+  "staysPutWhenRightIsSelected": "788,172,312,538",
+  "classes": "on-page dock-left"
+ },
+ "barMoved": "682,312,644,48",
+ "cannotBeLostOffTheEdge": {
+  "box": "-440,777,520,280",
+  "window": "1512x813"
+ },
+ "pressedWindowComesToFront": true,
+ "folded": {
+  "box": "788,172,312,32",
+  "content": "none",
+  "kept": true
+ },
+ "unfolded": "788,172,312,629",
+ "closed": {
+  "library": "none",
+  "button": "false",
+  "kept": true
+ },
+ "broughtBackFromTheBar": {
+  "library": "flex",
+  "button": "true",
+  "sameBox": true
+ },
+ "barButtonTogglesSettings": "none then flex",
+ "putBack": {
+  "library": true,
+  "inspector": true,
+  "kept": "{}{}"
+ },
+ "unmovedSettingsStillDodge": {
+  "classes": "on-page dock-left",
+  "box": "12,72,312,538"
+ },
+ "dotsDoNotDrag": true,
+ "closing": "close close",
+ "errors": []
+}

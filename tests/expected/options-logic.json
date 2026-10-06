@@ -1,0 +1,81 @@
+{
+ "gifChosen": {
+  "editor": true,
+  "crop": false,
+  "whole": true,
+  "preview": "120x150",
+  "previewShape": "100% 720 / 540",
+  "status": ""
+ },
+ "gifSavedMain": {
+  "n": 1,
+  "identicalFile": true,
+  "type": "data:image/gif",
+  "animated": true,
+  "thumb": "data:image/jpeg",
+  "preset": null,
+  "status": "Saved to your images and set as the background. You now have 1. Switch between them in the editor, which the toolbar icon opens."
+ },
+ "sidebarShape": {
+  "editor": true,
+  "crop": false,
+  "whole": true,
+  "previewShape": "309px 309 / 560"
+ },
+ "gifSavedSidebar": {
+  "n": 2,
+  "identicalFile": true,
+  "mode": "own",
+  "sidebarPreset": null,
+  "mainUnchanged": true,
+  "status": "Saved to your images and set as the sidebar's picture. You now have 2. Switch between them in the editor, which the toolbar icon opens."
+ },
+ "stillChosen": {
+  "editor": true,
+  "crop": true,
+  "whole": false
+ },
+ "stillSaved": {
+  "n": 3,
+  "type": "data:image/jpeg",
+  "animated": false,
+  "isLast": true
+ },
+ "zoomedOut": {
+  "image": "720x450",
+  "box": "720x540",
+  "at": "0,45",
+  "gap": true
+ },
+ "zoomedOutSaved": {
+  "n": 4,
+  "type": "data:image/webp",
+  "size": "1600x1200",
+  "topEdge": "0,0,0,0",
+  "middle": "0,0,0,255",
+  "thumb": "data:image/jpeg"
+ },
+ "zoomedHalfway": {
+  "image": "792x495",
+  "box": "720x540",
+  "at": "-36,23",
+  "gap": true
+ },
+ "zoomedToFill": {
+  "image": "864x540",
+  "box": "720x540",
+  "at": "-72,0",
+  "gap": false
+ },
+ "zoomedIn": {
+  "image": "1728x1080",
+  "box": "720x540",
+  "at": "-504,-270",
+  "gap": false
+ },
+ "tooBig": "That GIF is over 25 MB. Please choose a smaller one.",
+ "broken": {
+  "status": "That file could not be opened as an image.",
+  "editorHidden": true
+ }
+}

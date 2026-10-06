@@ -1,0 +1,451 @@
+{
+ "start": {
+  "enabled": true,
+  "showing": "Dusk",
+  "panels": "main",
+  "parts": "1000",
+  "selected": "zone-main",
+  "staleHidden": true,
+  "undoOff": true,
+  "redoOff": true,
+  "screen": "1387.17px x 789px",
+  "shrink": 0.917442,
+  "previewSidebar": "0,0,288,860",
+  "previewPane": "296,0,1216,860",
+  "previewColumn": "520,729,768,131",
+  "zoneSidebarWidthInPreview": 288,
+  "zoneLeftWidthInPreview": 224,
+  "tiles": {
+   "presets": 7,
+   "images": 2,
+   "stickers": 2
+  },
+  "previewWallpaper": "on",
+  "previewLeftPicture": "318,538,180,225",
+  "windows": "bar fixed, library fixed titled, inspector fixed titled"
+ },
+ "sidebarSelected": {
+  "panels": "sidebar",
+  "parts": "0100",
+  "selected": "zone-sidebar",
+  "browse": "The first one becomes the sidebar's picture."
+ },
+ "leftSelected": {
+  "panels": "side",
+  "title": "Picture on the left",
+  "selected": "zone-left",
+  "gripShown": true,
+  "gripRightHidden": true,
+  "gripOverPicture": "0,0,0,0",
+  "sideChoices": "010"
+ },
+ "backToMain": {
+  "panels": "main",
+  "selected": "zone-main",
+  "gripShown": true
+ },
+ "presetOnMain": {
+  "preset": "ocean",
+  "sidebarMode": "(joined)",
+  "showing": "Ocean",
+  "library": "0001000"
+ },
+ "presetOnSidebar": {
+  "sidebarMode": "own",
+  "sidebarPreset": "ember",
+  "mainStill": "ocean",
+  "showing": "Ember",
+  "library": "0010000",
+  "preview": "on"
+ },
+ "claudeOwnSidebar": {
+  "sidebarMode": "plain",
+  "mainStill": "ocean"
+ },
+ "imageOnMain": {
+  "preset": null,
+  "imageId": "a",
+  "showing": "one of your images",
+  "images": "10"
+ },
+ "stickerGoesToTheSideLastSelected": {
+  "left": "s2",
+  "right": null,
+  "selected": "zone-left",
+  "panels": "side",
+  "previewRight": false
+ },
+ "historyOn": {
+  "undoOff": false,
+  "redoOff": true
+ },
+ "undone": {
+  "left": "s1",
+  "redoOff": false
+ },
+ "redone": {
+  "left": "s2"
+ },
+ "sliderMoved": {
+  "opacity": 0.62,
+  "label": "62%"
+ },
+ "sliderUndoneInOneStep": {
+  "opacity": 0.5,
+  "was": 0.5,
+  "slider": "50"
+ },
+ "sliderRedone": {
+  "opacity": 0.62
+ },
+ "zoomHiddenForPresets": {
+  "main": true,
+  "sidebar": true
+ },
+ "zoomShownForImages": {
+  "main": true,
+  "sidebar": true
+ },
+ "zoomAutomaticLandscape": {
+  "saved": null,
+  "label": "Stretched to fit, automatic",
+  "slider": "0",
+  "resetButtonHidden": true,
+  "space": "the chat window, 1224 × 860"
+ },
+ "zoomSpaceWithAJoinedSidebar": "the whole window, 1512 × 860",
+ "zoomAutomaticUpright": {
+  "saved": null,
+  "label": "Fills, automatic",
+  "slider": "100"
+ },
+ "zoomAllTheWayOut": {
+  "saved": 0,
+  "label": "Whole picture",
+  "slider": "0",
+  "resetButtonHidden": false
+ },
+ "zoomIn": {
+  "saved": 2.5,
+  "label": "250%",
+  "slider": "250"
+ },
+ "zoomNearFill": {
+  "saved": 1,
+  "label": "Fills",
+  "slider": "100"
+ },
+ "zoomBackToAutomatic": {
+  "saved": null,
+  "label": "Fills, automatic",
+  "slider": "100"
+ },
+ "zoomKeptForTheSamePicture": {
+  "saved": 3,
+  "label": "300%",
+  "slider": "300"
+ },
+ "zoomAutomaticAgainForAnotherPicture": {
+  "saved": null,
+  "label": "Stretched to fit, automatic",
+  "slider": "0"
+ },
+ "zoomSidebarOut": {
+  "saved": 0,
+  "label": "Whole picture",
+  "slider": "0",
+  "mainUntouched": null
+ },
+ "canBeDragged": {
+  "main": true,
+  "sidebar": true,
+  "resetHidden": true
+ },
+ "aPressThatDoesNotMoveIsNotADrag": {
+  "x": 0,
+  "y": 0
+ },
+ "dragBackground": {
+  "x": 0.071,
+  "y": -0.051,
+  "expected": "0.071, -0.051",
+  "before": "288px 0px",
+  "after": "375px -44px",
+  "resetHidden": false,
+  "sidebarUntouched": 0
+ },
+ "dragBackgroundUndoneInOneStep": {
+  "x": 0,
+  "back": true
+ },
+ "backgroundPutBack": {
+  "x": 0,
+  "y": 0,
+  "back": true
+ },
+ "dragSidebarPicture": {
+  "x": 0.114,
+  "y": 0.076,
+  "at": "calc(50% + 33px) calc(50% + 65px)",
+  "mainUntouched": 0,
+  "selected": "zone-sidebar"
+ },
+ "sidebarPicturePutBack": {
+  "x": 0,
+  "at": "(not set)"
+ },
+ "aPresetCannotBeDragged": {
+  "pannable": false,
+  "x": 0
+ },
+ "dropStillOnMain": {
+  "during": "dragging dragging-files",
+  "taken": true,
+  "after": "",
+  "images": 3,
+  "stored": "data:image/jpeg",
+  "storedSize": "2560x1280",
+  "animated": false,
+  "thumb": "data:image/jpeg",
+  "preset": null,
+  "usesIt": true,
+  "selected": "zone-main",
+  "tiles": 3,
+  "emptyNoteHidden": true,
+  "said": "Added. It is kept under Your images."
+ },
+ "dropGifOnSidebar": {
+  "images": 4,
+  "identicalFile": true,
+  "animated": true,
+  "sidebarMode": "own",
+  "sidebarPreset": null,
+  "usesIt": true,
+  "mainStill": true,
+  "selected": "zone-sidebar"
+ },
+ "dropBesideChat": {
+  "stickers": 3,
+  "identicalFile": true,
+  "thumb": "data:image/png",
+  "right": true,
+  "left": "s2",
+  "selected": "zone-right",
+  "tiles": 3,
+  "said": "Added. It is kept under Side pictures."
+ },
+ "dropTwoOnLeft": {
+  "stickers": 5,
+  "firstUsed": true,
+  "said": "Added 2 pictures. They are kept under Side pictures."
+ },
+ "dropNotAPicture": {
+  "images": true,
+  "said": "Only pictures can be added: PNG, JPEG, GIF or WebP files.",
+  "after": ""
+ },
+ "dropBrokenPicture": {
+  "images": true,
+  "said": "That file could not be opened as an image."
+ },
+ "dropOnLibraryShelf": {
+  "images": 1,
+  "mainStill": true,
+  "sidebarStill": true
+ },
+ "dropOutsideTheScreen": {
+  "taken": false,
+  "images": 1,
+  "said": "Drop it on the main page, the sidebar, or beside the chat.",
+  "after": ""
+ },
+ "dragPresetToSidebar": {
+  "during": "dragging dragging-image",
+  "taken": true,
+  "sidebarMode": "own",
+  "sidebarPreset": "forest",
+  "after": ""
+ },
+ "dragPresetBesideChatIsRefused": {
+  "during": "dragging dragging-image",
+  "taken": false,
+  "left": "<id>",
+  "preset": null
+ },
+ "dragSidePictureToLeft": {
+  "during": "dragging dragging-sticker",
+  "taken": true,
+  "left": "s1",
+  "selected": "zone-left"
+ },
+ "dragSidePictureOntoMainIsRefused": {
+  "taken": false,
+  "imageId": true,
+  "right": true
+ },
+ "dragPictureUp": {
+  "position": "50 to 40",
+  "rightStill": "shared 50",
+  "movedUpInPreview": 64,
+  "expected": 65,
+  "slider": "40",
+  "gripFollowed": -59
+ },
+ "dragCorner": {
+  "size": "120 to 185",
+  "rightStill": "shared 120",
+  "widthInPreview": "120 to 185",
+  "slider": "185"
+ },
+ "bothDragsUndone": {
+  "size": "shared 120",
+  "position": "shared 50"
+ },
+ "gripsThereWithoutSelecting": {
+  "left": true,
+  "outlined": false
+ },
+ "dragPictureSideways": {
+  "shift": 44,
+  "expected": 44,
+  "movedInPreview": 44,
+  "nowSelected": "zone-left",
+  "resetHidden": false,
+  "rightStill": "not set"
+ },
+ "draggedFarLeftStopsAtTheEdge": {
+  "pictureLeft": 308,
+  "paneLeft": 296
+ },
+ "pictureBackBesideTheChat": {
+  "shift": 0,
+  "sameAsBefore": true,
+  "resetHidden": true
+ },
+ "eachSideHasItsOwn": {
+  "left": {
+   "size": 300,
+   "opacity": 0.4,
+   "widthInPreview": 300,
+   "seeThrough": "0.4"
+  },
+  "rightSlidersShowedItsOwn": {
+   "size": "120",
+   "opacity": "100",
+   "label": "120px"
+  },
+  "right": {
+   "size": 90,
+   "position": 10,
+   "opacity": "shared 1",
+   "widthInPreview": 90
+  },
+  "leftUntouched": "300/300",
+  "button": "Make the left one match"
+ },
+ "leftSlidersShowItsOwn": {
+  "size": "300",
+  "opacity": "40",
+  "button": "Make the right one match"
+ },
+ "makeTheOtherMatch": {
+  "right": "300/50/0.4",
+  "left": "300/shared 50/0.4",
+  "widths": "300/300",
+  "said": "The picture on the right now has the same size, height and opacity."
+ },
+ "matchUndoneInOneStep": "90/10/shared",
+ "deleteKeyTakesItOff": {
+  "left": null,
+  "stillInLibrary": true,
+  "gripShown": false,
+  "sideChoices": "100"
+ },
+ "textColour": {
+  "textColor": "#ffffff",
+  "sidebarTextColor": null,
+  "reply": "rgb(255, 255, 255)",
+  "smallPrint": "color(srgb 1 1 1 / 0.74)",
+  "messageBox": "rgb(137, 135, 129)",
+  "codeBlock": "rgb(11, 11, 11)",
+  "sidebar": "rgb(11, 11, 11)"
+ },
+ "frame": {
+  "frameMain": "key",
+  "width": 22,
+  "preview": "on",
+  "drawn": "29px",
+  "pressed": "0000000100"
+ },
+ "wholeWindow": {
+  "layout": "combined",
+  "rows": "combined"
+ },
+ "sidebarJoined": {
+  "mode": "joined",
+  "panelOpacity": 0.35,
+  "blocks": "joined",
+  "noteAboutWholeWindow": true
+ },
+ "sidebarFont": {
+  "sidebarFont": "mono",
+  "font": "default",
+  "preview": "ui-monospace, ",
+  "reply": "Georgia,"
+ },
+ "darkPreview": {
+  "dark": true,
+  "pressed": "01",
+  "boxColour": "rgb(48, 48, 46)"
+ },
+ "switchedOff": {
+  "enabled": false,
+  "previewWallpaper": null,
+  "previewFrame": null
+ },
+ "removeImage": {
+  "images": "5 to 4",
+  "fileGone": true,
+  "tiles": 4,
+  "undoOff": true
+ },
+ "iconOnAClaudeTab": {
+  "asked": "5:toggle-editor",
+  "newTab": null,
+  "broughtToFront": null
+ },
+ "iconOnAnotherTab": {
+  "asked": "8:toggle-editor 4:open-editor 5:open-editor",
+  "newTab": null,
+  "broughtToFront": 5
+ },
+ "iconWhenClaudeTabsNeedRefreshing": {
+  "asked": "5:toggle-editor 5:open-editor",
+  "newTab": "chrome-extension://test/editor.html?why=refresh",
+  "broughtToFront": null
+ },
+ "iconWithNoClaudeTab": {
+  "asked": "8:toggle-editor",
+  "newTab": "https://claude.ai/new",
+  "broughtToFront": null
+ },
+ "newClaudeTabAsksOnce": [
+  {
+   "open": true
+  },
+  {
+   "open": false
+  },
+  {
+   "open": false
+  }
+ ],
+ "cropLink": "chrome-extension://test/options.html#sidebar",
+ "inATab": {
+  "onPage": false,
+  "done": true,
+  "openClaude": false,
+  "refreshNote": true
+ },
+ "errors": []
+}
