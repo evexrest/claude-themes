@@ -44,7 +44,9 @@
   "outlined": "A",
   "gripOverPicture": "0,0,0,0",
   "itsSettingsShown": true,
-  "emptyNoteHidden": true
+  "emptyNoteHidden": true,
+  "row": "A*",
+  "layerButtons": "(none)"
  },
  "rightSelectedWithNoPicture": {
   "title": "Pictures on the right",
@@ -89,7 +91,9 @@
   "inPreview": 2,
   "grips": 2,
   "outlined": "B",
-  "library": "11"
+  "library": "11",
+  "row": "B* A",
+  "layerButtons": "backward,back"
  },
  "historyOn": {
   "undoOff": false,
@@ -99,12 +103,14 @@
   "placed": "A left s1",
   "inPreview": 1,
   "outlined": "A",
+  "row": "A*",
   "redoOff": false
  },
  "redone": {
   "placed": "A left s1, B left s2",
   "inPreview": 2,
-  "outlined": "B"
+  "outlined": "B",
+  "row": "B* A"
  },
  "theSamePictureTwice": {
   "placed": "A left s1, B left s2, C left s2",
@@ -400,6 +406,107 @@
   "placed": "A left s1, B left s2, C right s2",
   "inPreview": 3
  },
+ "layers": {
+  "atFirst": {
+   "order": "ABCD",
+   "row": "D* B A",
+   "buttons": "backward,back",
+   "inPreview": "A-4 B-3 C-2 D-1",
+   "grips": "A1 B2 C3 D4",
+   "aPressLandsOn": "D",
+   "outlined": "D"
+  },
+  "rowNames": [
+   "Picture 1 of 3, counted from the front (Front)",
+   "Picture 2 of 3, counted from the front",
+   "Picture 3 of 3, counted from the front (Back)"
+  ],
+  "buttonNames": "Bring forward | Send back | To the front | To the back | Remove from the page",
+  "theFrontOneSentBack": {
+   "order": "DABC",
+   "row": "B A D*",
+   "buttons": "forward,front",
+   "inPreview": "D-4 A-3 B-2 C-1",
+   "aPressLandsOn": "B"
+  },
+  "andBroughtBackToTheFront": {
+   "order": "ABCD",
+   "row": "D* B A",
+   "buttons": "backward,back",
+   "inPreview": "A-4 B-3 C-2 D-1",
+   "aPressLandsOn": "D"
+  },
+  "choosingInTheRow": {
+   "row": "D B* A",
+   "buttons": "forward,backward,front,back",
+   "outlined": "B",
+   "sliders": "180/40"
+  },
+  "rowKeptWhileASliderMoves": true,
+  "bringForward": {
+   "order": "ACDB",
+   "row": "B* D A",
+   "buttons": "backward,back",
+   "inPreview": "A-4 C-3 D-2 B-1",
+   "aPressLandsOn": "B",
+   "grips": "A1 C2 D3 B4",
+   "sameElementsInThePreview": true
+  },
+  "sendBack": {
+   "order": "ACBD",
+   "row": "D B* A",
+   "buttons": "forward,backward,front,back",
+   "inPreview": "A-4 C-3 B-2 D-1",
+   "aPressLandsOn": "D"
+  },
+  "toTheBack": {
+   "order": "BACD",
+   "row": "D A B*",
+   "buttons": "forward,front",
+   "inPreview": "B-4 A-3 C-2 D-1",
+   "aPressLandsOn": "D"
+  },
+  "toTheFront": {
+   "order": "ACDB",
+   "row": "B* D A",
+   "buttons": "backward,back",
+   "inPreview": "A-4 C-3 D-2 B-1",
+   "aPressLandsOn": "B"
+  },
+  "undone": {
+   "order": "BACD",
+   "row": "D A B*",
+   "inPreview": "B-4 A-3 C-2 D-1"
+  },
+  "redone": {
+   "order": "ACDB",
+   "row": "B* D A",
+   "inPreview": "A-4 C-3 D-2 B-1"
+  },
+  "aloneOnItsSide": {
+   "row": "C*",
+   "buttons": "front,back",
+   "outlined": "C",
+   "toTheFront": {
+    "order": "ADBC",
+    "row": "C*",
+    "buttons": "back",
+    "inPreview": "A-4 D-3 B-2 C-1",
+    "aPressLandsOn": "B"
+   }
+  },
+  "removeFromThePage": {
+   "order": "ADB",
+   "row": "(empty)",
+   "emptyNoteShown": true,
+   "inPreview": 3,
+   "stillInLibrary": true
+  },
+  "removeUndone": {
+   "order": "ADBC",
+   "row": "C*"
+  }
+ },
  "noMoreThanTwenty": {
   "placed": 20,
   "stillTheSame": true,
@@ -677,9 +784,9 @@
   }
  },
  "withoutAMouse": {
-  "controls": 171,
+  "controls": 178,
   "withNoName": [],
-  "choices": 108,
+  "choices": 110,
   "choicesThatDoNotSayWhetherTheyAreOn": [],
   "takenOutOfTheTabOrder": [],
   "removeButtonsSay": [
@@ -689,6 +796,10 @@
   "focusRing": "solid 2px",
   "messagesAreReadOut": "status",
   "pageOverlayHiddenFromScreenReaders": "true",
+  "sideRow": [
+   "Picture 1 of 2, counted from the front, chosen",
+   "Picture 2 of 2, counted from the front, not chosen"
+  ],
   "windowsNamed": "Library, Settings",
   "question": {
    "focusGoesToIt": "ask-no",

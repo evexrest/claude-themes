@@ -472,12 +472,14 @@ body.moving {
     color: #e8e6e1;
 }
 
-.group button:disabled {
+.group button:disabled,
+.layers button:disabled {
     color: #55534c;
     cursor: default;
 }
 
 .group button:not(:disabled):hover,
+.layers button:not(:disabled):hover,
 .wide:hover {
     background: #2c2c2a;
 }
@@ -896,6 +898,22 @@ h3 {
     width: 100%;
     margin-top: 16px;
     padding: 10px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #20201f;
+    color: #e8e6e1;
+}
+
+/* The four buttons that move a picture beside the chat forwards or back, two to
+   a row. */
+.layers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.layers button {
+    padding: 8px 6px;
     border: 0;
     border-radius: 8px;
     background: #20201f;

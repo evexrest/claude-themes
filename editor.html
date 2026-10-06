@@ -370,13 +370,34 @@
                     Library, or drop one from your computer onto this side.
                 </p>
 
-                <!-- The picture that is chosen on this side. -->
+                <!-- This side's pictures, and the settings of the one that is chosen. -->
                 <div id="side-chosen">
+                    <div class="tiles small" id="side-placed"></div>
+                    <p class="note">
+                        This side's pictures, the one in front first. Click one to choose
+                        it, here or on the screen.
+                    </p>
+
+                    <h3>Layer</h3>
+                    <div class="layers">
+                        <button id="layer-forward">Bring forward</button>
+                        <button id="layer-backward">Send back</button>
+                        <button id="layer-front">To the front</button>
+                        <button id="layer-back">To the back</button>
+                    </div>
+                    <p class="note">
+                        Where two pictures overlap, the one in front covers the other. The
+                        first two buttons move this picture past the next one on this side.
+                        The other two put it in front of, or behind, every picture on both
+                        sides.
+                    </p>
+                    <button class="wide" id="side-remove" title="It stays in the Library (Delete)">Remove from the page</button>
+
+                    <h3>Place and size</h3>
                     <p class="note first">
-                        Click a picture on the screen to choose it. Drag it to move it
-                        anywhere in the chat window, and drag its corner to resize it.
-                        Wherever it overlaps the chat it lies behind it, under the text and
-                        the message box.
+                        Drag the picture on the screen to move it anywhere in the chat
+                        window, and drag its corner to resize it. Wherever it overlaps the
+                        chat it lies behind it, under the text and the message box.
                     </p>
                     <button class="wide" id="sticker-shift-reset">Put it back beside the chat</button>
 

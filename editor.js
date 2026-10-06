@@ -170,9 +170,9 @@ function placedOn(side) {
     return state.placed.filter((item) => item.side === side);
 }
 
-// The picture that is chosen on one side: the one its sliders and the Delete key
-// work on. It is the one last picked there, or the one in front when that one has
-// gone or none has been picked. Null when the side has no picture.
+// The picture that is chosen on one side: the one its sliders, its layer buttons
+// and the Delete key work on. It is the one last picked there, or the one in front
+// when that one has gone or none has been picked. Null when the side has no picture.
 function chosenOn(side) {
     const here = placedOn(side);
     return here.find((item) => item.key === chosen[side]) || here[here.length - 1] || null;
@@ -189,6 +189,32 @@ function changePlaced(key, change, how = "step") {
 // Take one picture off the page. It stays in the library.
 function removePlaced(key) {
     save({ placed: state.placed.filter((item) => item.key !== key) });
+}
+
+// Where each layer button takes a picture beside the chat: its new place in the
+// list, counted from the back, or -1 for nowhere. `from` is where it is now, and
+// `mine` is true of a picture on its own side. The first two take it past the next
+// picture on its side, so that the side's row of pictures always shows the change.
+// The other two take it in front of, or behind, every picture on either side: a
+// picture can be dragged anywhere in the chat window, over one from the other side.
+const layerMoves = {
+    forward: (list, from, mine) => list.findIndex((item, index) => index > from && mine(item)),
+    backward: (list, from, mine) => list.findLastIndex((item, index) => index < from && mine(item)),
+    front: (list) => list.length - 1,
+    back: () => 0
+};
+
+// The list with one picture moved to another layer, or null when that would change
+// nothing. `how` is one of the names above.
+function relayered(list, key, how) {
+    const from = list.findIndex((item) => item.key === key);
+    const to = layerMoves[how](list, from, (item) => item.side === list[from].side);
+    if (to < 0 || to === from) {
+        return null;
+    }
+    const moved = list.filter((item) => item.key !== key);
+    moved.splice(to, 0, list[from]);
+    return moved;
 }
 
 // What to say when there is no room beside the chat for another picture.
@@ -589,6 +615,44 @@ async function removeSticker(id) {
     save(change, "none");
     await chrome.storage.local.remove(stickerKey(id));
     showLibrary();
+}
+
+// The row of the selected side's pictures in its settings, the front one first,
+// with the chosen one marked. It is drawn again only when the pictures in it
+// change, so that the keyboard keeps its place in it while a slider moves.
+let rowShows = "";
+function showPlaced(picked) {
+    const row = byId("side-placed");
+    const here = placedOn(part).reverse();
+    const thumb = (item) => (state.stickers.find((sticker) => sticker.id === item.id) || {}).thumb;
+    const shows = here.map((item) => item.key + " " + item.id + (thumb(item) ? "" : " unseen")).join(", ");
+
+    if (shows !== rowShows) {
+        rowShows = shows;
+        row.replaceChildren(...here.map((item, index) => {
+            const button = document.createElement("button");
+            button.className = "tile";
+            button.dataset.key = item.key;
+            button.setAttribute("aria-label", `Picture ${index + 1} of ${here.length}, counted from the front`);
+            if (thumb(item)) {
+                button.style.backgroundImage = `url("${thumb(item)}")`;
+            }
+            // The two ends of the row say which way it runs.
+            if (here.length > 1 && (index === 0 || index === here.length - 1)) {
+                const label = document.createElement("span");
+                label.textContent = index === 0 ? "Front" : "Back";
+                button.appendChild(label);
+            }
+            button.addEventListener("click", () => {
+                chosen[item.side] = item.key;
+                choose(item.side);
+            });
+            return button;
+        }));
+    }
+    for (const button of row.children) {
+        press(button, picked !== null && button.dataset.key === picked.key);
+    }
 }
 
 // Draw the library again: the presets, the saved images and the side pictures.
@@ -1400,6 +1464,10 @@ function sync() {
     byId("side-title").textContent = part === "left" ? "Pictures on the left" : "Pictures on the right";
     byId("side-empty").hidden = picked !== null;
     byId("side-chosen").hidden = picked === null;
+    showPlaced(picked);
+    for (const how of Object.keys(layerMoves)) {
+        byId("layer-" + how).disabled = picked === null || relayered(state.placed, picked.key, how) === null;
+    }
 
     byId("main-now").textContent = backgroundName(state.preset, state.imageId);
     byId("side-now").textContent = backgroundName(state.sidebarPreset, state.sidebarImageId);
@@ -1494,6 +1562,23 @@ async function start() {
     sideSlider("sticker-size", "size", pixels, same, same);
     sideSlider("sticker-position", "position", place, same, same);
     sideSlider("sticker-opacity", "opacity", percent, fraction, hundredths);
+    for (const how of Object.keys(layerMoves)) {
+        byId("layer-" + how).addEventListener("click", () => {
+            const item = chosenOn(part);
+            const list = item && relayered(state.placed, item.key, how);
+            if (list) {
+                // It stays the chosen one, even if it was only chosen for being in front.
+                chosen[item.side] = item.key;
+                save({ placed: list });
+            }
+        });
+    }
+    byId("side-remove").addEventListener("click", () => {
+        const item = chosenOn(part);
+        if (item) {
+            removePlaced(item.key);
+        }
+    });
 
     showFrames();
     showLibrary();

@@ -13,10 +13,17 @@
   store.preset = q.get("preset") || "dusk";
   store.stickers = [{ id: "s1", thumb: GIF1 }, { id: "s2", thumb: GIF2 }]; store["sticker-s1"] = GIF1; store["sticker-s2"] = GIF2;
   store.placed = q.get("left") === "none" ? [] : [{ key: "p1", id: "s1", side: "left", size: Number(q.get("size") || 180), position: 85, opacity: 1, shift: 0 }];
+  // For a picture of the layers: placed=three puts three on the left, overlapping, the third a star drawn here.
+  if (q.get("placed") === "three") {
+    const star = (() => { const c = document.createElement("canvas"); c.width = 150; c.height = 150; const x = c.getContext("2d"); x.translate(75, 78); x.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 30 : 68, a = Math.PI * i / 5 - Math.PI / 2; x.lineTo(r * Math.cos(a), r * Math.sin(a)); } x.closePath(); x.fillStyle = "#3fa7a3"; x.fill(); x.lineJoin = "round"; x.lineWidth = 7; x.strokeStyle = "#14373a"; x.stroke(); return c.toDataURL("image/png"); })();
+    store.stickers.push({ id: "s3", thumb: star }); store["sticker-s3"] = star;
+    const put = (key, id, more) => ({ key, id, side: "left", size: 170, position: 85, opacity: 1, shift: 0, ...more });
+    store.placed = [put("p1", "s1", { position: 58, shift: -22 }), put("p2", "s2", { position: 74, shift: 26 }), put("p3", "s3", { size: 150, position: 90 })];
+  }
   if (q.get("frame")) store.frameMain = q.get("frame");
   if (q.get("text")) store.textColor = q.get("text");
   if (q.get("side")) store.sidebarMode = q.get("side");
   // For the pictures in docs/: no first-time note, and a chosen light or dark preview.
   if (q.get("shots")) store.welcomed = true;
-  addEventListener("load", () => setTimeout(() => { if (q.get("theme")) document.querySelector(`#themes .tile[data-theme="${q.get("theme")}"]`).click(); if (q.get("part")) document.getElementById("part-" + q.get("part")).click(); if (q.get("dark")) document.getElementById("mode-dark").click(); if (q.get("light")) document.getElementById("mode-light").click(); if (q.get("drag")) startDragging({ kind: q.get("drag") }); }, 300));
+  addEventListener("load", () => setTimeout(() => { if (q.get("theme")) document.querySelector(`#themes .tile[data-theme="${q.get("theme")}"]`).click(); if (q.get("part")) document.getElementById("part-" + q.get("part")).click(); if (q.get("dark")) document.getElementById("mode-dark").click(); if (q.get("light")) document.getElementById("mode-light").click(); if (q.get("drag")) startDragging({ kind: q.get("drag") }); if (q.get("click")) document.getElementById(q.get("click")).click(); }, 300));
 </script>

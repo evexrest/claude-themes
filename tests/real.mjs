@@ -138,6 +138,10 @@ try {
     found.addASecond = await run(editor, `(async () => { const tiles = document.querySelectorAll("#stickers .tile"); tiles[tiles.length - 1].click(); await new Promise((r) => setTimeout(r, 1200));
       return { inStorage: await ${inStorage}, handles: ${handles}, panel: document.getElementById("side-title").textContent }; })()`);
     found.pageShowsBoth = await run(page, onThePage);
+    // Send it behind the first: the page changes the layers and leaves the two elements where they are.
+    found.sendItBack = await run(editor, `(async () => { document.getElementById("layer-backward").click(); await new Promise((r) => setTimeout(r, 800));
+      return { inStorage: await ${inStorage}, row: [...document.querySelectorAll("#side-placed .tile")].map((b) => b.getAttribute("aria-pressed") === "true" ? "chosen" : "other").join(", "), canStill: ["forward", "backward", "front", "back"].filter((how) => !document.getElementById("layer-" + how).disabled).join(",") }; })()`);
+    found.pageShowsTheNewOrder = await run(page, onThePage);
     await picture(page, "real-page.png");
 
     // Move and resize a window with the mouse itself, as a person would.

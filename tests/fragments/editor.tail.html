@@ -21,6 +21,9 @@
   // The saved list, back to front, as "A left s1, B left s2": each placed picture gets a letter the first time it is seen.
   const letters = new Map(); const letter = (key) => { if (!letters.has(key)) letters.set(key, String.fromCharCode(65 + letters.size)); return letters.get(key); };
   const placedNow = () => store.placed.map((p) => letter(p.key) + " " + p.side + " " + p.id).join(", ") || "(none)";
+  // The selected side's row of pictures, front first, the chosen one starred: "B* A". And the layer buttons that can be pressed.
+  const row = () => [...el("side-placed").children].map((b) => letter(b.dataset.key) + (b.getAttribute("aria-pressed") === "true" ? "*" : "")).join(" ") || "(empty)";
+  const layerButtons = () => ["forward", "backward", "front", "back"].filter((how) => !el("layer-" + how).disabled).join(",") || "(none)";
   const outlined = () => store.placed.filter((p) => grips.get(p.key) && grips.get(p.key).classList.contains("selected")).map((p) => letter(p.key)).join(",") || "(none)";
   const tileFor = (kind, id) => document.querySelector(`#library .tile[data-kind="${kind}"][data-id="${id}"]`);
   const selected = () => [...document.querySelectorAll(".zone.selected")].map((z) => z.id).join(",");
@@ -41,7 +44,7 @@
   el("zone-left").click(); await wait(200);
   const grip = grips.get("p1"), gb = grip.getBoundingClientRect(), sb = el("screen").getBoundingClientRect(), pb = picture("p1").getBoundingClientRect();
   r.leftSelected = { panels: panels(), title: el("side-title").textContent, selected: selected(), gripShown: !grip.hidden, grips: document.querySelectorAll(".grip").length, outlined: outlined(),
-    gripOverPicture: [gb.left - sb.left - pb.left * shrink, gb.top - sb.top - pb.top * shrink, gb.width - pb.width * shrink, gb.height - pb.height * shrink].map((n) => Math.round(n)).join(","), itsSettingsShown: !el("side-chosen").hidden, emptyNoteHidden: el("side-empty").hidden };
+    gripOverPicture: [gb.left - sb.left - pb.left * shrink, gb.top - sb.top - pb.top * shrink, gb.width - pb.width * shrink, gb.height - pb.height * shrink].map((n) => Math.round(n)).join(","), itsSettingsShown: !el("side-chosen").hidden, emptyNoteHidden: el("side-empty").hidden, row: row(), layerButtons: layerButtons() };
   el("zone-right").click(); await wait(60);
   r.rightSelectedWithNoPicture = { title: el("side-title").textContent, emptyNote: el("side-empty").hidden ? "" : el("side-empty").textContent.replace(/\s+/g, " ").trim(), itsSettingsShown: !el("side-chosen").hidden, bare: el("zone-right").classList.contains("bare") + "/" + el("zone-left").classList.contains("bare") };
   el("zone-left").click(); await wait(60);
@@ -58,14 +61,14 @@
   el("zone-main").click(); tileFor("image", "a").click(); await wait(40);
   r.imageOnMain = { preset: store.preset, imageId: store.imageId, showing: el("main-now").textContent, images: pressed("#images .tile") };
   letter("p1"); tileFor("sticker", "s2").click(); await wait(200);
-  r.sidePictureIsAddedToTheSideLastSelected = { placed: placedNow(), heights: store.placed.map((p) => p.position).join(","), selected: selected(), panels: panels(), inPreview: page.querySelectorAll(".claude-sticker").length, grips: document.querySelectorAll(".grip").length, outlined: outlined(), library: pressed("#stickers .tile") };
+  r.sidePictureIsAddedToTheSideLastSelected = { placed: placedNow(), heights: store.placed.map((p) => p.position).join(","), selected: selected(), panels: panels(), inPreview: page.querySelectorAll(".claude-sticker").length, grips: document.querySelectorAll(".grip").length, outlined: outlined(), library: pressed("#stickers .tile"), row: row(), layerButtons: layerButtons() };
 
   // ----- undo and redo -----
   r.historyOn = { undoOff: el("undo").disabled, redoOff: el("redo").disabled };
   el("undo").click(); await wait(200);
-  r.undone = { placed: placedNow(), inPreview: page.querySelectorAll(".claude-sticker").length, outlined: outlined(), redoOff: el("redo").disabled };
+  r.undone = { placed: placedNow(), inPreview: page.querySelectorAll(".claude-sticker").length, outlined: outlined(), row: row(), redoOff: el("redo").disabled };
   el("redo").click(); await wait(200);
-  r.redone = { placed: placedNow(), inPreview: page.querySelectorAll(".claude-sticker").length, outlined: outlined() };
+  r.redone = { placed: placedNow(), inPreview: page.querySelectorAll(".claude-sticker").length, outlined: outlined(), row: row() };
   tileFor("sticker", "s2").click(); await wait(200);
   r.theSamePictureTwice = { placed: placedNow(), heights: store.placed.map((p) => p.position).join(","), inPreview: page.querySelectorAll(".claude-sticker").length };
   el("part-main").click(); const opacityBefore = store.opacity ?? 0.5;
@@ -227,7 +230,48 @@
   el("undo").click(); await wait(100); el("undo").click(); await wait(250);
   r.bothBroughtBackByUndo = { placed: placedNow(), inPreview: page.querySelectorAll(".claude-sticker").length };
 
+  // ----- the layers: which picture is in front -----
+  // Back to front: A and B on the left, C on the right, D on the left, all three on the left overlapping.
+  letters.clear(); ["m1", "m2", "n1", "m3"].forEach(letter);
+  await chrome.storage.local.set({ placed: [P("m1", "s1", "left", { position: 50 }), P("m2", "s2", "left", { position: 40 }), P("n1", "s2", "right"), P("m3", "s1", "left", { position: 30 })] }); el("part-left").click(); await wait(300);
+  const order = () => store.placed.map((p) => letter(p.key)).join("");
+  const inPreview = () => store.placed.map((p) => letter(p.key) + getComputedStyle(picture(p.key)).zIndex).join(" ");
+  const gripOrder = () => store.placed.map((p) => letter(p.key) + grips.get(p.key).style.zIndex).join(" ");
+  // Whichever grip a press in the middle of B's picture lands on: A, B and D all lie there.
+  const underTheMiddleOfB = () => { const b = grips.get("m2").getBoundingClientRect(), under = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); return [...grips].filter(([, grip]) => grip === under).map(([key]) => letter(key)).join("") || under.id; };
+  const pick = async (key) => { [...el("side-placed").children].find((b) => b.dataset.key === key).click(); await wait(200); };
+  const push = async (how) => { el("layer-" + how).click(); await wait(250); return { order: order(), row: row(), buttons: layerButtons(), inPreview: inPreview(), aPressLandsOn: underTheMiddleOfB() }; };
+  const elements = Object.fromEntries(store.placed.map((p) => [p.key, picture(p.key)]));
+  r.layers = { atFirst: { order: order(), row: row(), buttons: layerButtons(), inPreview: inPreview(), grips: gripOrder(), aPressLandsOn: underTheMiddleOfB(), outlined: outlined() },
+    rowNames: [...el("side-placed").children].map((b) => b.getAttribute("aria-label") + (b.textContent ? " (" + b.textContent + ")" : "")), buttonNames: [...document.querySelectorAll(".layers button, #side-remove")].map((b) => b.textContent).join(" | ") };
+  // the one in front is chosen without being picked; moved, it is still the chosen one
+  r.layers.theFrontOneSentBack = await push("back");
+  r.layers.andBroughtBackToTheFront = await push("front");
+  await pick("m2");
+  r.layers.choosingInTheRow = { row: row(), buttons: layerButtons(), outlined: outlined(), sliders: [el("sticker-size").value, el("sticker-position").value].join("/") };
+  const tileOfB = [...el("side-placed").children].find((b) => b.dataset.key === "m2"); set("sticker-size", 150); await wait(100);
+  r.layers.rowKeptWhileASliderMoves = [...el("side-placed").children].find((b) => b.dataset.key === "m2") === tileOfB;
+  r.layers.bringForward = await push("forward");
+  r.layers.bringForward.grips = gripOrder();
+  r.layers.bringForward.sameElementsInThePreview = store.placed.every((p) => picture(p.key) === elements[p.key]);
+  r.layers.sendBack = await push("backward");
+  r.layers.toTheBack = await push("back");
+  r.layers.toTheFront = await push("front");
+  el("undo").click(); await wait(250);
+  r.layers.undone = { order: order(), row: row(), inPreview: inPreview() };
+  el("redo").click(); await wait(250);
+  r.layers.redone = { order: order(), row: row(), inPreview: inPreview() };
+  // the only picture on its side has no neighbour to pass, but can still go in front of the other side's
+  el("part-right").click(); await wait(200);
+  r.layers.aloneOnItsSide = { row: row(), buttons: layerButtons(), outlined: outlined() };
+  r.layers.aloneOnItsSide.toTheFront = await push("front");
+  el("side-remove").click(); await wait(250);
+  r.layers.removeFromThePage = { order: order(), row: row(), emptyNoteShown: !el("side-empty").hidden, inPreview: page.querySelectorAll(".claude-sticker").length, stillInLibrary: store.stickers.some((s) => s.id === "s2") };
+  el("undo").click(); await wait(250);
+  r.layers.removeUndone = { order: order(), row: row() };
+
   // ----- no more than twenty -----
+  el("part-left").click();
   await chrome.storage.local.set({ placed: Array.from({ length: 20 }, (_, i) => P("f" + i, "s1", i % 2 ? "left" : "right", { size: 60, position: i * 5 })) }); await wait(250);
   tileFor("sticker", "s2").click(); await wait(100);
   r.noMoreThanTwenty = { placed: store.placed.length, stillTheSame: store.placed.every((p) => p.id === "s1"), said: el("toast").textContent, inPreview: page.querySelectorAll(".claude-sticker").length, grips: document.querySelectorAll(".grip").length };
@@ -373,13 +417,15 @@
   await chrome.storage.local.set({ ...freshSettings() }); await wait(150);
 
   // ----- every control has a name and can be reached and seen without a mouse -----
+  // With two pictures on the selected side, so that its row of pictures is among the controls.
+  await chrome.storage.local.set({ placed: [P("w1", "s1", "left"), P("w2", "ts", "left")] }); el("part-left").click(); await wait(200);
   const nameOf = (c) => (c.getAttribute("aria-label") || (c.id && document.querySelector(`label[for="${c.id}"]`)?.textContent) || c.closest("label")?.textContent || c.textContent || c.title || "").trim();
   const called = (c) => c.id ? "#" + c.id : "." + c.className.split(" ").join(".") + (c.parentElement.id ? " in #" + c.parentElement.id : "");
   const controls = [...document.querySelectorAll("button, input:not([type=file]), select, a[href]")].filter((c) => !c.closest(".warn[hidden]")), choices = [...document.querySelectorAll(".pair button, .tile, .swatch, .frame-choice")];
   el("show-library").focus(); const ring = getComputedStyle(el("show-library"));
   r.withoutAMouse = { controls: controls.length, withNoName: [...new Set(controls.filter((c) => !nameOf(c)).map(called))], choices: choices.length, choicesThatDoNotSayWhetherTheyAreOn: [...new Set(choices.filter((c) => !c.hasAttribute("aria-pressed")).map(called))],
     takenOutOfTheTabOrder: controls.filter((c) => c.tabIndex < 0).map(called), removeButtonsSay: [...new Set([...document.querySelectorAll(".remove")].map(nameOf))], focusRing: ring.outlineStyle + " " + ring.outlineWidth, messagesAreReadOut: el("toast").getAttribute("role"),
-    pageOverlayHiddenFromScreenReaders: el("overlay").getAttribute("aria-hidden"), windowsNamed: ["library", "inspector"].map((w) => el(w).getAttribute("aria-label")).join(", ") };
+    pageOverlayHiddenFromScreenReaders: el("overlay").getAttribute("aria-hidden"), sideRow: [...el("side-placed").children].map((b) => b.getAttribute("aria-label") + ", " + (b.getAttribute("aria-pressed") === "true" ? "chosen" : "not chosen")), windowsNamed: ["library", "inspector"].map((w) => el(w).getAttribute("aria-label")).join(", ") };
   el("theme-reset").focus(); el("theme-reset").click(); await wait(60); const inAsk = document.activeElement.id; el("ask-no").click(); await wait(60);
   r.withoutAMouse.question = { focusGoesToIt: inAsk, andBackAfter: document.activeElement.id };
 
