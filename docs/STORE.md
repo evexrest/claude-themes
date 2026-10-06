@@ -39,13 +39,15 @@ The description already says "Unofficial, not made by Anthropic".
 > part of the page, click a picture, and see it change. Drag pictures to move them. Undo
 > takes back any step.
 >
-> - Backgrounds: six built in, or your own pictures and animated GIFs
+> - Nine ready-made themes: one click for a whole look
+> - Backgrounds: ten built in, or your own pictures and animated GIFs
 > - Stretch, zoom and drag a background to fit the chat window or the whole window
 > - A separate background, text colour, font and border for the sidebar
 > - Pictures and GIFs beside the chat, each with its own size, place and opacity
 > - Ink and pop-out borders that never move or resize anything
 > - Save a whole theme to a file, with its pictures, to back it up or share it
-> - Works in light and dark mode
+> - Works in light and dark mode, and warns you when your text colour is hard to read
+> - Works from the keyboard and with a screen reader
 >
 > What it leaves alone: the message box, menus and code blocks keep Claude's own look, and
 > pages that are not chats are shown as Claude draws them.
@@ -62,7 +64,8 @@ private in it, and take screenshots of the Claude window at 1280 x 800. Up to fi
 
 **Icon.** `icons/icon-128.png`.
 
-**Small promo tile** (440 x 280, optional). Not made yet.
+**Small promo tile** (440 x 280, optional). `docs/promo-440x280.png`, made by
+`tools/make-promo.sh`.
 
 ## The privacy tab
 

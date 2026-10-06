@@ -3,6 +3,24 @@
 What changed in each version, newest first. Versions before 0.18.0 were made over two days
 and are grouped.
 
+## 0.19.0 (2026-10-06)
+
+- Nine ready-made themes at the top of the Library. One click switches the whole look.
+  Your saved pictures are kept, and Undo takes the switch back.
+- Four new backgrounds: Midnight, Paper, Mist and Blossom.
+- A warning under the text colours when the text is hard to read on the background, in
+  Claude's light mode, its dark mode or both. A button fixes it when one colour reads in
+  both.
+- A keyboard shortcut for the editor: Alt+Shift+E, or Option+Shift+E on a Mac. Change it
+  at `chrome://extensions/shortcuts`.
+- The editor works without a mouse. Every control has a name a screen reader can say,
+  choices say whether they are on, and the keyboard's place is ringed.
+- A question such as "Remove this picture?" starts on Cancel, so Enter never removes
+  anything.
+- If Chrome cannot store a change, the editor puts the change back and says so.
+- The foot of the Library shows the version and links to the issue page and the privacy
+  statement.
+
 ## 0.18.0 (2026-10-05)
 
 - An icon.

@@ -30,6 +30,9 @@ The toolbar icon opens the editor over the Claude page. Its three windows (the b
 Library and the Settings) float like windows on a desktop: drag one by its title bar, drag
 an edge to resize it, and use the three dots to close it, fold it away or put it back.
 
+To start from a finished look, click one of the **Themes** at the top of the Library. To
+build your own:
+
 1. Click a part of the page: the main page, the sidebar, or the space on either side of
    the chat.
 2. Click a picture in the Library to put it there, or drag one in from your computer.
@@ -40,7 +43,9 @@ an edge to resize it, and use the three dots to close it, fold it away or put it
 
 ## What it does
 
-- Six built-in gradient presets
+- Nine ready-made themes. One click switches the whole look: background, text colour,
+  font and border. Five follow Claude's light and dark mode. Four look the same in both
+- Ten built-in backgrounds, each a wash of colour
 - Drop your own images onto the editor, or upload one with cropping: drag and zoom to
   choose the part that shows
 - Every image you save is kept, so you can switch between them without uploading again
@@ -75,6 +80,11 @@ an edge to resize it, and use the three dots to close it, fold it away or put it
   bigger than the empty space carries on behind the chat, never on top of it
 - Text colour and font for the chat, for backgrounds that make the normal text hard to
   read, and a separate colour for the words Claude marks out (normally crimson)
+- A warning when the text is hard to read on the background in light mode, dark mode or
+  both, with a button that fixes it when one colour reads in both
+- A keyboard shortcut for the editor: Alt+Shift+E, or Option+Shift+E on a Mac. Change it
+  at `chrome://extensions/shortcuts`
+- The editor works from the keyboard and with a screen reader
 - Upload your own frame picture; its thickness is measured for you
 - Works in light and dark mode
 - Save the whole theme to a file, with its pictures, and load it again: as a backup, on
@@ -95,8 +105,10 @@ an edge to resize it, and use the three dots to close it, fold it away or put it
 
 - Chrome, and browsers built on it, only. The Claude desktop app cannot be themed.
 - It depends on how claude.ai is built, which Anthropic can change at any time.
-- A stretched background, zoom and dragging are for saved images. The six built-in
+- A stretched background, zoom and dragging are for saved images. The ten built-in
   backgrounds are washes of colour.
+- The readability warning reads a picture at 64 places and ignores where on the page the
+  text is. Treat it as a hint.
 
 ## For developers
 
@@ -126,7 +138,8 @@ what changed in each version.
 | `options.html`, `options.js`, `options.css` | The upload page, opened from the editor: crop an image for the screen or the sidebar and add it to your saved images |
 | `frame-upload.js` | The upload page: read and save your own frame picture |
 | `stickers.js` | The upload page: save a picture or GIF for beside the chat |
-| `themes.js` | The editor: save the theme to a file, load one, reset everything, and the first-time note |
+| `themes.js` | The editor: the ready-made themes, saving the theme to a file, loading one, resetting everything, the first-time note, and the foot of the Library |
+| `readable.js` | The editor: works out whether the text can be read on the background, and shows the warning |
 | `icons/` | The extension's icon, as a drawing (`icon.svg`) and at the four sizes Chrome uses |
 | `tools/` | Scripts that make the icons, the screenshots and the zip for the Chrome Web Store |
 | `docs/` | Screenshots, and what to put in the Chrome Web Store listing |
