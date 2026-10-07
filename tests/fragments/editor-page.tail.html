@@ -101,7 +101,7 @@
   r.windowsAtFirst = { library: box("library"), inspector: box("inspector"), bar: box("bar"), kept: JSON.stringify(store.editorWindows ?? null), titles: [...document.querySelectorAll(".titlebar b")].map((b) => b.textContent).join(","), edges: document.querySelectorAll("#library .edge").length + "+" + document.querySelectorAll("#inspector .edge").length + "+" + document.querySelectorAll("#bar .edge").length };
   // A bar wrapped onto more rows, as in a narrow browser window: the settings start under it, not behind it. Then one row again.
   const under = () => document.body.style.getPropertyValue("--under-bar"), clear = () => el("inspector").getBoundingClientRect().top - el("bar").getBoundingClientRect().bottom;
-  el("bar").style.maxWidth = "420px"; await until(() => el("bar").offsetHeight > 48 && under() !== "72px");
+  el("bar").style.maxWidth = "420px"; await until(() => el("bar").offsetHeight > 48 && parseFloat(under()) > 72);
   const wrapped = { barIsTaller: el("bar").offsetHeight > 48, settingsStartBelowItBy: clear() };
   el("bar").style.maxWidth = ""; await until(() => under() === "72px");
   r.underAWrappedBar = { ...wrapped, oneRowAgain: under() + ", settings below it by " + clear(), inspectorBackWhereItWas: box("inspector") === r.windowsAtFirst.inspector };
