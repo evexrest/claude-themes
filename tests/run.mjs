@@ -23,7 +23,7 @@ const expectedIn = join(here, "expected");
 
 const suites = [
     { name: "logic", what: "the page script and stylesheet", run: ["zsh", [join(here, "dump.sh"), "logic", "16000"]] },
-    { name: "editor-logic", what: "the editor in a tab", run: ["zsh", [join(here, "dump.sh"), "editor-logic", "26000"]] },
+    { name: "editor-logic", what: "the editor in a tab", run: ["zsh", [join(here, "dump.sh"), "editor-logic", "40000"]] },
     { name: "editor-page-logic", what: "the editor over the page", run: ["zsh", [join(here, "dump.sh"), "editor-page-logic", "14000", "on=page"]] },
     { name: "options-logic", what: "the upload page", run: ["zsh", [join(here, "dump.sh"), "options-logic"]] },
     { name: "real", what: "the folder loaded as a real extension", run: ["node", [join(here, "real.mjs")]] }

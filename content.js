@@ -472,7 +472,12 @@ function applyFrames(imageChanged) {
             frameUrl = null;
         }
         if (settings.frameImage) {
-            frameUrl = URL.createObjectURL(dataUrlToBlob(settings.frameImage));
+            // A stored frame that is not a picture leaves only "Your frame" undrawn.
+            try {
+                frameUrl = URL.createObjectURL(dataUrlToBlob(settings.frameImage));
+            } catch (error) {
+                console.warn("Claude Themes: the uploaded frame could not be read.", error);
+            }
         }
     }
 
@@ -631,10 +636,7 @@ function checkPage() {
         return;
     }
     plainPage = plain;
-    applyBackground(false);
-    applyFrames(false);
-    applyText();
-    placeStickers();
+    drawEach([() => applyBackground(false), () => applyFrames(false), applyText, placeStickers]);
 }
 
 // Draw each part of the theme on its own. One that cannot be drawn (a stored
@@ -674,10 +676,7 @@ async function start() {
 
     // If the page removes our element or attributes while it loads, put them back.
     const observer = new MutationObserver(() => {
-        applyBackground(false);
-        applySidebar(false);
-        applyFrames(false);
-        applyText();
+        drawEach([() => applyBackground(false), () => applySidebar(false), () => applyFrames(false), applyText]);
     });
     observer.observe(root, {
         childList: true,
@@ -726,9 +725,7 @@ async function start() {
             }
             watched = pane;
         }
-        checkPage();
-        placeStickers();
-        sizePictures();
+        drawEach([checkPage, placeStickers, sizePictures]);
     }, 1000);
 
     // Not inside the editor's own preview, which is one of the extension's pages.

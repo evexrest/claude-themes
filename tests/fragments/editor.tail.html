@@ -324,7 +324,7 @@
   await chrome.storage.local.set({ "image-th": shaped(40, 20), "sticker-ts": shaped(20, 20), "sticker-tu": shaped(20, 30), images: [...store.images, { id: "th", thumb: shaped(40, 20) }], stickers: [...store.stickers, { id: "ts", thumb: shaped(20, 20) }, { id: "tu", thumb: shaped(20, 30) }] }); await wait(80);
   await chrome.storage.local.set({ preset: null, imageId: "th", imageZoom: 0.5, textColor: "#123456", sidebarMode: "plain", frameMain: "brush", placed: [P("t1", "ts", "left", { size: 140, shift: 25 }), P("t2", "tu", "right", { position: 40, opacity: 0.6 }), P("t3", "ts", "right", { position: 70 })] }); await wait(150);
   const kept = await themeFile();
-  r.themeFile = { format: kept.claudeThemes, madeWith: kept.madeWith === filesVersion, settings: Object.keys(kept.settings).length === Object.keys(defaults).length - 2, leavesOutTheLists: !("images" in kept.settings) && !("stickers" in kept.settings), pictures: Object.keys(kept.pictures).sort().join(","), mainIsThePicture: kept.pictures.main === store["image-th"],
+  r.themeFile = { format: kept.claudeThemes, madeWith: kept.madeWith === filesVersion, settings: Object.keys(kept.settings).length === Object.keys(defaults).length - 4, leavesOutAFrameNoBorderUses: !("frameImage" in kept.settings) && !("frameSlice" in kept.settings), leavesOutTheLists: !("images" in kept.settings) && !("stickers" in kept.settings), pictures: Object.keys(kept.pictures).sort().join(","), mainIsThePicture: kept.pictures.main === store["image-th"],
     sidePictures: Object.keys(kept.pictures.side).sort().join(","), eachIsItsFile: kept.pictures.side.ts === store["sticker-ts"] && kept.pictures.side.tu === store["sticker-tu"], placed: kept.settings.placed.map((p) => p.side + " " + p.id).join(", ") };
   el("theme-reset").click(); await wait(60); const resetAsked = !el("ask").hidden; el("ask-yes").click(); await wait(150);
   r.resetEverything = { asked: resetAsked, preset: store.preset, textColor: store.textColor ?? null, zoom: store.imageZoom ?? null, placed: store.placed.length, frame: store.frameMain, picturesKept: store.images.some((i) => i.id === "th") && "image-th" in store && store.stickers.some((i) => i.id === "ts") && "sticker-ts" in store };
@@ -405,6 +405,7 @@
     aPictureThatIsNotBase64: await harm({ frameImage: "data:image/png;base64,@", frameSlice: [1, 1, 1, 1] }),
     aPictureThatEndsItsUrlAndAddsAnother: await harm({ frameImage: 'data:image/png;base64,AAAA"), url("https://example.com/beacon.gif', frameSlice: [1, 1, 1, 1] }),
     measurementsThatAreNotAList: await harm({ frameImage: colourImage("#0000ff"), frameSlice: "x" }),
+    aFrameThatIsTheRightShapeButNotAPicture: await harm({ frameMain: "custom", frameImage: "data:image/png;base64,AAAA", frameSlice: [1, 1, 1, 1] }).then((said) => said.startsWith("TOOK") && store.frameImage === colourImage("#00ff00") ? "kept the user's own frame" : said),
     aBorderAsThickAsThePage: await harm({ frameWidth: 10000 }),
     anOpacityOfTenThousand: await harm({ panelOpacity: 10000 }),
     aBackgroundThatDoesNotExist: await harm({ preset: "nope" }),
@@ -412,6 +413,7 @@
     namesEveryObjectHas: await harm({ constructor: "x", toString: 1, hasOwnProperty: true }),
     anEmptyFrameLeavesTheUsersOwn: await harm({ frameImage: null, frameSlice: null }) };
   const framed = await loadTheme(JSON.stringify({ claudeThemes: 2, settings: { frameMain: "custom", frameWidth: 20, frameImage: colourImage("#0000ff"), frameSlice: [3, 3, 3, 3] } })); await wait(120);
+  r.harmfulThemeFile.aFileSavedNowHoldsTheFrame = (await themeFile()).settings.frameImage === colourImage("#0000ff");
   r.harmfulThemeFile.aRealFrameStillLoads = { told: framed, frameMain: store.frameMain, width: store.frameWidth, slice: JSON.stringify(store.frameSlice), itsPicture: store.frameImage === colourImage("#0000ff") };
   el("undo").click(); await wait(120);
   el("theme-reset").click(); await wait(60); el("ask-yes").click(); await wait(150);

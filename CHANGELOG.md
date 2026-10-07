@@ -14,13 +14,15 @@ A security pass before publishing.
 - A stored value that cannot be drawn no longer stops the rest of the theme on claude.ai.
   Each part is drawn on its own.
 - The editor and the upload page are told by Chrome's own rules to load only files inside
-  the extension. They cannot contact another site.
-- Loading a theme file, or Reset everything, keeps a frame you uploaded, as they keep
-  your saved pictures.
+  the extension, and they cannot fetch anything from another site. A link still opens its
+  page when you click it.
+- Reset everything keeps a frame you uploaded, as it keeps your saved pictures. So does
+  loading a theme file that has no frame of its own. A file that has one replaces yours.
+- A theme file holds the uploaded frame only when a border is set to it.
 - The privacy statement says what claude.ai itself can see of a theme.
 - Chrome 120 or newer is needed. The fade under the chat's title bar already needed it.
-- `tools/package.sh` zips only files that git knows, and refuses if one of them has
-  changes that are not committed.
+- `tools/package.sh` zips only files that git knows. It refuses if one of them has changes
+  that are not committed, or if a script, page or stylesheet in the folder is not in git.
 
 ## 0.20.0 (2026-10-06)
 

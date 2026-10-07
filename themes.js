@@ -23,10 +23,11 @@ const userFrame = ["frameImage", "frameSlice"];
 // The setting that names each of the two backgrounds' pictures.
 const themePictures = { main: "imageId", sidebar: "sidebarImageId" };
 // The most text one picture in a theme file may be: a background (a 25 MB GIF is
-// about this much as text), a picture beside the chat (12 MB), an uploaded frame.
+// about this much as text), a picture beside the chat (12 MB), an uploaded frame
+// (the upload page writes a PNG of up to 1400 pixels a side).
 const largestPicture = 36 * 1024 * 1024;
 const largestSidePicture = 17 * 1024 * 1024;
-const largestFrame = 3 * 1024 * 1024;
+const largestFrame = 11 * 1024 * 1024;
 
 // The theme as it is now, ready to be written to a file.
 async function themeFile() {
@@ -35,6 +36,12 @@ async function themeFile() {
         if (!notInAThemeFile.includes(key)) {
             settings[key] = state[key];
         }
+    }
+
+    // The uploaded frame goes in the file only when a border is set to it.
+    if (![settings.frameMain, settings.frameSidebar, settings.frameAll].includes("custom")) {
+        delete settings.frameImage;
+        delete settings.frameSlice;
     }
 
     // Only the pictures that are showing: a background that is a preset has none.
@@ -86,7 +93,7 @@ const settingChoices = {
 const settingRanges = {
     opacity: [0, 1], panelOpacity: [0, 1], sidebarOpacity: [0, 1],
     imageZoom: [0, 4], sidebarZoom: [0, 4],
-    imageShiftX: [-5, 5], imageShiftY: [-5, 5], sidebarShiftX: [-5, 5], sidebarShiftY: [-5, 5],
+    imageShiftX: [-1, 1], imageShiftY: [-1, 1], sidebarShiftX: [-1, 1], sidebarShiftY: [-1, 1],
     frameWidth: [4, 40], frameSidebarWidth: [4, 40]
 };
 // Settings that may be empty. An uploaded frame is not among them: a file with no
@@ -119,7 +126,7 @@ function soundSetting(key, value) {
     }
     if (key === "frameSlice") {
         // The measurements of an uploaded frame: four numbers.
-        return Array.isArray(value) && value.length === 4 && value.every((part) => typeof part === "number" && part >= 0 && part <= 10000);
+        return Array.isArray(value) && value.length === 4 && value.every((part) => typeof part === "number" && part >= 1 && part <= 1400);
     }
     if (key === "enabled") {
         return typeof value === "boolean";
@@ -183,8 +190,17 @@ async function loadTheme(text) {
         }
     }
 
-    // A frame is its picture and its measurements together, or neither.
-    if (!("frameImage" in change && "frameSlice" in change)) {
+    // A frame is its picture and its measurements together, or neither, and the
+    // picture has to open as one.
+    let framed = "frameImage" in change && "frameSlice" in change;
+    if (framed) {
+        try {
+            await openPicture(change.frameImage);
+        } catch (error) {
+            framed = false;
+        }
+    }
+    if (!framed) {
         delete change.frameImage;
         delete change.frameSlice;
     }

@@ -172,7 +172,7 @@ try {
     await run(page, `document.documentElement.classList.remove("dark"); document.documentElement.style.colorScheme = ""`);
 
     // The theme's own buttons, in the editor as it really runs: framed inside the Claude page.
-    found.themeButtons = await run(editor, `(async () => { const file = await themeFile(); document.getElementById("theme-save").click(); await new Promise((r) => setTimeout(r, 300)); const said = document.getElementById("toast").textContent; document.getElementById("theme-reset").click(); await new Promise((r) => setTimeout(r, 100)); const asked = !document.getElementById("ask").hidden; document.getElementById("ask-no").click(); return { fileHasSettings: Object.keys(file.settings).length > 30, saveSaid: said, resetAsksInsideTheEditor: asked }; })()`);
+    found.themeButtons = await run(editor, `(async () => { const file = await themeFile(); document.getElementById("theme-save").click(); await new Promise((r) => setTimeout(r, 300)); const said = document.getElementById("toast").textContent; document.getElementById("theme-reset").click(); await new Promise((r) => setTimeout(r, 100)); const asked = !document.getElementById("ask").hidden; document.getElementById("ask-no").click(); return { fileHasSettings: Object.keys(file.settings).length >= 29, saveSaid: said, resetAsksInsideTheEditor: asked }; })()`);
     await sleep(500);
     const savedTheme = resolve(downloads, "claude-theme.json");
     found.themeButtons.fileWritten = existsSync(savedTheme) ? "format " + JSON.parse(readFileSync(savedTheme, "utf8")).claudeThemes : "no file";
