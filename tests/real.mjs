@@ -92,8 +92,10 @@ try {
   const editorFrames = async () => (await targets()).filter((t) => t.url.startsWith(base + "editor.html?on=page")).length;
 
   // What a version before 0.20.0 left in storage: one picture for the left side, in the old settings, and no list of pictures.
-  found.anEarlierVersionsSettings = await run(icon, `(async () => { const c = new OffscreenCanvas(120, 150), x = c.getContext("2d"); x.fillStyle = "#2f6b3f"; x.beginPath(); x.arc(60, 75, 55, 0, 7); x.fill();
-    const blob = await c.convertToBlob({ type: "image/png" }); const data = await new Promise((ok) => { const reader = new FileReader(); reader.onload = () => ok(reader.result); reader.readAsDataURL(blob); });
+  // A small upright picture, drawn where the toolbar-icon script runs and kept in `data` as storage holds one.
+  const aPicture = `const c = new OffscreenCanvas(120, 150), x = c.getContext("2d"); x.fillStyle = "#2f6b3f"; x.beginPath(); x.arc(60, 75, 55, 0, 7); x.fill();
+    const blob = await c.convertToBlob({ type: "image/png" }); const data = await new Promise((ok) => { const reader = new FileReader(); reader.onload = () => ok(reader.result); reader.readAsDataURL(blob); });`;
+  found.anEarlierVersionsSettings = await run(icon, `(async () => { ${aPicture}
     await chrome.storage.local.set({ stickers: [{ id: "old", thumb: data }], "sticker-old": data, stickerLeft: "old", stickerLeftSize: 140, stickerPosition: 30, stickerOpacity: 0.9 }); return "saved"; })()`);
   // The pictures beside the chat, as the page shows them and as storage holds them.
   const onThePage = `[...document.querySelectorAll(".claude-sticker")].map((p) => { const b = p.getBoundingClientRect(); return p.dataset.side + " " + (p.style.display === "none" ? "hidden" : [b.left, b.top, b.width, b.height].map(Math.round).join(",")) + " layer " + p.style.zIndex + " opacity " + p.style.opacity; })`;
@@ -232,6 +234,39 @@ try {
       return { previewShown: document.getElementById("sticker-preview").naturalWidth > 0, savedMore: (await chrome.storage.local.get({ stickers: [] })).stickers.length - before, styled: getComputedStyle(document.body).fontFamily !== "" && document.styleSheets.length }; })()`);
     await sleep(300);
     found.pagesOwnRules.refusedAnythingElse = events.filter((e) => e.method === "Log.entryAdded" && /Content Security Policy|Refused to/.test(e.params.entry.text) && !e.params.entry.text.includes("lock-check.invalid")).map((e) => e.params.entry.text.slice(0, 160));
+  }
+
+  // ----- a monitor and a laptop -----
+  // The empty space beside the chat is far narrower on a laptop. Pictures set up on a monitor are looked at there, and again
+  // after the window shrinks to a laptop's: none may reach the column the messages sit in, and one saved as a share of the
+  // space takes up the same share of it on both.
+  {
+    const tab = await send("Target.createTarget", { url: "https://claude.ai/chat/screens" });
+    const screen = await attach(tab.targetId);
+    // The space a picture may use stops 12px short of the window's edge and of the column.
+    const measure = `(() => { const pane = document.querySelector(".dframe-pane-primary").getBoundingClientRect(), column = document.querySelector('[data-cds="ChatComposer"]').getBoundingClientRect();
+      const space = { left: column.left - pane.left - 24, right: pane.right - column.right - 24 }, tenth = (n) => Math.round(n * 1000) / 10, seen = { spaceEachSide: space.left + "px / " + space.right + "px" };
+      for (const p of document.querySelectorAll(".claude-sticker")) { const b = p.getBoundingClientRect(), side = p.dataset.side;
+        const over = Math.max(0, Math.min(b.right, column.right) - Math.max(b.left, column.left)), fromTheEdge = side === "left" ? b.left - pane.left - 12 : pane.right - 12 - b.right;
+        seen[side] = p.style.display === "none" ? "hidden" : Math.round(b.width) + "px wide, " + tenth(b.width / space[side]) + "% of its space, " + (space[side] - b.width > 0.5 ? tenth(fromTheEdge / (space[side] - b.width)) + "% of the way across it, " : "") + Math.round(over) + "px over the text column"; }
+      return seen; })()`;
+    const onBoth = async (placed) => {
+      const seen = {};
+      for (const [name, width, height] of [["monitor 2560x1440", 2560, 1440], ["laptop 1512x982", 1512, 982]]) {
+        await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false }, screen);
+        if (placed) { await run(icon, `(async () => { ${aPicture} await chrome.storage.local.set({ enabled: true, stickers: [{ id: "a", thumb: data }], "sticker-a": data, placed: ${JSON.stringify(placed)} }); return "saved"; })()`); placed = null; }
+        await sleep(1500);
+        seen[name] = await run(screen, measure);
+      }
+      return seen;
+    };
+    found.onAMonitorAndALaptop = {
+      // As 0.20.1 saved them, in pixels: 400 wide on the left, and 260 wide on the right, dragged 120 towards the chat.
+      savedInPixelsByAnEarlierVersion: await onBoth([{ key: "k1", id: "a", side: "left", size: 400, position: 85, opacity: 1, shift: 0 }, { key: "k2", id: "a", side: "right", size: 260, position: 40, opacity: 1, shift: -120 }]),
+      // As shares: half the space wide in the middle of it on the left, and a quarter wide against the chat on the right.
+      savedAsSharesOfTheSpace: await onBoth([{ key: "k3", id: "a", side: "left", width: 0.5, across: 0.5, position: 85, opacity: 1 }, { key: "k4", id: "a", side: "right", width: 0.25, across: 1, position: 40, opacity: 1 }])
+    };
+    await send("Target.closeTarget", { targetId: tab.targetId });
   }
 
   console.log(JSON.stringify(found, null, 1));

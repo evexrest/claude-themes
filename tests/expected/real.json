@@ -153,5 +153,31 @@
   "previewShown": true,
   "savedMore": 1,
   "styled": 1
+ },
+ "onAMonitorAndALaptop": {
+  "savedInPixelsByAnEarlierVersion": {
+   "monitor 2560x1440": {
+    "spaceEachSide": "724px / 724px",
+    "left": "400px wide, 55.2% of its space, 50% of the way across it, 0px over the text column",
+    "right": "260px wide, 35.9% of its space, 75.9% of the way across it, 0px over the text column"
+   },
+   "laptop 1512x982": {
+    "spaceEachSide": "200px / 200px",
+    "left": "200px wide, 100% of its space, 0px over the text column",
+    "right": "200px wide, 100% of its space, 0px over the text column"
+   }
+  },
+  "savedAsSharesOfTheSpace": {
+   "monitor 2560x1440": {
+    "spaceEachSide": "724px / 724px",
+    "left": "362px wide, 50% of its space, 50% of the way across it, 0px over the text column",
+    "right": "181px wide, 25% of its space, 100% of the way across it, 0px over the text column"
+   },
+   "laptop 1512x982": {
+    "spaceEachSide": "200px / 200px",
+    "left": "100px wide, 50% of its space, 50% of the way across it, 0px over the text column",
+    "right": "50px wide, 25% of its space, 100% of the way across it, 0px over the text column"
+   }
+  }
  }
 }
