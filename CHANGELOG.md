@@ -10,7 +10,8 @@ A polish pass over the editor. It looks and works as before; these are the detai
 - The windows are solid. They were slightly see-through, and the page's own writing
   showed through and ran into theirs.
 - The bar wraps onto more rows when the browser window is too narrow for one, where its
-  last buttons used to be cut off, and it always stays in front of the two windows.
+  last buttons used to be cut off, and it always stays in front of the two windows. The
+  settings and the notes under it start below however many rows it has.
 - The chosen one of a row of choices (Main page, Sidebar and so on) has a rim as well as a
   lighter fill, and the edges of the font box and the colour chips are easier to see.
 - Plain buttons stand out a little more from the window they are on. Buttons fade between

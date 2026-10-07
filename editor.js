@@ -1306,7 +1306,6 @@ const smallest = { width: 220, height: 120 };
 // width, their gap from the edge and a gap beside them (see #inspector in editor.css).
 const settingsSpace = 312 + 12 + 12;
 let windows = {};
-let front = 2;
 
 function keepWindows() {
     chrome.storage.local.set({ editorWindows: windows });
@@ -1401,11 +1400,16 @@ function makeWindow(id) {
     const element = byId(id);
     let box = null;
 
-    // A press anywhere on a window brings it in front of the others. The bar is
-    // always in front (see #bar in editor.css).
+    // A press anywhere on a window brings it in front of the other one, which goes
+    // back to the layer the stylesheet gives it. The bar is always in front of both
+    // (see #bar in editor.css).
     if (id !== "bar") {
         element.addEventListener("pointerdown", () => {
-            element.style.zIndex = ++front;
+            for (const other of windowIds) {
+                if (other !== "bar") {
+                    byId(other).style.zIndex = other === id ? 3 : "";
+                }
+            }
         }, true);
     }
 
@@ -1736,6 +1740,11 @@ async function start() {
     placeWindows();
     // A smaller browser window may leave a window out of reach: bring it back in.
     window.addEventListener("resize", placeWindows);
+    // The bar wraps onto more rows in a narrow browser window. What starts out
+    // under it (the notes, the settings) starts under however tall it is.
+    new ResizeObserver(() => {
+        document.body.style.setProperty("--under-bar", byId("bar").offsetHeight + 24 + "px");
+    }).observe(byId("bar"));
 
     chrome.storage.onChanged.addListener((changes) => {
         // The placed pictures changed by something else (the upload page, an editor

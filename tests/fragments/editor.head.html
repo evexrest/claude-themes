@@ -24,7 +24,8 @@
   if (q.get("frame")) store.frameMain = q.get("frame");
   if (q.get("text")) store.textColor = q.get("text");
   if (q.get("side")) store.sidebarMode = q.get("side");
-  // For the pictures in docs/: no first-time note, and a chosen light or dark preview.
-  if (q.get("shots")) store.welcomed = true;
+  // For the pictures in docs/: no first-time note, and a chosen light or dark preview. Nothing fades either: the picture
+  // is taken on a clock that does not run the fades, so it would show each button as it was before it was pressed.
+  if (q.get("shots")) { store.welcomed = true; const still = document.createElement("style"); still.textContent = "* { transition: none !important; }"; document.head.appendChild(still); }
   addEventListener("load", () => setTimeout(() => { if (q.get("theme")) document.querySelector(`#themes .tile[data-theme="${q.get("theme")}"]`).click(); if (q.get("part")) document.getElementById("part-" + q.get("part")).click(); if (q.get("dark")) document.getElementById("mode-dark").click(); if (q.get("light")) document.getElementById("mode-light").click(); if (q.get("drag")) startDragging({ kind: q.get("drag") }); if (q.get("click")) document.getElementById(q.get("click")).click(); }, 300));
 </script>

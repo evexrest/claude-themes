@@ -308,8 +308,11 @@ body.moving {
     pointer-events: none;
 }
 
-/* The three dots: close, fold away, put back. */
+/* The three dots: close, fold away, put back. They lie over the window's top
+   left corner, which resizes it, so a press beside the first dot is the dot's. */
 .lights {
+    position: relative;
+    z-index: 2;
     display: flex;
     gap: 12px;
 }
@@ -325,8 +328,7 @@ body.moving {
 
 /* Each dot is pressed from a 24px square around it; the squares touch and do not
    overlap. */
-.lights button::before,
-.remove::before {
+.lights button::before {
     position: absolute;
     inset: -6px;
     content: "";
@@ -532,14 +534,15 @@ body.moving {
     background: #e58a6b;
 }
 
-/* Notes that sit under the bar. */
+/* Notes that sit under the bar: 72px down while the bar is one row, further when
+   it has wrapped (--under-bar, kept by editor.js). */
 #stale,
 #not-a-chat,
 #unfamiliar,
 #refresh,
 #toast {
     position: fixed;
-    top: 72px;
+    top: var(--under-bar, 72px);
     left: var(--middle, 50%);
     box-sizing: border-box;
     margin: 0;
@@ -593,10 +596,10 @@ body.moving {
 /* The settings: at the right, or at the left while the right-hand side is
    selected, so that they never start out over the part being changed. */
 #inspector {
-    top: 72px;
+    top: var(--under-bar, 72px);
     right: 12px;
     width: 312px;
-    max-height: calc(100vh - 84px);
+    max-height: calc(100vh - var(--under-bar, 72px) - 12px);
 }
 
 body.dock-left #inspector:not(.moved) {
@@ -833,6 +836,14 @@ h3 {
     font-size: 13px;
     line-height: 1;
     opacity: 0;
+}
+
+/* It is pressed from a 24px square: out as far as the gap between two pictures,
+   and a pixel further into its own picture than the cross is drawn. */
+.remove::before {
+    position: absolute;
+    inset: -3px -3px -1px -1px;
+    content: "";
 }
 
 .cell:hover .remove,
@@ -1159,6 +1170,21 @@ input[type="text"] {
     .layers button:not(:disabled):active,
     #add button:active,
     #ask button:active {
+        position: relative;
         scale: 0.96;
+    }
+
+    /* A press on a button's outermost pixels would find, on letting go, that the
+       button had shrunk from under the pointer, and the click would go to whatever
+       is behind. While it is pressed it is pressed from all of its first size. */
+    .group button:not(:disabled):active::after,
+    .go:active::after,
+    .wide:not(:disabled):active::after,
+    .layers button:not(:disabled):active::after,
+    #add button:active::after,
+    #ask button:active::after {
+        position: absolute;
+        inset: -4%;
+        content: "";
     }
 }

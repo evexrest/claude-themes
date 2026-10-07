@@ -100,6 +100,12 @@
   "titles": "Library,Settings",
   "edges": "8+8+0"
  },
+ "underAWrappedBar": {
+  "barIsTaller": true,
+  "settingsStartBelowItBy": 12,
+  "oneRowAgain": "72px, settings below it by 12",
+  "inspectorBackWhereItWas": true
+ },
  "libraryMoved": {
   "box": "370,305,656,296",
   "kept": "{\"left\":370,\"top\":305}",
@@ -128,6 +134,7 @@
   "window": "1512x813"
  },
  "pressedWindowComesToFront": true,
+ "barStaysInFrontAfterManyPresses": true,
  "folded": {
   "box": "788,172,312,32",
   "content": "none",
