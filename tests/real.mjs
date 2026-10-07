@@ -97,9 +97,10 @@ try {
     const blob = await c.convertToBlob({ type: "image/png" }); const data = await new Promise((ok) => { const reader = new FileReader(); reader.onload = () => ok(reader.result); reader.readAsDataURL(blob); });`;
   found.anEarlierVersionsSettings = await run(icon, `(async () => { ${aPicture}
     await chrome.storage.local.set({ stickers: [{ id: "old", thumb: data }], "sticker-old": data, stickerLeft: "old", stickerLeftSize: 140, stickerPosition: 30, stickerOpacity: 0.9 }); return "saved"; })()`);
-  // The pictures beside the chat, as the page shows them and as storage holds them.
+  // The pictures beside the chat, as the page shows them and as storage holds them: "width/across/height/opacity", the first two as
+  // shares of the empty space, or "in pixels size/height/opacity/shift" for one that 0.20.1 or earlier left.
   const onThePage = `[...document.querySelectorAll(".claude-sticker")].map((p) => { const b = p.getBoundingClientRect(); return p.dataset.side + " " + (p.style.display === "none" ? "hidden" : [b.left, b.top, b.width, b.height].map(Math.round).join(",")) + " layer " + p.style.zIndex + " opacity " + p.style.opacity; })`;
-  const inStorage = `chrome.storage.local.get(["placed", "stickers"]).then((kept) => "placed" in kept ? kept.placed.map((p) => p.side + " " + (p.id === "old" ? "old" : p.id === kept.stickers[kept.stickers.length - 1].id ? "dropped" : "?") + " " + [p.size, p.position, p.opacity, p.shift].join("/")).join(", ") || "(none)" : "(no list saved)")`;
+  const inStorage = `chrome.storage.local.get(["placed", "stickers"]).then((kept) => "placed" in kept ? kept.placed.map((p) => p.side + " " + (p.id === "old" ? "old" : p.id === kept.stickers[kept.stickers.length - 1].id ? "dropped" : "?") + " " + ("size" in p ? "in pixels " + [p.size, p.position, p.opacity, p.shift].join("/") : [p.width, p.across, p.position, p.opacity].join("/"))).join(", ") || "(none)" : "(no list saved)")`;
 
   // ----- a Claude tab -----
   const claudeTab = await send("Target.createTarget", { url: "https://claude.ai/chat/demo" });

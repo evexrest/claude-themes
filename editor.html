@@ -390,11 +390,17 @@
 
                     <h3>Place and size</h3>
                     <p class="note first">
-                        Drag the picture on the screen to move it anywhere in the chat
-                        window, and drag its corner to resize it. Wherever it overlaps the
-                        chat it lies behind it, under the text and the message box.
+                        Drag the picture to move it within the empty space on this side,
+                        and drag its corner to resize it. It keeps its share of that space
+                        on any screen, so it never covers the chat.
                     </p>
-                    <button class="wide" id="sticker-shift-reset">Put it back beside the chat</button>
+                    <!-- For a picture 0.20.0 or 0.20.1 saved in pixels (see changePlaced in editor.js). -->
+                    <p class="note" id="sticker-earlier" hidden>
+                        This picture was sized by an earlier version, in pixels. Resize it
+                        or move it sideways on the screen where it looks right, and it
+                        will keep that share of the space on every screen.
+                    </p>
+                    <button class="wide" id="sticker-shift-reset">Put it back in the middle of the space</button>
 
                     <!-- editor.js sets the ends of these three, from placedLimits. -->
                     <label class="slider" for="sticker-size">

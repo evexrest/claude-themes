@@ -425,18 +425,25 @@
   "right": 1005,
   "rightsRight": 1105
  },
- "stickersDragged": {
-  "left": 429,
-  "leftsRight": 529,
-  "right": 960,
-  "rightsRight": 1060
+ "stickersAtTheWindowsEdge": {
+  "left": 308,
+  "leftsRight": 408,
+  "right": 1096,
+  "rightsRight": 1196,
+  "spaces": "308 to 590 and 914 to 1196"
  },
- "stickersDraggedTooFar": {
-  "left": 1096,
-  "leftsRight": 1196,
-  "right": 308,
-  "rightsRight": 408,
-  "pane": "296 to 1208"
+ "stickersAgainstTheChat": {
+  "left": 490,
+  "leftsRight": 590,
+  "right": 914,
+  "rightsRight": 1014,
+  "spaces": "308 to 590 and 914 to 1196"
+ },
+ "stickersAQuarterOfTheWayAcross": {
+  "left": 354,
+  "leftsRight": 454,
+  "right": 1051,
+  "rightsRight": 1151
  },
  "stickersPutBack": {
   "left": 399,
@@ -567,7 +574,7 @@
    "pe": "none"
   }
  },
- "pastTheGap": {
+ "fillsItsSpace": {
   "box": {
    "paneLeft": 296,
    "colLeft": 602,
@@ -580,10 +587,10 @@
    "side": "left",
    "shown": true,
    "left": 308,
-   "right": 708,
+   "right": 590,
    "top": 64,
-   "bottom": 564,
-   "width": 400,
+   "bottom": 417,
+   "width": 282,
    "opacity": "0.5",
    "layer": "0",
    "type": "blob",
@@ -592,79 +599,71 @@
   "right": {
    "side": "right",
    "shown": true,
-   "left": 796,
+   "left": 914,
    "right": 1196,
    "top": 64,
-   "bottom": 564,
-   "width": 400,
+   "bottom": 417,
+   "width": 282,
    "opacity": "0.5",
    "layer": "1",
    "type": "blob",
    "pe": "none"
   },
+  "overTheText": "0px and 0px",
   "layers": {
    "parent": "claude-stickers",
    "z": "0",
-   "underTheMessageBox": true,
-   "aboveThePageColour": true,
+   "whereItIs": "chat window > l > page area",
    "clicksPassThrough": "none"
   },
   "size": "8,8,288,1300 | 296,8,912,1300"
  },
- "biggest": {
-  "left": {
-   "side": "left",
-   "shown": true,
-   "left": 308,
-   "right": 1108,
-   "top": 64,
-   "bottom": 1064,
-   "width": 800,
-   "opacity": "0.5",
-   "layer": "0",
-   "type": "blob",
-   "pe": "none"
+ "savedInPixels": {
+  "usualPlace": {
+   "left": 399,
+   "leftsRight": 499,
+   "right": 1005,
+   "rightsRight": 1105
   },
-  "right": {
-   "side": "right",
-   "shown": true,
-   "left": 396,
-   "right": 1196,
-   "top": 64,
-   "bottom": 1064,
-   "width": 800,
-   "opacity": "0.5",
-   "layer": "1",
-   "type": "blob",
-   "pe": "none"
-  }
- },
- "neverWiderThanTheWindow": {
-  "left": {
-   "side": "left",
-   "shown": true,
-   "left": 308,
-   "right": 1196,
-   "top": 64,
-   "bottom": 1174,
-   "width": 888,
-   "opacity": "0.5",
-   "layer": "0",
-   "type": "blob",
-   "pe": "none"
+  "dragged": {
+   "left": 429,
+   "leftsRight": 529,
+   "right": 960,
+   "rightsRight": 1060
   },
-  "right": {
-   "side": "right",
-   "shown": true,
+  "draggedPastTheChat": {
+   "left": 490,
+   "leftsRight": 590,
+   "right": 914,
+   "rightsRight": 1014,
+   "spaces": "308 to 590 and 914 to 1196",
+   "overTheText": "0px and 0px"
+  },
+  "draggedPastTheWindowsEdge": {
    "left": 308,
-   "right": 1196,
-   "top": 64,
-   "bottom": 1174,
-   "width": 888,
-   "opacity": "0.5",
-   "layer": "1",
-   "type": "blob",
-   "pe": "none"
+   "leftsRight": 408,
+   "right": 1096,
+   "rightsRight": 1196
+  },
+  "widerThanTheSpace": {
+   "left": 308,
+   "leftsRight": 590,
+   "right": 914,
+   "rightsRight": 1196,
+   "overTheText": "0px and 0px"
+  },
+  "widerThanTheSpaceAndDragged": {
+   "left": 308,
+   "leftsRight": 590,
+   "right": 914,
+   "rightsRight": 1196
+  },
+  "aSmallOneInA1200pxSpace": "60px wide",
+  "thePageScriptWritesNothing": "key,id,side,size,position,opacity,shift | key,id,side,size,position,opacity,shift",
+  "heldNarrowerByAShortWindow": {
+   "wide": "266px and 266px",
+   "spaces": "308 to 590 and 914 to 1196",
+   "dragged5": "5px and -5px"
   }
  },
  "claudeOwnBackground": {
@@ -681,7 +680,28 @@
    "paneBottom": 408
   },
   "left": true,
-  "right": true
+  "right": true,
+  "edges": {
+   "left": 308,
+   "leftsRight": 400,
+   "right": 724,
+   "rightsRight": 816
+  },
+  "spaces": "308 to 400 and 724 to 816",
+  "overTheText": "0px and 0px"
+ },
+ "tooNarrow": {
+  "box": {
+   "paneLeft": 296,
+   "colLeft": 352,
+   "colRight": 652,
+   "paneRight": 708,
+   "paneTop": 8,
+   "paneBottom": 408
+  },
+  "spaces": "308 to 340 and 664 to 696",
+  "left": false,
+  "right": false
  },
  "wideAgain": {
   "left": true,

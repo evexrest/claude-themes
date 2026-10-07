@@ -17,7 +17,16 @@
   // One of the pictures beside the chat: its <img> in the preview, its grip in the editor, and what is saved about it.
   const picture = (key) => [...page.querySelectorAll(".claude-sticker")].find((e) => e.dataset.key === key) || null;
   const item = (key) => store.placed.find((p) => p.key === key);
-  const P = (key, id, side, more = {}) => ({ key, id, side, size: 180, position: 85, opacity: 1, shift: 0, ...more });
+  // A picture beside the chat, as it is saved: its width and its place across are shares of the empty space on its side, which is 200px wide in the preview.
+  const P = (key, id, side, more = {}) => ({ key, id, side, width: 0.9, across: 0.5, position: 85, opacity: 1, ...more });
+  // The same as 0.20.0 and 0.20.1 saved one: a size and a shift in pixels.
+  const inPixels = (key, id, side, more = {}) => ({ key, id, side, size: 120, position: 50, opacity: 1, shift: 0, ...more });
+  // A saved picture's numbers, "width/across/height/opacity" with the two shares to a thousandth: "0.6/0.5/50/1". One still in pixels says so: "in pixels 120/50/1/0".
+  const numbersOf = (p) => "size" in p ? "in pixels " + [p.size, p.position, p.opacity, p.shift].join("/") : [p.width, p.across].map((n) => Math.round(n * 1000) / 1000).concat(p.position, p.opacity).join("/");
+  // Where the empty space on each side is in the preview, and how much of a picture lies over the column of text.
+  const spaceOf = (side) => { const pane = page.querySelector(".dframe-pane-primary").getBoundingClientRect(), column = page.querySelector('[data-cds="ChatComposer"]').getBoundingClientRect(); return side === "left" ? [pane.left + 12, column.left - 12] : [column.right + 12, pane.right - 12]; };
+  const acrossPreview = (key) => { const b = picture(key).getBoundingClientRect(); return Math.round(b.width) + "px, " + Math.round(b.left) + " to " + Math.round(b.right); };
+  const overTheText = (key) => { const b = picture(key).getBoundingClientRect(), column = page.querySelector('[data-cds="ChatComposer"]').getBoundingClientRect(); return Math.round(Math.max(0, Math.min(b.right, column.right) - Math.max(b.left, column.left))) + "px"; };
   // The saved list, back to front, as "A left s1, B left s2": each placed picture gets a letter the first time it is seen.
   const letters = new Map(); const letter = (key) => { if (!letters.has(key)) letters.set(key, String.fromCharCode(65 + letters.size)); return letters.get(key); };
   const placedNow = () => store.placed.map((p) => letter(p.key) + " " + p.side + " " + p.id).join(", ") || "(none)";
@@ -178,7 +187,7 @@
   r.dragSidePictureOntoMainIsRefused = { taken: wrong.taken, imageId: store.imageId === usedBefore, placed: store.placed.length };
 
   // ----- moving and resizing a side picture on the screen -----
-  await chrome.storage.local.set({ placed: [P("a1", "s1", "left", { size: 120, position: 50 }), P("b1", "s2", "right", { size: 120, position: 50 })] }); el("part-left").click(); await wait(300);
+  await chrome.storage.local.set({ placed: [P("a1", "s1", "left", { width: 0.6, position: 50 }), P("b1", "s2", "right", { width: 0.6, position: 50 })] }); el("part-left").click(); await wait(300);
   const point = (target, type, x, y) => target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, clientX: x, clientY: y }));
   const g = () => grips.get("a1").getBoundingClientRect();
   let at = g(); const topBefore = picture("a1").getBoundingClientRect().top;
@@ -186,34 +195,72 @@
   r.dragPictureUp = { position: "50 to " + item("a1").position, theOtherStill: item("b1").position, movedUpInPreview: Math.round(topBefore - picture("a1").getBoundingClientRect().top), expected: Math.round(60 / shrink), slider: el("sticker-position").value, gripFollowed: Math.round(g().top - at.top) };
   at = g(); const handle = grips.get("a1").querySelector(".handle"); const widthBefore = picture("a1").getBoundingClientRect().width;
   point(handle, "pointerdown", at.right, at.bottom); point(handle, "pointermove", at.right + 30, at.bottom); point(handle, "pointerup", at.right + 30, at.bottom); await wait(250);
-  r.dragCorner = { size: "120 to " + item("a1").size, theOtherStill: item("b1").size, widthInPreview: Math.round(widthBefore) + " to " + Math.round(picture("a1").getBoundingClientRect().width), slider: el("sticker-size").value };
+  r.dragCorner = { width: "0.6 to " + item("a1").width, theOtherStill: item("b1").width, widthInPreview: Math.round(widthBefore) + " to " + Math.round(picture("a1").getBoundingClientRect().width), slider: el("sticker-size").value, label: el("sticker-size-value").textContent };
   el("undo").click(); await wait(60); el("undo").click(); await wait(60);
-  r.bothDragsUndone = { size: item("a1").size, position: item("a1").position };
+  r.bothDragsUndone = { width: item("a1").width, position: item("a1").position };
 
   // ----- dragging a side picture sideways, and picking it up without selecting its side first -----
   el("part-main").click(); await wait(150);
   r.gripsThereWithoutSelecting = { grips: [...document.querySelectorAll(".grip")].filter((e) => !e.hidden).length, outlined: outlined() };
   at = g(); const leftBefore = picture("a1").getBoundingClientRect().left;
-  point(grips.get("a1"), "pointerdown", at.left + 10, at.top + 10); point(grips.get("a1"), "pointermove", at.left + 50, at.top + 10); point(grips.get("a1"), "pointerup", at.left + 50, at.top + 10); await wait(250);
-  r.dragPictureSideways = { shift: item("a1").shift, expected: Math.round(40 / shrink), movedInPreview: Math.round(picture("a1").getBoundingClientRect().left - leftBefore), nowSelected: selected(), resetHidden: el("sticker-shift-reset").hidden, theOtherStill: item("b1").shift };
-  at = g(); point(grips.get("a1"), "pointerdown", at.left + 10, at.top + 10); point(grips.get("a1"), "pointermove", at.left - 5000, at.top + 10); point(grips.get("a1"), "pointerup", at.left - 5000, at.top + 10); await wait(250);
-  r.draggedFarLeftStopsAtTheEdge = { pictureLeft: Math.round(picture("a1").getBoundingClientRect().left), paneLeft: Math.round(page.querySelector(".dframe-pane-primary").getBoundingClientRect().left) };
+  const tug = async (key, across, target = grips.get(key)) => { const b = grips.get(key).getBoundingClientRect(), x = target === grips.get(key) ? b.left + 10 : target.getBoundingClientRect().left + 4, y = target === grips.get(key) ? b.top + 10 : target.getBoundingClientRect().top + 4; point(target, "pointerdown", x, y); point(target, "pointermove", x + across, y); point(target, "pointerup", x + across, y); await wait(250); };
+  await tug("a1", 20);
+  r.dragPictureSideways = { across: "0.5 to " + item("a1").across, expected: Math.round(20 / shrink), movedInPreview: Math.round(picture("a1").getBoundingClientRect().left - leftBefore), nowSelected: selected(), resetHidden: el("sticker-shift-reset").hidden, resetSays: el("sticker-shift-reset").textContent, theOtherStill: item("b1").across };
+  // however far it is dragged, it stops at the two ends of the empty space on its side: the window's edge, and 12px short of the column of text
+  await tug("a1", -5000);
+  r.draggedFarLeftStopsAtTheEdge = { across: item("a1").across, picture: acrossPreview("a1"), space: spaceOf("left").join(" to "), paneLeft: Math.round(page.querySelector(".dframe-pane-primary").getBoundingClientRect().left) };
+  await tug("a1", 5000);
+  r.draggedFarRightStopsAtTheChat = { across: item("a1").across, picture: acrossPreview("a1"), space: spaceOf("left").join(" to "), overTheText: overTheText("a1") };
+  await tug("b1", -5000);
+  r.theRightOneStopsAtTheChatToo = { across: item("b1").across, picture: acrossPreview("b1"), space: spaceOf("right").join(" to "), overTheText: overTheText("b1"), nowSelected: selected() };
+  await tug("b1", 5000);
+  r.andAtTheWindowsEdge = { across: item("b1").across, picture: acrossPreview("b1") };
+  el("sticker-shift-reset").click(); await wait(250); el("part-left").click(); await wait(100);
   el("sticker-shift-reset").click(); await wait(250);
-  r.pictureBackBesideTheChat = { shift: item("a1").shift, sameAsBefore: Math.round(picture("a1").getBoundingClientRect().left) === Math.round(leftBefore), resetHidden: el("sticker-shift-reset").hidden };
+  r.pictureBackInTheMiddle = { across: item("a1").across + " and " + item("b1").across, sameAsBefore: Math.round(picture("a1").getBoundingClientRect().left) === Math.round(leftBefore), resetHidden: el("sticker-shift-reset").hidden };
+  // the corner dragged far past the chat, then far the other way: as wide as the space and no wider, then as narrow as a picture may be
+  await tug("a1", 5000, handle);
+  r.dragCornerPastTheChat = { width: item("a1").width, picture: acrossPreview("a1"), space: spaceOf("left").join(" to "), overTheText: overTheText("a1"), slider: el("sticker-size").value, label: el("sticker-size-value").textContent };
+  await tug("a1", 5000);
+  r.dragCornerPastTheChat.thenItHasNowhereToGoSideways = { across: item("a1").across, picture: acrossPreview("a1") };
+  await tug("a1", -5000, handle);
+  r.dragCornerToNothing = { width: item("a1").width, picture: acrossPreview("a1"), label: el("sticker-size-value").textContent };
+  // against the chat, the corner nearest the chat is held there, and the picture grows towards the window's edge
+  await tug("a1", 5000); await tug("a1", 20, handle);
+  r.dragCornerOfOneAgainstTheChat = { across: item("a1").across, width: item("a1").width, picture: acrossPreview("a1"), overTheText: overTheText("a1") };
+  el("sticker-shift-reset").click(); set("sticker-size", 60); await wait(250);
+  r.sliderSetsTheShare = { numbers: numbersOf(item("a1")), picture: acrossPreview("a1"), limits: el("sticker-size").min + " to " + el("sticker-size").max };
+
+  // ----- pictures 0.20.0 and 0.20.1 saved in pixels -----
+  // Opening the editor saves nothing, and they are drawn as those versions drew them where they fitted the space. Making one fainter
+  // leaves all of them in pixels. Resizing one saves that one as shares of the space and leaves the others, which do not move.
+  { const a1Kept = item("a1"), b1Kept = item("b1"), keys = ["e1", "e2", "e3"];
+    await chrome.storage.local.set({ placed: [inPixels("e1", "s1", "left", { shift: 25 }), inPixels("e2", "s2", "left", { size: 90, position: 20, shift: -30 }), inPixels("e3", "s2", "right", { size: 500, shift: -40 })] }); await wait(300);
+    const drawn = () => keys.map(acrossPreview).join(" | "), stored = () => store.placed.map(numbersOf).join(", ");
+    const before = drawn(), tops = () => keys.map((key) => Math.round(picture(key).getBoundingClientRect().top)).join(","), topsBefore = tops();
+    r.savedInPixels = { beforeAnyChange: { stored: stored(), drawn: before, overTheText: keys.map(overTheText).join(", "), sizeSliderOfTheFrontOneOnTheLeft: el("sticker-size").value + ", " + el("sticker-size-value").textContent, resetHidden: el("sticker-shift-reset").hidden, saysItIsInPixels: !el("sticker-earlier").hidden } };
+    const others = () => ["e1", "e3"].map((key) => acrossPreview(key) + " from " + Math.round(picture(key).getBoundingClientRect().top)).join(" | "), othersBefore = others();
+    set("sticker-opacity", 70); await wait(250);
+    r.savedInPixels.afterMakingOneFainter = { stored: stored(), nothingMoved: drawn() === before && tops() === topsBefore };
+    set("sticker-size", 50); await wait(250);
+    r.savedInPixels.afterResizingThatOne = { stored: stored(), drawn: drawn(), theOthersDidNotMove: others() === othersBefore, stillSaysItIsInPixels: !el("sticker-earlier").hidden };
+    el("undo").click(); await wait(250); el("undo").click(); await wait(250);
+    r.savedInPixels.undone = { stored: stored(), nothingMoved: drawn() === before && tops() === topsBefore };
+    await chrome.storage.local.set({ placed: [a1Kept, b1Kept] }); await wait(250); }
 
   // ----- several on one side: the sliders, and the Delete key, are for the chosen one -----
   letters.clear(); ["a1", "a2", "b1"].forEach(letter);
-  await chrome.storage.local.set({ placed: [item("a1"), P("a2", "s2", "left", { size: 120, position: 20 }), item("b1")] }); await wait(250);
-  const numbers = (key) => [item(key).size, item(key).position, item(key).opacity, item(key).shift].join("/");
+  await chrome.storage.local.set({ placed: [item("a1"), P("a2", "s2", "left", { width: 0.6, position: 20 }), item("b1")] }); await wait(250);
+  const numbers = (key) => numbersOf(item(key));
   r.aPictureAddedElsewhereIsNotChosen = { placed: placedNow(), outlined: outlined(), slider: el("sticker-size").value };
-  set("sticker-size", 300); set("sticker-opacity", 40); await wait(250);
+  set("sticker-size", 100); set("sticker-opacity", 40); await wait(250);
   r.slidersChangeTheChosenOne = { A: numbers("a1"), B: numbers("a2"), C: numbers("b1"), widthsInPreview: ["a1", "a2", "b1"].map((key) => Math.round(picture(key).getBoundingClientRect().width)).join("/"), seeThrough: picture("a1").style.opacity + "/" + picture("a2").style.opacity };
   // pressing another picture on the screen chooses it: where two overlap, the one in front
   const tap = (key) => { const b = grips.get(key).getBoundingClientRect(), x = b.left + 4, y = b.bottom - 4; const under = document.elementFromPoint(x, y); point(under, "pointerdown", x, y); point(under, "pointerup", x, y); return [...grips].filter(([, grip]) => grip === under || grip.contains(under)).map(([key]) => letter(key)).join(""); };
   const cornerOfBIsOverA = (() => { const a = grips.get("a1").getBoundingClientRect(), b = grips.get("a2").getBoundingClientRect(); return b.left + 4 > a.left && b.left + 4 < a.right && b.bottom - 4 > a.top && b.bottom - 4 < a.bottom; })();
   const pressedOn = tap("a2"); await wait(250);
   r.pressingAPictureChoosesIt = { twoUnderThePointer: cornerOfBIsOverA, landedOn: pressedOn, outlined: outlined(), sliders: [el("sticker-size").value, el("sticker-position").value, el("sticker-opacity").value].join("/"), label: el("sticker-size-value").textContent, gripLayers: ["a1", "a2", "b1"].map((key) => grips.get(key).style.zIndex).join(",") };
-  set("sticker-size", 90); set("sticker-position", 10); await wait(250);
+  set("sticker-size", 45); set("sticker-position", 10); await wait(250);
   r.eachPictureHasItsOwn = { A: numbers("a1"), B: numbers("a2"), C: numbers("b1"), widthsInPreview: ["a1", "a2", "b1"].map((key) => Math.round(picture(key).getBoundingClientRect().width)).join("/") };
   el("undo").click(); await wait(100); el("undo").click(); await wait(100);
   r.eachSliderIsItsOwnStepOfUndo = { A: numbers("a1"), B: numbers("a2") };
@@ -252,7 +299,7 @@
   r.layers.andBroughtBackToTheFront = await push("front");
   await pick("m2");
   r.layers.choosingInTheRow = { row: row(), buttons: layerButtons(), outlined: outlined(), sliders: [el("sticker-size").value, el("sticker-position").value].join("/") };
-  const tileOfB = [...el("side-placed").children].find((b) => b.dataset.key === "m2"); set("sticker-size", 150); await wait(100);
+  const tileOfB = [...el("side-placed").children].find((b) => b.dataset.key === "m2"); set("sticker-size", 75); await wait(100);
   r.layers.rowKeptWhileASliderMoves = [...el("side-placed").children].find((b) => b.dataset.key === "m2") === tileOfB;
   r.layers.bringForward = await push("forward");
   r.layers.bringForward.grips = gripOrder();
@@ -275,7 +322,7 @@
 
   // ----- no more than twenty -----
   el("part-left").click();
-  await chrome.storage.local.set({ placed: Array.from({ length: 20 }, (_, i) => P("f" + i, "s1", i % 2 ? "left" : "right", { size: 60, position: i * 5 })) }); await wait(250);
+  await chrome.storage.local.set({ placed: Array.from({ length: 20 }, (_, i) => P("f" + i, "s1", i % 2 ? "left" : "right", { width: 0.3, position: i * 5 })) }); await wait(250);
   tileFor("sticker", "s2").click(); await wait(100);
   r.noMoreThanTwenty = { placed: store.placed.length, stillTheSame: store.placed.every((p) => p.id === "s1"), said: el("toast").textContent, inPreview: page.querySelectorAll(".claude-sticker").length, grips: document.querySelectorAll(".grip").length };
   n = store.stickers.length; dropOn(el("zone-left"), [gif()]); await until(() => store.stickers.length > n);
@@ -322,15 +369,16 @@
 
   // ----- a theme saved to a file and loaded again, and everything reset -----
   await chrome.storage.local.set({ "image-th": shaped(40, 20), "sticker-ts": shaped(20, 20), "sticker-tu": shaped(20, 30), images: [...store.images, { id: "th", thumb: shaped(40, 20) }], stickers: [...store.stickers, { id: "ts", thumb: shaped(20, 20) }, { id: "tu", thumb: shaped(20, 30) }] }); await wait(80);
-  await chrome.storage.local.set({ preset: null, imageId: "th", imageZoom: 0.5, textColor: "#123456", sidebarMode: "plain", frameMain: "brush", placed: [P("t1", "ts", "left", { size: 140, shift: 25 }), P("t2", "tu", "right", { position: 40, opacity: 0.6 }), P("t3", "ts", "right", { position: 70 })] }); await wait(150);
+  await chrome.storage.local.set({ preset: null, imageId: "th", imageZoom: 0.5, textColor: "#123456", sidebarMode: "plain", frameMain: "brush", placed: [P("t1", "ts", "left", { width: 0.7, across: 0.9 }), P("t2", "tu", "right", { position: 40, opacity: 0.6 }), P("t3", "ts", "right", { position: 70 })] }); await wait(150);
   const kept = await themeFile();
   r.themeFile = { format: kept.claudeThemes, madeWith: kept.madeWith === filesVersion, settings: Object.keys(kept.settings).length === Object.keys(defaults).length - 4, leavesOutAFrameNoBorderUses: !("frameImage" in kept.settings) && !("frameSlice" in kept.settings), leavesOutTheLists: !("images" in kept.settings) && !("stickers" in kept.settings), pictures: Object.keys(kept.pictures).sort().join(","), mainIsThePicture: kept.pictures.main === store["image-th"],
-    sidePictures: Object.keys(kept.pictures.side).sort().join(","), eachIsItsFile: kept.pictures.side.ts === store["sticker-ts"] && kept.pictures.side.tu === store["sticker-tu"], placed: kept.settings.placed.map((p) => p.side + " " + p.id).join(", ") };
+    sidePictures: Object.keys(kept.pictures.side).sort().join(","), eachIsItsFile: kept.pictures.side.ts === store["sticker-ts"] && kept.pictures.side.tu === store["sticker-tu"], placed: kept.settings.placed.map((p) => p.side + " " + p.id + " " + numbersOf(p)).join(", ") };
   el("theme-reset").click(); await wait(60); const resetAsked = !el("ask").hidden; el("ask-yes").click(); await wait(150);
   r.resetEverything = { asked: resetAsked, preset: store.preset, textColor: store.textColor ?? null, zoom: store.imageZoom ?? null, placed: store.placed.length, frame: store.frameMain, picturesKept: store.images.some((i) => i.id === "th") && "image-th" in store && store.stickers.some((i) => i.id === "ts") && "sticker-ts" in store };
-  // What each placed picture shows, by the file it holds, and its numbers: "left ts 140/85/1/25".
+  // What each placed picture shows, by the file it holds, and its numbers: "left ts 0.7/0.9/85/1".
   const shows = (p) => store["sticker-" + p.id] === store["sticker-ts"] ? "ts" : store["sticker-" + p.id] === store["sticker-tu"] ? "tu" : "another";
-  const placedAs = () => store.placed.map((p) => p.side + " " + shows(p) + " " + [p.size, p.position, p.opacity, p.shift].join("/")).join(", ") || "(none)";
+  const placedAs = () => store.placed.map((p) => p.side + " " + shows(p) + " " + numbersOf(p)).join(", ") || "(none)";
+  const drawnAs = () => store.placed.map((p) => p.side + " " + acrossPreview(p.key)).join(", ");
   const fields = () => [...new Set(store.placed.map((p) => Object.keys(p).join(",")))].join(" | ");
   const imagesBefore = store.images.length, stickersBefore = store.stickers.length;
   const told = await loadTheme(JSON.stringify(kept)); await wait(200);
@@ -342,11 +390,16 @@
   // a file from before 0.20.0, when each side had one picture
   const oldFile = { claudeThemes: 1, madeWith: "0.19.1", settings: { preset: "ocean", stickerLeft: "x1", stickerRight: "x2", stickerSize: 150, stickerPosition: 60, stickerOpacity: 0.8, stickerShift: 0, stickerLeftSize: 90, stickerLeftPosition: null, stickerLeftOpacity: null, stickerLeftShift: 12, stickerRightSize: null, stickerRightPosition: null, stickerRightOpacity: null, stickerRightShift: null }, pictures: { left: store["sticker-ts"], right: store["sticker-tu"] } };
   const stickersBeforeOld = store.stickers.length; const toldOld = await loadTheme(JSON.stringify(oldFile)); await wait(200);
-  r.themeFileFromAnEarlierVersion = { told: toldOld, preset: store.preset, placed: placedAs(), sidePicturesAddedToLibrary: store.stickers.length - stickersBeforeOld, fields: fields(), keysAreNew: store.placed.every((p) => p.key !== "left" && p.key !== "right"), oldSettingsNotSaved: Object.keys(store).filter((k) => /^sticker(Left|Right|Size|Position|Opacity|Shift)/.test(k)).length, inPreview: page.querySelectorAll(".claude-sticker").length };
+  r.themeFileFromAnEarlierVersion = { told: toldOld, preset: store.preset, placed: placedAs(), drawnWhereThatVersionDrewThem: drawnAs(), sidePicturesAddedToLibrary: store.stickers.length - stickersBeforeOld, fields: fields(), keysAreNew: store.placed.every((p) => p.key !== "left" && p.key !== "right"), oldSettingsNotSaved: Object.keys(store).filter((k) => /^sticker(Left|Right|Size|Position|Opacity|Shift)/.test(k)).length, inPreview: page.querySelectorAll(".claude-sticker").length };
   await loadTheme(JSON.stringify({ ...oldFile, settings: { ...oldFile.settings, stickerLeft: null }, pictures: { right: store["sticker-tu"] } })); await wait(150);
   r.themeFileFromAnEarlierVersion.withOnlyARightPicture = placedAs();
   await loadTheme(JSON.stringify({ ...oldFile, pictures: { left: store["sticker-ts"] } })); await wait(150);
   r.themeFileFromAnEarlierVersion.withoutTheRightPicturesFile = placedAs();
+  // a file 0.20.1 saved: a list of side pictures, each with a size and a shift in pixels. They are kept that way, and drawn where that version drew them.
+  const file0201 = { claudeThemes: 2, madeWith: "0.20.1", settings: { preset: "forest", placed: [{ key: "x1", id: "ts", side: "left", size: 140, position: 85, opacity: 1, shift: 25 }, { key: "x2", id: "tu", side: "right", size: 180, position: 40, opacity: 0.6, shift: 0 }] }, pictures: { side: { ts: store["sticker-ts"], tu: store["sticker-tu"] } } };
+  const told0201 = await loadTheme(JSON.stringify(file0201)); await wait(200);
+  r.themeFileFrom0201 = { told: told0201, preset: store.preset, placed: placedAs(), fields: fields(), drawnWhereThatVersionDrewThem: drawnAs() };
+  el("undo").click(); await wait(120);
   const placedBeforeOdd = placedAs();
   const odd = await loadTheme(JSON.stringify({ claudeThemes: 1, settings: { textColor: "red; background: url(x)", opacity: "lots", enabled: "yes", unknownThing: 1, images: [{ id: "x" }], preset: null, imageId: "missing", panelOpacity: 0.4, sidebarTextColor: "#ABCDEF" }, pictures: { main: "https://example.com/x.png" } })); await wait(150);
   r.strangeThemeFile = { told: odd, textColor: store.textColor ?? null, opacity: typeof store.opacity, enabled: store.enabled, unknown: "unknownThing" in store, imagesStillAList: Array.isArray(store.images) && store.images.every((i) => i.id !== "x"), preset: store.preset, imageId: store.imageId ?? null, panelOpacity: store.panelOpacity, sidebarTextColor: store.sidebarTextColor, sidePicturesLeftAlone: placedAs() === placedBeforeOdd };
@@ -357,6 +410,15 @@
   const stranger = { claudeThemes: 2, settings: { placed: [fine({ position: 99, evil: "<img src=x onerror=alert(1)>", key: { toString: null }, zIndex: 999999 }), ...faulty, ...Array.from({ length: 50 }, (_, i) => fine({ position: i, side: i % 2 ? "right" : "left" }))] }, pictures: { side: { ts: store["sticker-ts"], unused: store["sticker-tu"] } } };
   let stickersBeforeStranger = store.stickers.length; const toldStranger = await loadTheme(JSON.stringify(stranger)); await wait(250);
   r.sidePicturesFromAStranger = { told: toldStranger, inTheFile: stranger.settings.placed.length, taken: store.placed.length, fields: fields(), heights: store.placed.map((p) => p.position).join(","), sides: store.placed.map((p) => p.side[0]).join(""), allShow: [...new Set(store.placed.map(shows))].join(","), keysAllDifferent: new Set(store.placed.map((p) => p.key)).size === store.placed.length && store.placed.every((p) => typeof p.key === "string"), sidePicturesAddedToLibrary: store.stickers.length - stickersBeforeStranger, inPreview: page.querySelectorAll(".claude-sticker").length };
+  el("undo").click(); await wait(120);
+  // the same for a list as this version saves it: a width or a place outside its ends, a number missing, or one with the numbers of both kinds, is left out
+  const share = (more) => ({ id: "ts", side: "left", width: 0.5, across: 0.5, position: 50, opacity: 1, ...more });
+  const without = (name, thing) => { const rest = { ...thing }; delete rest[name]; return rest; };
+  const faultyShares = [share({ width: 1.01 }), share({ width: 5 }), share({ width: 0.04 }), share({ width: "0.5" }), share({ across: -0.01 }), share({ across: 1.01 }), share({ across: null }), share({ position: 101 }), share({ opacity: 0 }), without("width", share()), without("across", share()),
+    share({ size: 100 }), share({ shift: 0 }), share({ size: 100, shift: 0 }), fine({ width: 0.5 }), fine({ across: 0.5 })];
+  const strangerShares = { claudeThemes: 3, settings: { placed: [share({ position: 11, evil: "<img src=x onerror=alert(1)>" }), ...faultyShares, share({ width: 1, across: 1, position: 22 }), share({ width: 0.1, across: 0, position: 33, side: "right" })] }, pictures: { side: { ts: store["sticker-ts"] } } };
+  const toldShares = await loadTheme(JSON.stringify(strangerShares)); await wait(250);
+  r.sharesFromAStranger = { told: toldShares, inTheFile: strangerShares.settings.placed.length, taken: store.placed.length, placed: placedAs(), fields: fields(), drawn: drawnAs(), overTheText: store.placed.map((p) => overTheText(p.key)).join(", ") };
   el("undo").click(); await wait(120);
   // one whose picture did not come with the file is left out
   stickersBeforeStranger = store.stickers.length;
@@ -463,7 +525,7 @@
 
   // ----- the placed pictures changed by something else end this editor's steps -----
   el("part-main").click(); set("opacity", 33); await wait(60); const hadAStep = !el("undo").disabled, some = store.stickers[0].id, listBefore = store.placed || [];
-  await chrome.storage.local.set({ placed: [...listBefore, { key: "out", id: some, side: "left", size: 100, position: 50, opacity: 1, shift: 0 }] }); await wait(100);
+  await chrome.storage.local.set({ placed: [...listBefore, P("out", some, "left")] }); await wait(100);
   r.listChangedFromOutside = { hadAStep, undoOffAfter: el("undo").disabled, theOutsidePictureStays: store.placed.some((p) => p.key === "out") };
   await chrome.storage.local.set({ placed: listBefore }); await wait(100);
   // ----- an earlier version's picture that is no longer among the saved ones is not carried over -----

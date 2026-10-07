@@ -1,21 +1,25 @@
 // Part of the editor: saving the whole theme to a file, loading one, putting
 // everything back to Claude's own, and the note shown the first time the editor is
 // opened. Loaded after editor.js, whose `state`, `save`, `say`, `ask`, `byId`,
-// `sides`, `openPicture`, `drawn` and `showLibrary` it uses, with `defaults`,
-// `imageKey`, `stickerKey`, `newId`, `mostPlaced`, `placedLimits` and
-// `placedFromOld` from settings.js.
+// `sides`, `openPicture`, `drawn` and `showLibrary` it uses, with
+// `defaults`, `imageKey`, `stickerKey`, `newId`, `mostPlaced`, `placedLimits`,
+// `earlierLimits` and `placedFromOld` from settings.js.
 
 // A theme file is plain JSON:
-//   { claudeThemes: 2, madeWith: "0.20.0", settings: { ... }, pictures: { ... } }
+//   { claudeThemes: 3, madeWith: "0.21.0", settings: { ... }, pictures: { ... } }
 // `settings` holds every setting of the look. `pictures` holds the files that look
 // uses, as stored text: the two backgrounds under "main" and "sidebar", and under
 // "side" the pictures beside the chat, each under the id the settings call it by.
 // The two lists of saved pictures are not settings of the look and are left out.
 //
-// Format 1 is from before 0.20.0, when each side had one picture. Its settings are
-// the old ones (see placedFromOld in settings.js) and its two side pictures are
-// under "left" and "right". It still loads.
-const themeFormat = 2;
+// Format 2 is from 0.20.0 and 0.20.1, which kept each side picture's width and how
+// far it had been dragged in pixels, where they are now shares of the empty space
+// it is in (see inShares in settings.js). Format 1 is from before 0.20.0, when
+// each side had one picture. Its settings are the old ones (see placedFromOld in
+// settings.js) and its two side pictures are under "left" and "right". Both still
+// load.
+const themeFormat = 3;
+const earlierFormats = [1, 2];
 const notInAThemeFile = ["images", "stickers"];
 // An uploaded frame is a file of the user's, like a saved picture: going back to a
 // fresh look keeps it.
@@ -37,7 +41,6 @@ async function themeFile() {
             settings[key] = state[key];
         }
     }
-
     // The uploaded frame goes in the file only when a border is set to it.
     if (![settings.frameMain, settings.frameSidebar, settings.frameAll].includes("custom")) {
         delete settings.frameImage;
@@ -134,28 +137,43 @@ function soundSetting(key, value) {
     return settingsThatAreText.includes(key) && typeof value === "string" && value.length <= 200;
 }
 
+// The two sets of numbers a picture beside the chat can have in a theme file: as
+// this version keeps them, and as 0.20.0 and 0.20.1 did (see inShares in
+// settings.js). Each has its own least and most for every number.
+const placedShapes = [placedLimits, earlierLimits];
+const placedNumbers = [...new Set(placedShapes.flatMap(Object.keys))];
+
 // The pictures beside the chat, from a theme file: no more than there can be, each
-// on a side, with every number between the least and the most the editor allows.
-// One with anything wrong is left out, and so is anything in one that this version
-// does not know. They have no keys yet: loadTheme gives each a new one. Returns
-// null when the file has no such list.
+// on a side, with the numbers of one of those two sets, every one between the
+// least and the most the editor allowed it. One with anything wrong is left out:
+// a number missing or outside its ends, or numbers from both sets at once. So is
+// anything in one that this version does not know. They have no keys yet:
+// loadTheme gives each a new one. Returns null when the file has no such list.
 function soundPlaced(value) {
     if (!Array.isArray(value)) {
         return null;
     }
-    const sound = (item) => item !== null && typeof item === "object" &&
-        typeof item.id === "string" && item.id.length <= 200 && sides.includes(item.side) &&
-        Object.keys(placedLimits).every((what) => {
-            const [least, most] = placedLimits[what];
-            return typeof item[what] === "number" && item[what] >= least && item[what] <= most;
-        });
-    return value.filter(sound).slice(0, mostPlaced).map((item) => ({
-        id: item.id, side: item.side, size: item.size, position: item.position, opacity: item.opacity, shift: item.shift
-    }));
+    const within = (item, limits) => placedNumbers.every((what) => {
+        if (!Object.hasOwn(limits, what)) {
+            return !Object.hasOwn(item, what);
+        }
+        const [least, most] = limits[what];
+        return typeof item[what] === "number" && item[what] >= least && item[what] <= most;
+    });
+    const taken = [];
+    for (const item of value) {
+        const sound = item !== null && typeof item === "object" && typeof item.id === "string" && item.id.length <= 200 && sides.includes(item.side);
+        const limits = sound ? placedShapes.find((shape) => within(item, shape)) : null;
+        if (limits && taken.length < mostPlaced) {
+            taken.push({ id: item.id, side: item.side, ...Object.fromEntries(Object.keys(limits).map((what) => [what, item[what]])) });
+        }
+    }
+    return taken;
 }
 
 // A format 1 file's settings and pictures, as a format 2 file would hold them: the
-// picture each side had becomes one of a list, and its file is named by its side.
+// picture each side had becomes one of a list, with its size in pixels, and its
+// file is named by its side.
 function fromFormatOne(file) {
     const settings = { ...file.settings };
     // A file that says nothing about the sides leaves them as they are.
@@ -176,7 +194,7 @@ async function loadTheme(text) {
     } catch (error) {
         return "That file is not a theme file.";
     }
-    if (!file || ![1, themeFormat].includes(file.claudeThemes) || typeof file.settings !== "object" || file.settings === null) {
+    if (!file || ![...earlierFormats, themeFormat].includes(file.claudeThemes) || typeof file.settings !== "object" || file.settings === null) {
         return file && file.claudeThemes > themeFormat
             ? "That theme was made with a newer version of Claude Themes. Update the extension to load it."
             : "That file is not a theme file.";

@@ -3,6 +3,31 @@
 What changed in each version, newest first. Versions before 0.18.0 were made over two days
 and are grouped.
 
+## 0.21.0 (2026-10-06)
+
+Pictures beside the chat fit any screen.
+
+- A side picture's size and place are now shares of the empty space on its side of the
+  chat, where they were pixels. That space is far narrower on a laptop than on a monitor,
+  and with the sidebar open than shut, so a picture set up on a big screen covered the
+  text on a small one. Now it takes up the same share of the space on every screen, and it
+  cannot be over the chat on any of them.
+- The Size slider reads as a percentage of the space, from 5% to 100%. A new picture
+  starts at 80%, in the middle.
+- Dragging a picture moves it within the empty space on its side and stops at both ends.
+  Dragging its corner stops at the width of the space. A picture can no longer be made
+  wider than the space or dragged behind the chat.
+- Pictures set up in 0.20.0 or 0.20.1 are kept. One that fitted its space looks as it did.
+  One that was wider than the space now fills it, and one dragged past the end of the
+  space stops there.
+- Such a picture is saved the new way the next time you resize it or move it sideways,
+  as it looks in that window, and from then on it takes the same share of the space on
+  every screen. Do that on the screen where it looks right. Until then it keeps its size
+  in pixels wherever it fits and is held to the space wherever it does not. The editor
+  says so under Place and size while such a picture is chosen.
+- Theme files hold side pictures as they are saved. Files saved by earlier versions still
+  load. An earlier version asked to load a new file says to update.
+
 ## 0.20.1 (2026-10-06)
 
 A security pass before publishing.

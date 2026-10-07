@@ -2,7 +2,7 @@
 
 // Keep this the same as "version" in manifest.json. The editor compares the two to
 // tell whether Chrome is still running an older copy of the extension.
-const filesVersion = "0.20.1";
+const filesVersion = "0.21.0";
 
 const defaults = {
     enabled: true,
@@ -56,13 +56,17 @@ const defaults = {
     stickers: [],
     // The ones that are on the page, from the back to the front: where two overlap,
     // the one later in the list is drawn over the other. Each is
-    // { key, id, side, size, position, opacity, shift }. `key` is this placed
+    // { key, id, side, width, across, position, opacity }. `key` is this placed
     // picture's own name, and `id` the saved picture it shows; one saved picture can
-    // be placed more than once. `side` is "left" or "right": the empty space its
-    // usual place is worked out from. `size` is its width in pixels, `position` its
-    // height on the page from 0 (the top) to 100 (the bottom), `opacity` how solid
-    // it is, up to 1, and `shift` how far it has been dragged sideways from its usual
-    // place, in pixels.
+    // be placed more than once. `side` is "left" or "right": the empty space beside
+    // the chat that it is in. `width` is how wide it is, as a share of that space
+    // from 0.05 to 1, and `across` is where it sits across what is left of the space:
+    // 0 at the window's edge, 1 against the chat, 0.5 in the middle. They are shares
+    // because that space is far narrower on a small screen than on a big one, and a
+    // picture kept this way cannot be over the chat on either. `position` is its
+    // height on the page from 0 (the top) to 100 (the bottom) and `opacity` how solid
+    // it is, up to 1. One saved by 0.20.0 or 0.20.1 has a `size` and a `shift` in
+    // pixels in place of the two shares: see inShares.
     placed: [],
     // Chat text. A null colour and the "default" font leave Claude's own alone.
     // `codeColor` is for the words Claude marks like `this`, normally crimson.
@@ -106,8 +110,72 @@ const mostPlaced = 20;
 // What a picture is given when it is first placed, and the least and the most each
 // of its numbers may be. The editor's sliders, a drag on the page and a theme file
 // all keep to these.
-const placedStart = { size: 180, position: 85, opacity: 1, shift: 0 };
-const placedLimits = { size: [60, 800], position: [0, 100], opacity: [0.1, 1], shift: [-10000, 10000] };
+const placedStart = { width: 0.8, across: 0.5, position: 85, opacity: 1 };
+const placedLimits = { width: [0.05, 1], across: [0, 1], position: [0, 100], opacity: [0.1, 1] };
+
+// The same for a picture as 0.20.0 and 0.20.1 saved it. `size` was its width and
+// `shift` how far it had been dragged sideways from the middle of the empty space,
+// both in pixels, so it could be wider than that space on a smaller screen and lie
+// over the chat. Storage and theme files can still hold these, and the settings
+// from before 0.20.0 are read as them (see placedFromOld). Nothing else makes one.
+const earlierStart = { size: 180, position: 85, opacity: 1, shift: 0 };
+const earlierLimits = { size: [60, 800], position: [0, 100], opacity: [0.1, 1], shift: [-10000, 10000] };
+
+// Space kept clear around a side picture, and the least room worth using.
+const stickerGap = 12;
+const stickerSmallest = 48;
+
+// The empty space on each side of the chat, which is where the side pictures go:
+// from the edge of the chat window to the column the messages sit in, less a gap
+// at each end. `pane` and `column` are those two as boxes, each with a `left` and
+// a `width`, or null when the page has none. Each side comes back as
+// { left, width }, in pixels across the page, or as null where there is too little
+// space to show a picture in.
+function spaceBeside(pane, column) {
+    const between = (from, to) => {
+        const width = to - from - stickerGap * 2;
+        return width < stickerSmallest ? null : { left: from + stickerGap, width: width };
+    };
+    if (!pane || !column || !(column.width > 0)) {
+        return { left: null, right: null };
+    }
+    return {
+        left: between(pane.left, column.left),
+        right: between(column.left + column.width, pane.left + pane.width)
+    };
+}
+
+// A placed picture with its width and its place as shares of the empty space on
+// its side, which is `room` pixels wide. One that is kept that way already comes
+// back as it is. One saved by 0.20.0 or 0.20.1 is worked out from its pixels: as
+// wide as it was, up to the whole space, and where that version drew it, which was
+// in the middle of what was left of the space and then `shift` to the right. So in
+// a space it fitted in, it looks as it did, and in a narrower one it fills the
+// space and stops there.
+//
+// `widest` is for the page, which draws a picture narrower than its width when the
+// window is too short for it at that width: what is left of the space is then
+// counted from the width it is drawn at. Its width is not held to the least a
+// slider allows: those versions' least was 60 pixels whatever the space, which is
+// the slider's least, a twentieth, of the 1200 pixels beside a chat on a very
+// wide monitor, and under it on a wider one still.
+function inShares(item, room, widest = Infinity) {
+    if (!("size" in item)) {
+        return item;
+    }
+    const width = Math.min(1, item.size / room);
+    const spare = room - Math.min(width * room, widest);
+    const fromTheEdge = spare / 2 + (item.side === "left" ? item.shift : -item.shift);
+    return {
+        key: item.key,
+        id: item.id,
+        side: item.side,
+        width: width,
+        across: spare > 0 ? Math.min(1, Math.max(0, fromTheEdge / spare)) : placedStart.across,
+        position: item.position,
+        opacity: item.opacity
+    };
+}
 
 // The list with one more picture, put on one side in front of all the others, or
 // null when there is no room for another. Where that side has pictures already, it
@@ -133,8 +201,9 @@ const oldSideSettings = [
     "stickerSize", "stickerPosition", "stickerOpacity", "stickerShift"
 ];
 
-// Those settings as the list they would be now: the left picture, then the right.
-// Null when they say nothing about either side's picture.
+// Those settings as the list 0.20.0 would have made of them: the left picture, then
+// the right, each with its size and shift in pixels (see inShares). Null when they
+// say nothing about either side's picture.
 function placedFromOld(kept) {
     if (!("stickerLeft" in kept || "stickerRight" in kept)) {
         return null;
@@ -144,7 +213,7 @@ function placedFromOld(kept) {
         const item = { key: side.toLowerCase(), id: kept["sticker" + side], side: side.toLowerCase() };
         for (const what of ["Size", "Position", "Opacity", "Shift"]) {
             const name = what.toLowerCase();
-            item[name] = kept["sticker" + side + what] ?? kept["sticker" + what] ?? placedStart[name];
+            item[name] = kept["sticker" + side + what] ?? kept["sticker" + what] ?? earlierStart[name];
         }
         if (item.id) {
             placed.push(item);

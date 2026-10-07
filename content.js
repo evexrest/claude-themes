@@ -1,7 +1,8 @@
 // Runs on every claude.ai page. Reads the saved settings, shows the background, the
 // sidebar's picture and the pictures beside the chat, draws the frames and sets the
 // chat text's colour and font. `defaults`, `presets`, `frameValues`, `fontFamily`,
-// `hslParts`, `imageKey`, `stickerKey` and `readSettings` come from settings.js.
+// `hslParts`, `imageKey`, `stickerKey`, `stickerGap`, `spaceBeside`, `inShares` and
+// `readSettings` come from settings.js.
 
 const root = document.documentElement;
 let settings = defaults;
@@ -40,10 +41,6 @@ const stickers = new Map();
 // The one element that holds them all, once there is a picture to show.
 let stickerHolder = null;
 const stickerFiles = new Map();
-
-// Space kept clear around a side picture, and the least room worth using.
-const stickerGap = 12;
-const stickerSmallest = 48;
 
 function dataUrlToBlob(dataUrl) {
     const [head, base64] = dataUrl.split(",");
@@ -370,29 +367,26 @@ function matchStickers() {
 
 // Put each side picture beside the chat: in the empty space between the edge of
 // the chat window and the column the messages sit in. The message box is as wide
-// as that column, so it is used to find it. A picture that fits is centred in
-// that space. A bigger one starts at the window's edge and carries on behind the
-// chat: the pictures live inside the page area, above its background and below
-// everything written on it (see .claude-sticker in theme.css). With no empty
-// space at all they are hidden.
+// as that column, so it is used to find it. A picture's width and its place
+// sideways are shares of that space (see `placed` in settings.js), so it is never
+// wider than the space and never leaves it, however narrow a smaller screen or an
+// open sidebar makes it. The pictures live inside the page area, above its
+// background and below everything written on it (see .claude-sticker in
+// theme.css). On a side with no empty space to speak of they are hidden.
 function placeStickers() {
     const pane = document.querySelector(".dframe-pane-primary");
     const column = document.querySelector('[data-cds="ChatComposer"]');
     const paneBox = pane ? pane.getBoundingClientRect() : null;
     const columnBox = column ? column.getBoundingClientRect() : null;
     const home = pane ? pane.closest(".dframe-content") || pane.parentElement : null;
+    const beside = spaceBeside(paneBox, columnBox);
 
     matchStickers();
     settings.placed.forEach((item, index) => {
         const element = stickers.get(item.key).element;
+        const space = settings.enabled && stickerFiles.get(item.id).url && home ? beside[item.side] : null;
 
-        let room = 0;
-        if (settings.enabled && stickerFiles.get(item.id).url && home && columnBox && columnBox.width > 0) {
-            room = item.side === "left" ? columnBox.left - paneBox.left : paneBox.right - columnBox.right;
-            room -= stickerGap * 2;
-        }
-
-        if (room < stickerSmallest) {
+        if (!space) {
             element.style.display = "none";
             return;
         }
@@ -411,25 +405,23 @@ function placeStickers() {
         const top = paneBox.top + 56;
         const height = paneBox.height - 56 - stickerGap;
 
-        // As wide as asked for, but never wider than the chat window, and never
-        // so wide that the picture's own shape would make it taller than the window.
-        let width = Math.min(item.size, paneBox.width - stickerGap * 2);
-        if (element.naturalWidth && element.naturalHeight) {
-            width = Math.min(width, height * element.naturalWidth / element.naturalHeight);
-        }
-        width = Math.max(width, 1);
+        // A picture that 0.20.0 or 0.20.1 saved in pixels is drawn as the shares it
+        // comes to in this space. Nothing is written: the editor saves it that way
+        // when it is next moved or resized (see changePlaced in editor.js).
+        // Its share of the space wide, but never so wide that the picture's own
+        // shape would make it taller than the window.
+        const widest = element.naturalWidth && element.naturalHeight
+            ? height * element.naturalWidth / element.naturalHeight
+            : Infinity;
+        const shares = inShares(item, space.width, widest);
+        const width = Math.max(Math.min(shares.width * space.width, widest), 1);
 
-        // Centred in the empty space when it fits, from the window's edge when it does not.
-        const spare = Math.max(0, room - width) / 2;
-        let start = item.side === "left"
-            ? paneBox.left + stickerGap + spare
-            : paneBox.right - stickerGap - spare - width;
-
-        // Then moved sideways by however far it has been dragged, but never out of
-        // the chat window.
-        if (item.shift !== 0) {
-            start = Math.min(Math.max(start + item.shift, paneBox.left + stickerGap), paneBox.right - stickerGap - width);
-        }
+        // Its share of the way across what is left of the space, counted from the
+        // window's edge towards the chat.
+        const fromTheEdge = shares.across * (space.width - width);
+        const start = item.side === "left"
+            ? space.left + fromTheEdge
+            : space.left + space.width - fromTheEdge - width;
 
         const share = item.position / 100;
         const style = element.style;
@@ -546,6 +538,8 @@ function tellEditor() {
     if (!editorFrame || !editorFrame.contentWindow) {
         return;
     }
+    const pane = document.querySelector(".dframe-pane-primary");
+    const column = document.querySelector('[data-cds="ChatComposer"]');
     editorFrame.contentWindow.postMessage({
         claudeThemes: "layout",
         plainPage: plainPage,
@@ -553,8 +547,11 @@ function tellEditor() {
         boxes: {
             // Only an open sidebar: the theme leaves a collapsed one alone.
             sidebar: boxOf(document.querySelector('.dframe-root[data-variant="web"]:not([data-collapsed]) .dframe-sidebar')),
-            pane: boxOf(document.querySelector(".dframe-pane-primary")),
-            column: boxOf(document.querySelector('[data-cds="ChatComposer"]')),
+            pane: boxOf(pane),
+            column: boxOf(column),
+            // The empty space on each side of the chat, which the editor needs to
+            // turn a drag in pixels into a share of it.
+            beside: spaceBeside(boxOf(pane), boxOf(column)),
             // Each picture beside the chat, under its key.
             placed: Object.fromEntries([...stickers].map(([key, slot]) => [key, boxOf(slot.element)]))
         }

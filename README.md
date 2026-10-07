@@ -74,15 +74,15 @@ change that.
   space, up to four times that. The picture grows and shrinks around its middle and
   never slides. The crop tool on the upload page zooms out to the whole picture as well
 - Drag to move: the background image on the page, the sidebar's picture on the sidebar,
-  and a side picture anywhere in the chat window. A button puts each back
+  and a side picture within the empty space on its side. A button puts each back
 - The main page's theme is for chats. Claude's other pages (Projects, Artifacts,
   Scheduled, Customize and so on) are left exactly as Claude draws them; the sidebar keeps
   its own picture and text colour there
 - Nothing on the page is blurred. Messages fade out as they reach the title bar
 - Pictures or GIFs in the empty space on either side of the chat, several to a side and 20
   in all. Each has its own size, height and opacity. They work with any background,
-  including Claude's own. A picture bigger than the empty space carries on behind the chat,
-  never on top of it
+  including Claude's own. A picture's size and place are shares of the empty space on its
+  side, so it looks the same on a laptop as on a big monitor and never covers the chat
 - Layers for those pictures. Where two overlap, you choose which is in front, with Bring
   forward, Send back, To the front and To the back
 - Text colour and font for the chat, for backgrounds that make the normal text hard to

@@ -324,13 +324,14 @@
   "gripFollowed": -59
  },
  "dragCorner": {
-  "size": "120 to 185",
-  "theOtherStill": 120,
+  "width": "0.6 to 0.927",
+  "theOtherStill": 0.6,
   "widthInPreview": "120 to 185",
-  "slider": "185"
+  "slider": "93",
+  "label": "93% of the space"
  },
  "bothDragsUndone": {
-  "size": 120,
+  "width": 0.6,
   "position": 50
  },
  "gripsThereWithoutSelecting": {
@@ -338,55 +339,127 @@
   "outlined": "(none)"
  },
  "dragPictureSideways": {
-  "shift": 44,
-  "expected": 44,
-  "movedInPreview": 44,
+  "across": "0.5 to 0.772",
+  "expected": 22,
+  "movedInPreview": 22,
   "nowSelected": "zone-left",
   "resetHidden": false,
-  "theOtherStill": 0
+  "resetSays": "Put it back in the middle of the space",
+  "theOtherStill": 0.5
  },
  "draggedFarLeftStopsAtTheEdge": {
-  "pictureLeft": 308,
+  "across": 0,
+  "picture": "120px, 308 to 428",
+  "space": "308 to 508",
   "paneLeft": 296
  },
- "pictureBackBesideTheChat": {
-  "shift": 0,
+ "draggedFarRightStopsAtTheChat": {
+  "across": 1,
+  "picture": "120px, 388 to 508",
+  "space": "308 to 508",
+  "overTheText": "0px"
+ },
+ "theRightOneStopsAtTheChatToo": {
+  "across": 1,
+  "picture": "120px, 1300 to 1420",
+  "space": "1300 to 1500",
+  "overTheText": "0px",
+  "nowSelected": "zone-right"
+ },
+ "andAtTheWindowsEdge": {
+  "across": 0,
+  "picture": "120px, 1380 to 1500"
+ },
+ "pictureBackInTheMiddle": {
+  "across": "0.5 and 0.5",
   "sameAsBefore": true,
   "resetHidden": true
+ },
+ "dragCornerPastTheChat": {
+  "width": 1,
+  "picture": "200px, 308 to 508",
+  "space": "308 to 508",
+  "overTheText": "0px",
+  "slider": "100",
+  "label": "100% of the space",
+  "thenItHasNowhereToGoSideways": {
+   "across": 0.5,
+   "picture": "200px, 308 to 508"
+  }
+ },
+ "dragCornerToNothing": {
+  "width": 0.05,
+  "picture": "10px, 403 to 413",
+  "label": "5% of the space"
+ },
+ "dragCornerOfOneAgainstTheChat": {
+  "across": 1,
+  "width": 0.268,
+  "picture": "54px, 454 to 508",
+  "overTheText": "0px"
+ },
+ "sliderSetsTheShare": {
+  "numbers": "0.6/0.5/50/1",
+  "picture": "120px, 348 to 468",
+  "limits": "5 to 100"
+ },
+ "savedInPixels": {
+  "beforeAnyChange": {
+   "stored": "in pixels 120/50/1/25, in pixels 90/20/1/-30, in pixels 500/50/1/-40",
+   "drawn": "120px, 373 to 493 | 90px, 333 to 423 | 200px, 1300 to 1500",
+   "overTheText": "0px, 0px, 0px",
+   "sizeSliderOfTheFrontOneOnTheLeft": "45, 45% of the space",
+   "resetHidden": false,
+   "saysItIsInPixels": true
+  },
+  "afterMakingOneFainter": {
+   "stored": "in pixels 120/50/1/25, in pixels 90/20/0.7/-30, in pixels 500/50/1/-40",
+   "nothingMoved": true
+  },
+  "afterResizingThatOne": {
+   "stored": "in pixels 120/50/1/25, 0.5/0.227/20/0.7, in pixels 500/50/1/-40",
+   "drawn": "120px, 373 to 493 | 100px, 331 to 431 | 200px, 1300 to 1500",
+   "theOthersDidNotMove": true,
+   "stillSaysItIsInPixels": false
+  },
+  "undone": {
+   "stored": "in pixels 120/50/1/25, in pixels 90/20/1/-30, in pixels 500/50/1/-40",
+   "nothingMoved": true
+  }
  },
  "aPictureAddedElsewhereIsNotChosen": {
   "placed": "A left s1, B left s2, C right s2",
   "outlined": "A",
-  "slider": "120"
+  "slider": "60"
  },
  "slidersChangeTheChosenOne": {
-  "A": "300/50/0.4/0",
-  "B": "120/20/1/0",
-  "C": "120/50/1/0",
-  "widthsInPreview": "300/120/120",
+  "A": "1/0.5/50/0.4",
+  "B": "0.6/0.5/20/1",
+  "C": "0.6/0.5/50/1",
+  "widthsInPreview": "200/120/120",
   "seeThrough": "0.4/1"
  },
  "pressingAPictureChoosesIt": {
   "twoUnderThePointer": true,
   "landedOn": "B",
   "outlined": "B",
-  "sliders": "120/20/100",
-  "label": "120px",
+  "sliders": "60/20/100",
+  "label": "60% of the space",
   "gripLayers": "1,2,3"
  },
  "eachPictureHasItsOwn": {
-  "A": "300/50/0.4/0",
-  "B": "90/10/1/0",
-  "C": "120/50/1/0",
-  "widthsInPreview": "300/90/120"
+  "A": "1/0.5/50/0.4",
+  "B": "0.45/0.5/10/1",
+  "C": "0.6/0.5/50/1",
+  "widthsInPreview": "200/90/120"
  },
  "eachSliderIsItsOwnStepOfUndo": {
-  "A": "300/50/0.4/0",
-  "B": "120/20/1/0"
+  "A": "1/0.5/50/0.4",
+  "B": "0.6/0.5/20/1"
  },
  "theOtherSidesSliders": {
   "outlined": "C",
-  "sliders": "120/50/100"
+  "sliders": "60/50/100"
  },
  "deleteKeyTakesTheChosenOneOff": {
   "placed": "A left s1, C right s2",
@@ -447,7 +520,7 @@
    "row": "D B* A",
    "buttons": "forward,backward,front,back",
    "outlined": "B",
-   "sliders": "180/40"
+   "sliders": "90/40"
   },
   "rowKeptWhileASliderMoves": true,
   "bringForward": {
@@ -599,7 +672,7 @@
   "askedWhenItIsNotOnThePage": "Remove this picture from your saved pictures?"
  },
  "themeFile": {
-  "format": 2,
+  "format": 3,
   "madeWith": true,
   "settings": true,
   "leavesOutAFrameNoBorderUses": true,
@@ -608,7 +681,7 @@
   "mainIsThePicture": true,
   "sidePictures": "ts,tu",
   "eachIsItsFile": true,
-  "placed": "left ts, right tu, right ts"
+  "placed": "left ts 0.7/0.9/85/1, right tu 0.9/0.5/40/0.6, right ts 0.9/0.5/70/1"
  },
  "resetEverything": {
   "asked": true,
@@ -628,12 +701,12 @@
   "textColor": "#123456",
   "sidebarMode": "plain",
   "frame": "brush",
-  "placed": "left ts 140/85/1/25, right tu 180/40/0.6/0, right ts 180/70/1/0",
+  "placed": "left ts 0.7/0.9/85/1, right tu 0.9/0.5/40/0.6, right ts 0.9/0.5/70/1",
   "sidePicturesAddedToLibrary": 2,
   "underNewIds": true,
   "twoCopiesShareOne": true,
   "newKeys": true,
-  "fields": "key,id,side,size,position,opacity,shift",
+  "fields": "key,id,side,width,across,position,opacity",
   "inPreview": 3
  },
  "themeLoadUndoneInOneStep": {
@@ -649,14 +722,22 @@
  "themeFileFromAnEarlierVersion": {
   "told": "Theme loaded. Undo goes back to the one you had.",
   "preset": "ocean",
-  "placed": "left ts 90/60/0.8/12, right tu 150/60/0.8/0",
+  "placed": "left ts in pixels 90/60/0.8/12, right tu in pixels 150/60/0.8/0",
+  "drawnWhereThatVersionDrewThem": "left 90px, 375 to 465, right 150px, 1325 to 1475",
   "sidePicturesAddedToLibrary": 2,
   "fields": "key,id,side,size,position,opacity,shift",
   "keysAreNew": true,
   "oldSettingsNotSaved": 0,
   "inPreview": 2,
-  "withOnlyARightPicture": "right tu 150/60/0.8/0",
-  "withoutTheRightPicturesFile": "left ts 90/60/0.8/12"
+  "withOnlyARightPicture": "right tu in pixels 150/60/0.8/0",
+  "withoutTheRightPicturesFile": "left ts in pixels 90/60/0.8/12"
+ },
+ "themeFileFrom0201": {
+  "told": "Theme loaded. Undo goes back to the one you had.",
+  "preset": "forest",
+  "placed": "left ts in pixels 140/85/1/25, right tu in pixels 180/40/0.6/0",
+  "fields": "key,id,side,size,position,opacity,shift",
+  "drawnWhereThatVersionDrewThem": "left 140px, 363 to 503, right 180px, 1310 to 1490"
  },
  "strangeThemeFile": {
   "told": "Theme loaded. Undo goes back to the one you had.",
@@ -683,13 +764,22 @@
   "sidePicturesAddedToLibrary": 1,
   "inPreview": 20,
   "withoutTheirPictures": {
-   "placed": "left ts 100/7/1/0",
+   "placed": "left ts in pixels 100/7/1/0",
    "sidePicturesAddedToLibrary": 1
   },
   "notAList": {
    "leftAlone": true,
    "restOfTheFileTaken": "forest"
   }
+ },
+ "sharesFromAStranger": {
+  "told": "Theme loaded. Undo goes back to the one you had.",
+  "inTheFile": 19,
+  "taken": 3,
+  "placed": "left ts 0.5/0.5/11/1, left ts 1/1/22/1, right ts 0.1/0/33/1",
+  "fields": "key,id,side,width,across,position,opacity",
+  "drawn": "left 100px, 358 to 458, left 200px, 308 to 508, right 20px, 1480 to 1500",
+  "overTheText": "0px, 0px, 0px"
  },
  "colourSums": {
   "blackOnWhite": 21,
@@ -809,7 +899,7 @@
    "imageId": "th",
    "textColor": "#123456",
    "frameMain": "custom",
-   "placed": "left ts 180/85/1/0"
+   "placed": "left ts 0.9/0.5/85/1"
   }
  },
  "withoutAMouse": {

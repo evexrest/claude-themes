@@ -42,18 +42,38 @@
  },
  "aPictureThePageHasNotMeasuredYet": "p1 318,600,180,225 outlined; p2 hidden",
  "aGripOverEachPicture": {
-  "grips": "p1 318,600,180,225 outlined; p2 350,500,120,150",
+  "grips": "p1 318,600,180,225 outlined; p2 348,500,120,150",
   "whereBothAre": "p2",
   "whereOnlyTheFirstIs": "p1",
   "handles": "nwse-resize,nwse-resize"
  },
  "draggingTheSecondOne": {
-  "shifts": "p1 0, p2 32",
-  "grips": "p1 318,600,180,225; p2 350,500,120,150 outlined"
+  "across": "p1 0.5, p2 0.875",
+  "grips": "p1 318,600,180,225; p2 348,500,120,150 outlined"
  },
+ "draggingItPastTheChat": "p1 0.5, p2 1",
  "takenOffAgain": {
   "grips": "p1 318,600,180,225 outlined",
   "inTheEditor": 1
+ },
+ "savedInPixelsOnThePage": {
+  "withNoSpaceOnItsSide": {
+   "sizeSlider": "off: No room on this side",
+   "otherSliders": "on",
+   "resetHidden": true,
+   "aChangeLeavesItInPixels": "in pixels 100/50/0.8/-30"
+  },
+  "onceThePageReportsTheSpace": {
+   "stored": "in pixels 100/50/0.8/-30",
+   "sizeSlider": "25, 25% of the space",
+   "resetHidden": false
+  },
+  "afterMakingItFainter": "in pixels 100/50/0.5/-30",
+  "afterResizingIt": "0.5/0.6/50/0.5",
+  "heldNarrowerByAShortWindow": {
+   "putBackButtonHidden": false,
+   "afterResizingIt": "0.6/0.75/50/1"
+  }
  },
  "whileDragging": {
   "classes": "on-page dragging dragging-files",

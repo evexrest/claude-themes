@@ -132,19 +132,25 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   let list = [];
   const show = async (next, ms = 200) => { list = next; await chrome.storage.local.set({ placed: list }); await wait(ms); };
   const alter = (changes, ms = 60) => show(list.map((p) => ({ ...p, ...(changes[p.key] || changes.all || {}) })), ms);
-  const one = (key, id, side, more = {}) => ({ key, id, side, size: 100, position: 100, opacity: 1, shift: 0, ...more });
+  // The empty space on each side of the chat is 282px wide on this page (see box() below: 306px from the window's edge to the column, less 12px at each end).
+  // A picture is kept as shares of it: this one is 100px of the 282 wide, in the middle of what is left.
+  const space = 282;
+  const one = (key, id, side, more = {}) => ({ key, id, side, width: 100 / space, across: 0.5, position: 100, opacity: 1, ...more });
   await show([]);
   results.noStickers = document.querySelectorAll(".claude-sticker").length;
   await show([one("l", "a", "left"), one("r", "b", "right")]);
   results.stickers = { box: box(), left: st("l"), right: st("r"), size: size() };
-  // dragged sideways: by that much, and never out of the chat window
+  // across the space: 0 is at the window's edge and 1 against the chat, on both sides, and neither end is past the space
   const edges = () => ({ left: st("l").left, leftsRight: st("l").right, right: st("r").left, rightsRight: st("r").right });
+  const spaces = () => (box().paneLeft + 12) + " to " + (box().colLeft - 12) + " and " + (box().colRight + 12) + " to " + (box().paneRight - 12);
   results.stickersUsualPlace = edges();
-  await alter({ l: { shift: 30 }, r: { shift: -45 } });
-  results.stickersDragged = edges();
-  await alter({ l: { shift: 5000 }, r: { shift: -5000 } });
-  results.stickersDraggedTooFar = { ...edges(), pane: box().paneLeft + " to " + box().paneRight };
-  await alter({ all: { shift: 0 } });
+  await alter({ all: { across: 0 } });
+  results.stickersAtTheWindowsEdge = { ...edges(), spaces: spaces() };
+  await alter({ all: { across: 1 } });
+  results.stickersAgainstTheChat = { ...edges(), spaces: spaces() };
+  await alter({ l: { across: 0.25 }, r: { across: 0.25 } });
+  results.stickersAQuarterOfTheWayAcross = edges();
+  await alter({ all: { across: 0.5 } });
   results.stickersPutBack = edges();
   const blobType = await fetch(pic("l").src).then((r) => r.blob()).then((b) => b.type + " " + b.size);
   results.stickerBlob = blobType;
@@ -165,25 +171,50 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   await show(list.filter((p) => p.key !== "r"));
   results.lastOfAPictureRemoved = { count: document.querySelectorAll(".claude-sticker").length, itsFile: await fetched(shownAs.r), theOthersFile: await fetched(shownAs.l), layers: layerOf() };
   await show([one("l", "a", "left"), one("r", "b", "right")]);
-  await alter({ all: { size: 400, position: 0, opacity: 0.5 } });
+  await alter({ all: { width: 1, position: 0, opacity: 0.5 } });
   results.heldByHeight = { left: st("l"), right: st("r") };
   // each picture has its own size, height and opacity
-  await alter({ l: { size: 80, position: 100, opacity: 0.3 }, r: { size: 140 } });
+  await alter({ l: { width: 80 / space, position: 100, opacity: 0.3 }, r: { width: 140 / space } });
   results.eachItsOwn = { left: st("l"), right: st("r") };
-  await alter({ all: { size: 400, position: 0, opacity: 0.5 } });
-  // a taller window, so the picture's height no longer holds it back: wider than the empty space, it goes behind the chat
-  const layers = () => { const e = pic("l"), c = document.querySelector('[data-cds="ChatComposer"]'), b = c.getBoundingClientRect(); e.style.pointerEvents = "auto"; const found = document.elementsFromPoint(b.left + 20, b.top + 10); e.style.pointerEvents = ""; return { parent: e.parentElement.className, z: getComputedStyle(e).zIndex, underTheMessageBox: found.indexOf(e) > found.indexOf(c), aboveThePageColour: found.indexOf(e) >= 0 && found.indexOf(e) < found.indexOf(e.closest(".dframe-content")), clicksPassThrough: getComputedStyle(e).pointerEvents }; };
+  await alter({ all: { width: 1, position: 0, opacity: 0.5 } });
+  // a taller window, so the picture's height no longer holds it back: at its widest it fills the empty space, and stops there
+  const layers = () => { const e = pic("l"), b = e.getBoundingClientRect(); return { parent: e.parentElement.className, z: getComputedStyle(e).zIndex, whereItIs: stack(b.left + 20, b.top + 20), clicksPassThrough: getComputedStyle(e).pointerEvents }; };
+  const overTheText = () => ["l", "r"].map((key) => Math.max(0, Math.min(st(key).right, box().colRight) - Math.max(st(key).left, box().colLeft)) + "px").join(" and ");
   document.querySelector(".dframe-root").style.height = "1300px"; await wait(1200);
-  results.pastTheGap = { box: box(), left: st("l"), right: st("r"), layers: layers(), size: size() };
-  await alter({ all: { size: 800 } });
-  results.biggest = { left: st("l"), right: st("r") };
-  await alter({ all: { size: 5000 } });
-  results.neverWiderThanTheWindow = { left: st("l"), right: st("r") };
-  document.querySelector(".dframe-root").style.height = ""; await alter({ all: { size: 400 } }, 1200);
+  results.fillsItsSpace = { box: box(), left: st("l"), right: st("r"), overTheText: overTheText(), layers: layers(), size: size() };
+  // ----- pictures as 0.20.0 and 0.20.1 saved them, with a size and a shift in pixels -----
+  // In a space one fits in, it is drawn where those versions drew it. It is never wider than the space and never past its end, which those versions allowed.
+  const inPixels = (key, id, side, more = {}) => ({ key, id, side, size: 100, position: 100, opacity: 1, shift: 0, ...more });
+  await show([inPixels("l", "a", "left"), inPixels("r", "b", "right")]);
+  results.savedInPixels = { usualPlace: edges() };
+  await alter({ l: { shift: 30 }, r: { shift: -45 } });
+  results.savedInPixels.dragged = edges();
+  await alter({ l: { shift: 5000 }, r: { shift: -5000 } });
+  results.savedInPixels.draggedPastTheChat = { ...edges(), spaces: spaces(), overTheText: overTheText() };
+  await alter({ l: { shift: -5000 }, r: { shift: 5000 } });
+  results.savedInPixels.draggedPastTheWindowsEdge = edges();
+  await alter({ all: { size: 800, shift: 0 } });
+  results.savedInPixels.widerThanTheSpace = { ...edges(), overTheText: overTheText() };
+  await alter({ all: { size: 800, shift: 300 } });
+  results.savedInPixels.widerThanTheSpaceAndDragged = edges();
+  // A small one is not made bigger: those versions' least was 60 pixels, which is under a tenth of the space beside the chat on a big monitor.
+  const wide = () => Math.round(st("l").right - st("l").left) + "px and " + Math.round(st("r").right - st("r").left) + "px";
+  results.savedInPixels.aSmallOneInA1200pxSpace = Math.round(inShares(inPixels("l", "a", "left", { size: 60 }), 1200).width * 1200) + "px wide";
+  results.savedInPixels.thePageScriptWritesNothing = store.placed.map((p) => Object.keys(p).join(",")).join(" | ");
+  // In a window too short for a picture at its width, the picture is narrower than it was set, and a drag still moves it by what was dragged.
+  { const tallWindow = document.querySelector(".dframe-root").style.height; document.querySelector(".dframe-root").style.height = "";
+    await alter({ all: { size: 800, shift: 0 } }, 200); const usual = edges(), heldTo = wide();
+    await alter({ l: { shift: 5 }, r: { shift: -5 } });
+    results.savedInPixels.heldNarrowerByAShortWindow = { wide: heldTo, spaces: spaces(), dragged5: (st("l").left - usual.left) + "px and " + (st("r").left - usual.right) + "px" };
+    document.querySelector(".dframe-root").style.height = tallWindow; await alter({ all: { shift: 0 } }, 200); }
+  document.querySelector(".dframe-root").style.height = ""; await show([one("l", "a", "left", { width: 1, position: 0, opacity: 0.5 }), one("r", "b", "right", { width: 1, position: 0, opacity: 0.5 })], 1200);
   await chrome.storage.local.set({ preset: "none" }); await wait(60);
   results.claudeOwnBackground = { wall: R.getAttribute("data-wallpaper"), leftShown: st("l").shown };
+  // a narrower window: the empty space shrinks and the pictures with it, down to 48px of space, below which they are hidden
   document.querySelector(".dframe-root").style.width = "820px"; await wait(1200);
-  results.narrow = { box: box(), left: st("l").shown, right: st("r").shown };
+  results.narrow = { box: box(), left: st("l").shown, right: st("r").shown, edges: edges(), spaces: spaces(), overTheText: overTheText() };
+  document.querySelector(".dframe-root").style.width = "700px"; await wait(1200);
+  results.tooNarrow = { box: box(), spaces: spaces(), left: st("l").shown, right: st("r").shown };
   document.querySelector(".dframe-root").style.width = ""; await wait(1200);
   results.wideAgain = { left: st("l").shown, right: st("r").shown };
   await show(list.filter((p) => p.key !== "r"), 100);

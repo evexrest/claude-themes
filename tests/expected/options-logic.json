@@ -84,17 +84,17 @@
   "nothingSavedYet": "(no list)"
  },
  "sidePictureAddedOnTheLeft": {
-  "placed": "right old 140/30/1/0, left new 180/85/1/0",
+  "placed": "right old in pixels 140/30/1/0, left new 0.8/0.5/85/1",
   "saved": 2,
   "thumb": "data:image/png",
   "themeOn": true,
   "status": "Saved, and added on the left. Move and resize it in the editor, which the toolbar icon opens."
  },
  "sidePictureAddedTwiceMore": {
-  "placed": "right old 140/30/1/0, left new 180/85/1/0, right new 180/18/1/0, left new 180/73/1/0",
+  "placed": "right old in pixels 140/30/1/0, left new 0.8/0.5/85/1, right new 0.8/0.5/18/1, left new 0.8/0.5/73/1",
   "saved": 2,
   "keysAllDifferent": true,
-  "fields": "key,id,side,size,position,opacity,shift"
+  "fields": "key,id,side,size,position,opacity,shift | key,id,side,width,across,position,opacity"
  },
  "sidePictureWhenThereIsNoRoom": {
   "placed": 20,

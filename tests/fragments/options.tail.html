@@ -43,7 +43,7 @@
   // Someone who installed a version before 0.20.0 has one picture a side in the old settings, and no list yet.
   Object.assign(store, { stickers: [{ id: "old", thumb: "t" }], "sticker-old": GIF2, stickerRight: "old", stickerSize: 140, stickerRightPosition: 30 });
   const giveSide = (file) => { const dt = new DataTransfer(); dt.items.add(file); const input = document.getElementById("sticker-file"); input.files = dt.files; input.dispatchEvent(new Event("change")); };
-  const beside = () => (store.placed || []).map((p) => p.side + " " + (p.id === "old" ? "old" : store["sticker-" + p.id] === GIF1 ? "new" : "?") + " " + [p.size, p.position, p.opacity, p.shift].join("/")).join(", ") || "(no list)";
+  const beside = () => (store.placed || []).map((p) => p.side + " " + (p.id === "old" ? "old" : store["sticker-" + p.id] === GIF1 ? "new" : "?") + " " + ("size" in p ? "in pixels " + [p.size, p.position, p.opacity, p.shift].join("/") : [p.width, p.across, p.position, p.opacity].join("/"))).join(", ") || "(no list)";
   giveSide(new File([gifBytes], "wave.gif", { type: "image/gif" })); await until(() => !stickerEditor.hidden && stickerPreview.naturalWidth > 0);
   r.sidePictureChosen = { shown: !stickerEditor.hidden, buttons: [...stickerEditor.querySelectorAll("button")].map((b) => b.textContent).join(" | "), nothingSavedYet: beside() };
   document.getElementById("sticker-left").click(); await wait(300);

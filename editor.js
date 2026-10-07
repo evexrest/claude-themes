@@ -7,8 +7,8 @@
 // Every change to the theme is saved straight away, and the page picks it up from
 // storage. `defaults`, `presets`,
 // `frames`, `frameValues`, `fonts`, `imageKey`, `stickerKey`, `newId`,
-// `readSettings`, `mostPlaced`, `placedLimits`, `placedWith` and `filesVersion`
-// come from settings.js.
+// `readSettings`, `mostPlaced`, `placedStart`, `placedLimits`, `placedWith`,
+// `spaceBeside`, `inShares` and `filesVersion` come from settings.js.
 
 const preview = document.getElementById("preview");
 const screenBox = document.getElementById("screen");
@@ -46,6 +46,9 @@ const chosen = { left: null, right: null };
 let scale = 1;
 // Over the real page: where its parts are, as content.js last measured them.
 let pageBoxes = null;
+// The empty space on each side of the chat as the side settings last showed it, as
+// text. See layout.
+let besideShown = "";
 // What is being dragged: { kind, id } for a picture from the library, or
 // { kind: "files" } for files from the computer.
 let dragged = null;
@@ -186,11 +189,47 @@ function chosenOn(side) {
     return here.find((item) => item.key === chosen[side]) || here[here.length - 1] || null;
 }
 
+// A picture beside the chat with its width and its place as shares of the empty
+// space on its side (see inShares in settings.js). One that an earlier version
+// saved in pixels is worked out against that space as the page last measured it,
+// which is where the page is showing it: the width it is drawn at is passed on,
+// because a short window holds a picture narrower than its width and its place
+// is counted from that. On a side with no space to go by, it comes back as it is.
+function sharesHere(item) {
+    const boxes = measure() || {};
+    const space = (boxes.beside || {})[item.side];
+    const drawn = (boxes.placed || {})[item.key];
+    return space ? inShares(item, space.width, drawn ? drawn.width : Infinity) : item;
+}
+
 // Change one of the pictures beside the chat. They are saved together, as one
 // list, so Undo is told which picture, and which of its values, a slider or a
 // drag is changing.
+//
+// A picture that an earlier version saved in pixels is saved as shares when its
+// width or its place sideways is set, and only then, and only that picture. Its
+// shares are worked out on this screen, and they would be the wrong ones to keep
+// for a picture that this screen's narrower space is squeezing: it would fill the
+// space on a bigger screen too. So one that has only been looked at here, or made
+// fainter, stays as it was saved.
 function changePlaced(key, change, how = "step") {
-    const list = state.placed.map((item) => item.key === key ? { ...item, ...change } : item);
+    const placing = "width" in change || "across" in change;
+    const current = state.placed.find((item) => item.key === key);
+    if (!current) {
+        return;
+    }
+    let next = { ...current, ...change };
+    if (placing) {
+        const shares = sharesHere(current);
+        // No space on its side to work the shares out from: there is nothing to
+        // place it in, and a width beside its pixels would be neither shape.
+        if ("size" in shares) {
+            return;
+        }
+        next = { ...shares, ...change };
+        next.width = clamp(next.width, ...placedLimits.width);
+    }
+    const list = state.placed.map((item) => item === current ? next : item);
     save({ placed: list }, how, key + " " + Object.keys(change).join(" "));
 }
 
@@ -203,8 +242,8 @@ function removePlaced(key) {
 // list, counted from the back, or -1 for nowhere. `from` is where it is now, and
 // `mine` is true of a picture on its own side. The first two take it past the next
 // picture on its side, so that the side's row of pictures always shows the change.
-// The other two take it in front of, or behind, every picture on either side: a
-// picture can be dragged anywhere in the chat window, over one from the other side.
+// The other two take it in front of, or behind, every picture on either side: the
+// two sides' pictures are kept in the one list.
 const layerMoves = {
     forward: (list, from, mine) => list.findIndex((item, index) => index > from && mine(item)),
     backward: (list, from, mine) => list.findLastIndex((item, index) => index < from && mine(item)),
@@ -306,9 +345,11 @@ function readShape(id) {
     small.src = image.thumb;
 }
 
-// The same for one of the numbers of a picture beside the chat (`what` is "size",
+// The same for one of the numbers of a picture beside the chat (`what` is "width",
 // "position" or "opacity"): the slider shows and changes it for the picture that is
-// chosen on the selected side, between the least and the most it may be.
+// chosen on the selected side, between the least and the most it may be. A picture
+// that an earlier version saved in pixels has no width to show as a share while
+// its side has no space to work one out from, and the slider waits until it has.
 function sideSlider(id, what, shown, stored, slid) {
     const input = byId(id);
     const label = byId(id + "-value");
@@ -323,13 +364,18 @@ function sideSlider(id, what, shown, stored, slid) {
     updaters.push(() => {
         const item = chosenOn(part);
         if (item) {
-            input.value = slid(item[what]);
-            label.textContent = shown(Number(input.value));
+            const value = sharesHere(item)[what];
+            input.disabled = value === undefined;
+            if (!input.disabled) {
+                input.value = slid(value);
+            }
+            label.textContent = input.disabled ? "No room on this side" : shown(Number(input.value));
         }
     });
 }
 
 const percent = (number) => number + "%";
+const ofTheSpace = (number) => number + "% of the space";
 const pixels = (number) => number + "px";
 const fraction = (number) => number / 100;
 const hundredths = (number) => Math.round(number * 100);
@@ -927,6 +973,8 @@ function inPreview(selector) {
 // Where the parts of the page are: the sidebar, the chat window (`pane`), the
 // column the messages sit in and, in `placed`, each picture beside the chat, under
 // its key. Each is { left, top, width, height }, or null when it is not showing.
+// `beside` is the empty space on each side of the chat that those pictures are
+// in, under "left" and "right" (see spaceBeside in settings.js).
 // Over the real page, content.js measures them and sends them here; in a tab, they
 // are measured in the preview.
 function measure() {
@@ -945,10 +993,13 @@ function measure() {
     for (const element of page ? page.querySelectorAll(".claude-sticker") : []) {
         placed[element.dataset.key] = box(element);
     }
+    const pane = box(inPreview(".dframe-pane-primary"));
+    const column = box(inPreview('[data-cds="ChatComposer"]'));
     return {
         sidebar: box(inPreview(".dframe-sidebar")),
-        pane: box(inPreview(".dframe-pane-primary")),
-        column: box(inPreview('[data-cds="ChatComposer"]')),
+        pane: pane,
+        column: column,
+        beside: spaceBeside(pane, column),
         placed: placed
     };
 }
@@ -1029,6 +1080,14 @@ function layout() {
         grip.classList.toggle("selected", part === item.side && chosenOn(item.side) === item);
     });
     showStage(boxes.sidebar);
+
+    // What the side's settings show of a picture saved in pixels by an earlier
+    // version depends on the space beside the chat, so they follow it.
+    const besideNow = JSON.stringify(boxes.beside || null);
+    if (besideNow !== besideShown) {
+        besideShown = besideNow;
+        sync();
+    }
 }
 
 // The main picture's space: the whole window when the sidebar is joined to the
@@ -1131,9 +1190,12 @@ function makeGrip(key) {
 }
 
 // Dragging a side picture on the screen moves it, up and down and sideways within
-// the chat window; dragging the corner nearest the chat resizes it.
+// the empty space on its side; dragging the corner nearest the chat resizes it.
+// Its width and its place sideways are kept as shares of that space, so neither
+// drag can take it out of the space or make it wider than it.
 function watchGrip(grip, key) {
     let start = null;
+    const thousandth = (number) => Math.round(number * 1000) / 1000;
 
     grip.addEventListener("pointerdown", (event) => {
         const item = state.placed.find((other) => other.key === key);
@@ -1148,17 +1210,11 @@ function watchGrip(grip, key) {
         const boxes = measure() || {};
         const box = (boxes.placed || {})[key];
         const pane = boxes.pane;
-        const column = boxes.column;
-        if (!box || !pane || !column) {
+        const space = (boxes.beside || {})[side];
+        if (!box || !pane || !space) {
             return;
         }
 
-        // These match placeStickers in content.js: the picture stays below the
-        // 56px title bar and 12px clear of the edges. `usual` is where it sits
-        // sideways when it has not been dragged: in the middle of the empty space,
-        // or from the window's edge when it is wider than that.
-        const room = (side === "left" ? column.left - pane.left : pane.left + pane.width - column.left - column.width) - 24;
-        const beside = Math.max(0, room - box.width) / 2;
         start = {
             x: event.clientX,
             y: event.clientY,
@@ -1167,12 +1223,12 @@ function watchGrip(grip, key) {
             width: box.width,
             side: side,
             resizing: event.target.classList.contains("handle"),
+            // These two match placeStickers in content.js: the picture stays below
+            // the 56px title bar and 12px clear of the bottom.
             highest: pane.top + 56,
             spare: pane.height - 56 - 12 - box.height,
-            room: room,
-            usual: side === "left" ? pane.left + 12 + beside : pane.left + pane.width - 12 - beside - box.width,
-            leftmost: pane.left + 12,
-            rightmost: pane.left + pane.width - 12 - box.width
+            space: space,
+            across: sharesHere(item).across
         };
         // Keeps the drag going when the pointer leaves the picture. A pointer
         // that cannot be captured still drags while it is over the picture.
@@ -1192,20 +1248,30 @@ function watchGrip(grip, key) {
         const down = (event.clientY - start.y) / scale;
 
         if (start.resizing) {
-            // A picture that fits its space is centred there, so it grows on both sides.
+            // The corner follows the pointer. A picture grows away from wherever it
+            // is held across its space: one at the window's edge grows as fast as
+            // the pointer moves, and one in the middle, which grows on both sides,
+            // twice as fast. Nearer the chat than that the corner cannot keep up,
+            // and twice as fast is kept.
             const towardsChat = start.side === "left" ? across : -across;
-            const grown = start.width < start.room ? towardsChat * 2 : towardsChat;
-            changePlaced(key, { size: clamp(Math.round(start.width + grown), ...placedLimits.size) }, "flow");
+            const grown = towardsChat / Math.max(1 - start.across, 0.5);
+            const width = thousandth((start.width + grown) / start.space.width);
+            changePlaced(key, { width: clamp(width, ...placedLimits.width) }, "flow");
         } else {
-            // Sideways anywhere in the chat window; up and down as far as there is
+            // Sideways as far as the space goes; up and down as far as there is
             // room. A direction it has not been moved in is left as it was.
-            start.across = start.across || across !== 0;
-            start.down = start.down || down !== 0;
+            start.movedAcross = start.movedAcross || across !== 0;
+            start.movedDown = start.movedDown || down !== 0;
             const change = {};
-            if (start.across) {
-                change.shift = Math.round(clamp(start.left + across, start.leftmost, start.rightmost) - start.usual);
+            // What is left of the space with the picture in it. One as wide as the
+            // space has nowhere to go.
+            const loose = start.space.width - start.width;
+            if (start.movedAcross && loose > 0) {
+                const left = clamp(start.left + across, start.space.left, start.space.left + loose);
+                const fromTheEdge = start.side === "left" ? left - start.space.left : start.space.left + loose - left;
+                change.across = thousandth(fromTheEdge / loose);
             }
-            if (start.down && start.spare > 0) {
+            if (start.movedDown && start.spare > 0) {
                 const share = (start.top + down - start.highest) / start.spare;
                 change.position = clamp(Math.round(share * 100), ...placedLimits.position);
             }
@@ -1487,7 +1553,12 @@ function sync() {
     }
     byId("shift-reset").hidden = state.imageShiftX === 0 && state.imageShiftY === 0;
     byId("side-shift-reset").hidden = state.sidebarShiftX === 0 && state.sidebarShiftY === 0;
-    byId("sticker-shift-reset").hidden = picked === null || picked.shift === 0;
+    // A picture saved in pixels by an earlier version, on a side with no space to
+    // work its place out from, has no `across` yet.
+    const across = picked === null ? undefined : sharesHere(picked).across;
+    byId("sticker-shift-reset").hidden = across === undefined || across === placedStart.across;
+    // Only where there is space to resize or move it in.
+    byId("sticker-earlier").hidden = picked === null || !("size" in picked) || across === undefined;
 
     // The main page's frame goes around the chat window ("separate", which leaves
     // the sidebar free to have its own) or around the whole window ("combined").
@@ -1548,7 +1619,7 @@ async function start() {
     byId("sticker-shift-reset").addEventListener("click", () => {
         const item = chosenOn(part);
         if (item) {
-            changePlaced(item.key, { shift: 0 });
+            changePlaced(item.key, { across: placedStart.across });
         }
     });
     colours("text-swatches", "text-color", "textColor", textSwatches, "#ffffff");
@@ -1567,7 +1638,7 @@ async function start() {
     slider("frame-width-side", "frameSidebarWidth", pixels, same, same);
 
     // The pictures beside the chat.
-    sideSlider("sticker-size", "size", pixels, same, same);
+    sideSlider("sticker-size", "width", ofTheSpace, fraction, hundredths);
     sideSlider("sticker-position", "position", place, same, same);
     sideSlider("sticker-opacity", "opacity", percent, fraction, hundredths);
     for (const how of Object.keys(layerMoves)) {

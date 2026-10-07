@@ -9,7 +9,9 @@
   const classes = () => [...document.body.classList].join(" ");
   const heard = []; addEventListener("message", (e) => { if (e.data && e.data.claudeThemes !== "layout") heard.push(e.data.claudeThemes); });
   const tell = async (boxes) => { postMessage({ claudeThemes: "layout", boxes }, "*"); await wait(60); };
-  const page = { sidebar: { left: 0, top: 0, width: 288, height: 900 }, pane: { left: 296, top: 0, width: 1216, height: 900 }, column: { left: 520, top: 812, width: 768, height: 88 }, placed: { p1: { left: 318, top: 600, width: 180, height: 225 } } };
+  const page = { sidebar: { left: 0, top: 0, width: 288, height: 900 }, pane: { left: 296, top: 0, width: 1216, height: 900 }, column: { left: 520, top: 812, width: 768, height: 88 },
+    // The empty space on each side of the chat, as content.js reports it: 12px in from the window's edge and from the column.
+    beside: { left: { left: 308, width: 200 }, right: { left: 1300, width: 200 } }, placed: { p1: { left: 318, top: 600, width: 180, height: 225 } } };
   // The grip over one picture beside the chat, by the picture's key, and all of them from the back to the front.
   const gripAt = (key) => { const e = grips.get(key); return !e || e.hidden ? "hidden" : [e.style.left, e.style.top, e.style.width, e.style.height].map((v) => Math.round(parseFloat(v))).join(","); };
   const gripsNow = () => store.placed.map((p) => p.key + " " + gripAt(p.key) + (grips.get(p.key)?.classList.contains("selected") ? " outlined" : "")).join("; ") || "(none)";
@@ -34,15 +36,42 @@
   r.dragOnThePage = { position: before + " to " + store.placed[0].position };
 
   // a second picture on the page: no grip until the page says where it is, then one over each, the front one's on top
-  await chrome.storage.local.set({ placed: [...store.placed, { key: "p2", id: "s2", side: "left", size: 120, position: 60, opacity: 1, shift: 0 }] }); await wait(60);
+  await chrome.storage.local.set({ placed: [...store.placed, { key: "p2", id: "s2", side: "left", width: 0.6, across: 0.5, position: 60, opacity: 1 }] }); await wait(60);
   r.aPictureThePageHasNotMeasuredYet = gripsNow();
-  await tell({ ...page, placed: { ...page.placed, p2: { left: 350, top: 500, width: 120, height: 150 } } });
+  await tell({ ...page, placed: { ...page.placed, p2: { left: 348, top: 500, width: 120, height: 150 } } });
   const keyUnder = (x, y) => { const under = document.elementFromPoint(x, y); return [...grips].filter(([, grip]) => grip === under).map(([key]) => key).join("") || under.id || under.className; };
   r.aGripOverEachPicture = { grips: gripsNow(), whereBothAre: keyUnder(400, 620), whereOnlyTheFirstIs: keyUnder(330, 800), handles: ["p1", "p2"].map((key) => getComputedStyle(grips.get(key).querySelector(".handle")).cursor).join(",") };
   point(grips.get("p2"), "pointerdown", 400, 620); point(grips.get("p2"), "pointermove", 430, 620); point(grips.get("p2"), "pointerup", 430, 620); await wait(60);
-  r.draggingTheSecondOne = { shifts: store.placed.map((p) => p.key + " " + p.shift).join(", "), grips: gripsNow() };
+  r.draggingTheSecondOne = { across: store.placed.map((p) => p.key + " " + p.across).join(", "), grips: gripsNow() };
+  // dragged far past the chat, it stops at the end of the space the page reports
+  point(grips.get("p2"), "pointerdown", 400, 620); point(grips.get("p2"), "pointermove", 3000, 620); point(grips.get("p2"), "pointerup", 3000, 620); await wait(60);
+  r.draggingItPastTheChat = store.placed.map((p) => p.key + " " + p.across).join(", ");
   await chrome.storage.local.set({ placed: store.placed.filter((p) => p.key !== "p2") }); await tell(page); await wait(200);
   r.takenOffAgain = { grips: gripsNow(), inTheEditor: document.querySelectorAll(".grip").length };
+
+  // a picture 0.20.1 saved in pixels becomes shares of the space the page reports for its side when it is resized, and not before.
+  // Here the page says the space on the right is 400px wide, and until it says anything there is nothing to work a share out from.
+  { const listKept = store.placed, numbers = () => store.placed.map((p) => "size" in p ? "in pixels " + [p.size, p.position, p.opacity, p.shift].join("/") : [p.width, p.across, p.position, p.opacity].join("/")).join(", ");
+    const slide = (id, value) => { el(id).value = value; el(id).dispatchEvent(new Event("input")); };
+    await chrome.storage.local.set({ placed: [{ key: "q1", id: "s1", side: "right", size: 100, position: 50, opacity: 1, shift: -30 }] });
+    await tell({ ...page, beside: { left: page.beside.left, right: null }, placed: {} }); el("part-right").click(); await wait(60);
+    r.savedInPixelsOnThePage = { withNoSpaceOnItsSide: { sizeSlider: el("sticker-size").disabled ? "off: " + el("sticker-size-value").textContent : "on", otherSliders: el("sticker-position").disabled || el("sticker-opacity").disabled ? "off" : "on", resetHidden: el("sticker-shift-reset").hidden } };
+    slide("sticker-opacity", 80); await wait(60);
+    r.savedInPixelsOnThePage.withNoSpaceOnItsSide.aChangeLeavesItInPixels = numbers();
+    await tell({ ...page, beside: { left: page.beside.left, right: { left: 1100, width: 400 } }, placed: { q1: { left: 1220, top: 400, width: 100, height: 125 } } });
+    r.savedInPixelsOnThePage.onceThePageReportsTheSpace = { stored: numbers(), sizeSlider: el("sticker-size").disabled ? "off" : el("sticker-size").value + ", " + el("sticker-size-value").textContent, resetHidden: el("sticker-shift-reset").hidden };
+    slide("sticker-opacity", 50); await wait(60);
+    r.savedInPixelsOnThePage.afterMakingItFainter = numbers();
+    slide("sticker-size", 50); await wait(60);
+    r.savedInPixelsOnThePage.afterResizingIt = numbers();
+    // One a short window holds to 200px of its 300: the page counts its place from the 200 it is drawn at, 150px from the window's edge
+    // with 200px to spare, and resizing it keeps that place.
+    await chrome.storage.local.set({ placed: [{ key: "q2", id: "s1", side: "right", size: 300, position: 50, opacity: 1, shift: -50 }] }); await wait(60);
+    await tell({ ...page, beside: { left: page.beside.left, right: { left: 1100, width: 400 } }, placed: { q2: { left: 1150, top: 300, width: 200, height: 500 } } }); await wait(60);
+    r.savedInPixelsOnThePage.heldNarrowerByAShortWindow = { putBackButtonHidden: el("sticker-shift-reset").hidden };
+    slide("sticker-size", 60); await wait(60);
+    r.savedInPixelsOnThePage.heldNarrowerByAShortWindow.afterResizingIt = numbers();
+    await chrome.storage.local.set({ placed: listKept }); await tell(page); el("zone-left").click(); await wait(60); }
 
   // dropping a file straight onto the page's sidebar
   const canvas = document.createElement("canvas"); canvas.width = 400; canvas.height = 300; canvas.getContext("2d").fillRect(0, 0, 400, 300);
