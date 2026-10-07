@@ -24,7 +24,7 @@
   "window": "1512x813",
   "pageBackground": "rgba(0, 0, 0, 0)",
   "stageBackground": "none",
-  "panelBackground": "rgba(21, 21, 21, 0.9)"
+  "panelBackground": "rgb(25, 25, 24)"
  },
  "leftSelected": {
   "grip": "318,600,180,225",

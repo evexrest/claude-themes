@@ -17,7 +17,7 @@ document.getElementById("sticker-file").addEventListener("change", (event) => {
         return;
     }
     if (file.size > maxStickerBytes) {
-        stickerStatus.textContent = "That file is over 12 MB. Please choose a smaller one.";
+        stickerStatus.textContent = "That file is over 12 MB. Choose a smaller one.";
         return;
     }
 

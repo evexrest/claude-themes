@@ -147,7 +147,7 @@ document.getElementById("file").addEventListener("change", (event) => {
         return;
     }
     if (file.size > maxMovingBytes) {
-        status.textContent = "That GIF is over 25 MB. Please choose a smaller one.";
+        status.textContent = "That GIF is over 25 MB. Choose a smaller one.";
         return;
     }
 

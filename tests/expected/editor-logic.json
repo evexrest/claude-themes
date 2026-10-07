@@ -653,8 +653,11 @@
   "shown": true,
   "text": "Remove this image from your saved images?",
   "yes": "Remove",
+  "restCannotBeReached": true,
+  "focusOn": "ask-no",
   "afterCancel": "5 to 5",
-  "boxGone": true
+  "boxGone": true,
+  "restCanBeReachedAgain": true
  },
  "removeImage": {
   "images": "5 to 4",

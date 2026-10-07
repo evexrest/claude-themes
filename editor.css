@@ -17,6 +17,7 @@ body {
     color: #e8e6e1;
     font-family: system-ui, sans-serif;
     font-size: 14px;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* Over the real page, everything that is not a window is see-through. */
@@ -251,7 +252,9 @@ body.dragging .grip {
     box-sizing: border-box;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 12px;
-    background: rgba(21, 21, 21, 0.9);
+    /* Solid: through a see-through window the page's own writing ran into the
+       window's. */
+    background: #191918;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
     transition: opacity 0.15s;
 }
@@ -272,6 +275,7 @@ body.moving {
 .window {
     display: flex;
     flex-direction: column;
+    max-width: calc(100vw - 24px);
 }
 
 .titlebar {
@@ -294,8 +298,8 @@ body.moving {
 
 .titlebar b {
     position: absolute;
-    right: 70px;
-    left: 70px;
+    right: 82px;
+    left: 82px;
     overflow: hidden;
     color: #a5a49a;
     font-size: 12px;
@@ -307,15 +311,25 @@ body.moving {
 /* The three dots: close, fold away, put back. */
 .lights {
     display: flex;
-    gap: 7px;
+    gap: 12px;
 }
 
 .lights button {
+    position: relative;
     width: 12px;
     height: 12px;
     padding: 0;
     border: 0;
     border-radius: 50%;
+}
+
+/* Each dot is pressed from a 24px square around it; the squares touch and do not
+   overlap. */
+.lights button::before,
+.remove::before {
+    position: absolute;
+    inset: -6px;
+    content: "";
 }
 
 .lights .shut {
@@ -339,6 +353,9 @@ body.moving {
     min-height: 0;
     padding: 16px;
     overflow: auto;
+    /* At the end of a window's scroll, the Claude page behind does not start to. */
+    overscroll-behavior: contain;
+    scrollbar-color: #55534c transparent;
 }
 
 /* Folded away: only the title bar. */
@@ -423,17 +440,22 @@ body.moving {
     cursor: nwse-resize;
 }
 
-/* The bar. */
+/* The bar. It stays in front of the two windows, which it shows and hides: where
+   the browser window is narrow enough for one to lie over it, its buttons can
+   still be reached. */
 #bar {
+    z-index: 900;
     top: 12px;
     left: var(--middle, 50%);
     display: flex;
     align-items: center;
-    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 12px;
     width: max-content;
     max-width: calc(100vw - 24px);
-    height: 48px;
-    padding: 0 12px;
+    min-height: 48px;
+    padding: 4px 12px;
     cursor: grab;
     touch-action: none;
     transform: translateX(-50%);
@@ -446,6 +468,7 @@ body.moving {
     gap: 10px;
     font-size: 16px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .mark {
@@ -468,7 +491,8 @@ body.moving {
     padding: 6px 12px;
     border: 0;
     border-radius: 7px;
-    background: #20201f;
+    background: #2a2a28;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
     color: #e8e6e1;
 }
 
@@ -481,7 +505,7 @@ body.moving {
 .group button:not(:disabled):hover,
 .layers button:not(:disabled):hover,
 .wide:hover {
-    background: #2c2c2a;
+    background: #363633;
 }
 
 .toggle {
@@ -611,6 +635,7 @@ h3 {
     color: #a5a49a;
     font-size: 12px;
     line-height: 1.4;
+    text-wrap: pretty;
 }
 
 .note.first,
@@ -796,15 +821,17 @@ h3 {
     position: absolute;
     top: -5px;
     right: -5px;
-    width: 18px;
-    height: 18px;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
     padding: 0;
     border: 0;
     border-radius: 50%;
     background: #151515;
     color: #e8e6e1;
     font-size: 13px;
-    line-height: 18px;
+    line-height: 1;
     opacity: 0;
 }
 
@@ -839,14 +866,17 @@ h3 {
 .pair button {
     padding: 6px 8px;
     border: 0;
-    border-radius: 7px;
+    /* The row's own corners, less the gap around the button. */
+    border-radius: 6px;
     background: transparent;
     color: #a5a49a;
     white-space: nowrap;
 }
 
+/* Its fill is only a shade lighter than the row, so a rim marks it too. */
 .pair button[aria-pressed="true"] {
     background: #3a3a38;
+    box-shadow: inset 0 0 0 1px #767571;
     color: #e8e6e1;
 }
 
@@ -900,7 +930,8 @@ h3 {
     padding: 10px 16px;
     border: 0;
     border-radius: 8px;
-    background: #20201f;
+    background: #2a2a28;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
     color: #e8e6e1;
 }
 
@@ -916,7 +947,8 @@ h3 {
     padding: 8px 6px;
     border: 0;
     border-radius: 8px;
-    background: #20201f;
+    background: #2a2a28;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
     color: #e8e6e1;
 }
 
@@ -928,6 +960,7 @@ h3 {
 
 .slider span {
     color: #a5a49a;
+    font-variant-numeric: tabular-nums;
 }
 
 input[type="range"] {
@@ -949,7 +982,7 @@ input[type="checkbox"] {
 .swatch {
     height: 26px;
     padding: 0;
-    border: 2px solid #3a3a38;
+    border: 2px solid #7a786f;
     border-radius: 6px;
     background: #20201f;
     color: #a5a49a;
@@ -977,7 +1010,7 @@ input[type="text"] {
     box-sizing: border-box;
     width: 100%;
     padding: 8px;
-    border: 1px solid #3a3a38;
+    border: 1px solid #7a786f;
     border-radius: 8px;
     background: #20201f;
     color: #e8e6e1;
@@ -1081,5 +1114,51 @@ input[type="text"] {
 
 #ask #ask-no {
     background: #2c2c2a;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
     color: #e8e6e1;
+}
+
+#ask #ask-no:hover {
+    background: #363633;
+}
+
+/* ---------- Feedback ----------
+   What the pointer is over changes colour quickly, not at once, and a button gives
+   a little when it is pressed. The press is movement, so it is left out for anyone
+   who has asked their computer for less of that. */
+.group button,
+.go,
+.wide,
+.layers button,
+#add button,
+#ask button,
+.pair button,
+.tile,
+.swatch,
+.frame-choice,
+.remove,
+.lights button {
+    transition-property: background-color, border-color, color, opacity, filter;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .group button,
+    .go,
+    .wide,
+    .layers button,
+    #add button,
+    #ask button {
+        transition-property: background-color, border-color, color, scale;
+    }
+
+    .group button:not(:disabled):active,
+    .go:active,
+    .wide:not(:disabled):active,
+    .layers button:not(:disabled):active,
+    #add button:active,
+    #ask button:active {
+        scale: 0.96;
+    }
 }

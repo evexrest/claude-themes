@@ -352,9 +352,10 @@
 
   // ----- removing a saved picture -----
   const before = store.images.length; el("images").querySelector(".remove").click(); await wait(60);
-  const question = { shown: !el("ask").hidden, text: el("ask-text").textContent, yes: el("ask-yes").textContent };
+  // While the question is up, nothing behind it can be reached with Tab; once it is answered, everything can again.
+  const question = { shown: !el("ask").hidden, text: el("ask-text").textContent, yes: el("ask-yes").textContent, restCannotBeReached: el("bar").inert && el("work").inert, focusOn: document.activeElement.id };
   el("ask-no").click(); await wait(80);
-  r.removeImageAsksFirst = { ...question, afterCancel: before + " to " + store.images.length, boxGone: el("ask").hidden };
+  r.removeImageAsksFirst = { ...question, afterCancel: before + " to " + store.images.length, boxGone: el("ask").hidden, restCanBeReachedAgain: !el("bar").inert && !el("work").inert };
   el("images").querySelector(".remove").click(); await wait(60); el("ask-yes").click(); await wait(150);
   r.removeImage = { images: before + " to " + store.images.length, fileGone: !("image-a" in store), tiles: el("images").children.length, undoOff: el("undo").disabled };
   // a saved side picture: every copy of it on the page goes with it

@@ -3,6 +3,26 @@
 What changed in each version, newest first. Versions before 0.18.0 were made over two days
 and are grouped.
 
+## 0.21.1 (2026-10-07)
+
+A polish pass over the editor. It looks and works as before; these are the details.
+
+- The windows are solid. They were slightly see-through, and the page's own writing
+  showed through and ran into theirs.
+- The bar wraps onto more rows when the browser window is too narrow for one, where its
+  last buttons used to be cut off, and it always stays in front of the two windows.
+- The chosen one of a row of choices (Main page, Sidebar and so on) has a rim as well as a
+  lighter fill, and the edges of the font box and the colour chips are easier to see.
+- Plain buttons stand out a little more from the window they are on. Buttons fade between
+  colours and give slightly when pressed; the press is left out when the computer is set
+  to reduce motion.
+- The three dots on a window and the cross on a saved picture are easier to hit.
+- Scrolling to the end of a window no longer starts the Claude page scrolling behind it.
+- While the editor is asking a question, Tab stays on the question's two buttons.
+- Numbers beside a slider keep their width as they change, and notes no longer end on a
+  lone word.
+- "Please" is gone from the two messages about files that are too big.
+
 ## 0.21.0 (2026-10-06)
 
 Pictures beside the chat fit any screen.

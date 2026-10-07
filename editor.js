@@ -588,10 +588,14 @@ function ask(question, yes) {
         box.hidden = false;
         // Enter on a question should never be the answer that cannot be taken back.
         const asker = document.activeElement;
+        // Until it is answered, Tab stays on the question's two buttons.
+        const behind = [byId("bar"), byId("work")];
+        behind.forEach((part) => { part.inert = true; });
         byId("ask-no").focus();
 
         const finish = (said) => {
             box.hidden = true;
+            behind.forEach((part) => { part.inert = false; });
             byId("ask-yes").removeEventListener("click", agreed);
             byId("ask-no").removeEventListener("click", refused);
             document.removeEventListener("keydown", escaped, true);
@@ -785,7 +789,7 @@ function drawn(picture, longest, type, quality) {
 async function keepImage(file) {
     const animated = file.type === "image/gif";
     if (animated && file.size > maxMovingBytes) {
-        throw new Error("That GIF is over 25 MB. Please choose a smaller one.");
+        throw new Error("That GIF is over 25 MB. Choose a smaller one.");
     }
     const data = await readFile(file);
     const picture = await openPicture(data);
@@ -803,7 +807,7 @@ async function keepImage(file) {
 // is, so a see-through PNG stays see-through and a GIF keeps moving.
 async function keepSticker(file) {
     if (file.size > maxStickerBytes) {
-        throw new Error("That file is over 12 MB. Please choose a smaller one.");
+        throw new Error("That file is over 12 MB. Choose a smaller one.");
     }
     const data = await readFile(file);
     const picture = await openPicture(data);
@@ -1397,10 +1401,13 @@ function makeWindow(id) {
     const element = byId(id);
     let box = null;
 
-    // A press anywhere on a window brings it in front of the others.
-    element.addEventListener("pointerdown", () => {
-        element.style.zIndex = ++front;
-    }, true);
+    // A press anywhere on a window brings it in front of the others. The bar is
+    // always in front (see #bar in editor.css).
+    if (id !== "bar") {
+        element.addEventListener("pointerdown", () => {
+            element.style.zIndex = ++front;
+        }, true);
+    }
 
     let grab = element;
     if (id !== "bar") {
