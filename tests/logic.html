@@ -42,10 +42,14 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
     claudes.textContent = `.scroll-fade-strip-top { position: sticky; top: 0; height: 28px; background: ${strip("bottom")}; } .scroll-fade-strip-bottom { position: sticky; bottom: 0; height: 28px; background: ${strip("top")}; }`;
     const panel = document.createElement("div"); panel.className = "epitaxy-chat-panel";
     panel.innerHTML = '<div class="[--cds-scroll-fade-strip-color:var(--cds-page-bg)]" style="height: 80px; overflow: auto"><div class="scroll-fade-strip-top"></div><div style="height: 300px"></div><div class="scroll-fade-strip-bottom"></div></div>';
-    document.head.append(claudes); document.body.append(panel);
+    // The same strip, handed the same see-through colour, where the theme has no rule for it. It shows the
+    // black that the theme's rule prevents, and that claude.ai's rule above is being read at all.
+    const outside = document.createElement("div"); outside.style.setProperty("--cds-scroll-fade-strip-color", "transparent");
+    outside.innerHTML = '<div class="scroll-fade-strip-top"></div>';
+    document.head.append(claudes); document.body.append(panel, outside);
     const paints = (name) => getComputedStyle(panel.querySelector(name)).backgroundImage;
-    results.codeFadeStrips = { top: paints(".scroll-fade-strip-top"), bottom: paints(".scroll-fade-strip-bottom") };
-    claudes.remove(); panel.remove();
+    results.codeFadeStrips = { top: paints(".scroll-fade-strip-top"), bottom: paints(".scroll-fade-strip-bottom"), outsideACodeSession: getComputedStyle(outside.firstChild).backgroundImage };
+    claudes.remove(); panel.remove(); outside.remove();
   }
   await chrome.storage.local.set({ frameSidebar: "raised", frameMain: "brush", frameWidth: 40 }); await wait(60);
   results.framesOn = { size: size(), pseudo: pseudo(), hostBorder: getComputedStyle(sb).borderTopWidth + "/" + getComputedStyle(pane).borderTopWidth };

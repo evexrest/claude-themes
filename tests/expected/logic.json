@@ -38,7 +38,8 @@
  },
  "codeFadeStrips": {
   "top": "none",
-  "bottom": "none"
+  "bottom": "none",
+  "outsideACodeSession": "linear-gradient(rgba(0, 0, 0, 0), color(srgb 0 0 0 / 0.85) 13%, color(srgb 0 0 0 / 0.5) 40%, color(srgb 0 0 0 / 0.15) 70%, rgba(0, 0, 0, 0))"
  },
  "framesOn": {
   "size": "8,8,288,400 | 296,8,912,400",

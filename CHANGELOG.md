@@ -8,9 +8,9 @@ and are grouped.
 A fix for Claude Code.
 
 - With a background on, two dark bands showed at the top and bottom of a Code session
-  once it was scrolled. Claude had changed how it draws the strips that fade those two
-  edges, and the see-through colour this extension gave them came out as black. Over a
-  background the strips now draw nothing.
+  once it was scrolled. Claude draws the strips that fade those two edges in a way that
+  turns the see-through colour this extension gives them into black. Over a background
+  the strips now draw nothing.
 
 ## 0.21.1 (2026-10-07)
 
