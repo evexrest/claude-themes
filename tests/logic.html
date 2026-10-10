@@ -33,6 +33,20 @@ const state = () => ({ wall: R.getAttribute("data-wallpaper"), text: R.getAttrib
   results.promptBoxUntouched = { text: g("ed").color, inner: g("edinner").color, font: g("ed").fontFamily, code: g("edcode").color, codeBlockPlain: g("plain").color, codeBlockLabel: g("label").color, preOwn: g("pre").color, panel: g("panel").color, chip: g("chip").color, menu: g("menu").color };
   results.pageText = { message: g("p").color, smallPrint: g("small").color, model: g("model").color, titleBarButton: g("btn").color };
   results.start = { ...state(), pixel: await pixel(), sideAttr: R.getAttribute("data-sidebar-image"), size: size(), pseudo: pseudo() };
+  // ----- Code: the strips that fade the transcript's top and bottom edges -----
+  // claude.ai's own rule for a strip, copied on 2026-10-10. It works the strip's colours out from the
+  // colour it is given, at strengths of its own, so a see-through colour comes out as black.
+  {
+    const strip = (to) => `linear-gradient(to ${to}, var(--cds-scroll-fade-strip-color,var(--cds-surface-1)), rgb(from var(--cds-scroll-fade-strip-color,var(--cds-surface-1)) r g b / .85) 13%, rgb(from var(--cds-scroll-fade-strip-color,var(--cds-surface-1)) r g b / .5) 40%, rgb(from var(--cds-scroll-fade-strip-color,var(--cds-surface-1)) r g b / .15) 70%, transparent)`;
+    const claudes = document.createElement("style");
+    claudes.textContent = `.scroll-fade-strip-top { position: sticky; top: 0; height: 28px; background: ${strip("bottom")}; } .scroll-fade-strip-bottom { position: sticky; bottom: 0; height: 28px; background: ${strip("top")}; }`;
+    const panel = document.createElement("div"); panel.className = "epitaxy-chat-panel";
+    panel.innerHTML = '<div class="[--cds-scroll-fade-strip-color:var(--cds-page-bg)]" style="height: 80px; overflow: auto"><div class="scroll-fade-strip-top"></div><div style="height: 300px"></div><div class="scroll-fade-strip-bottom"></div></div>';
+    document.head.append(claudes); document.body.append(panel);
+    const paints = (name) => getComputedStyle(panel.querySelector(name)).backgroundImage;
+    results.codeFadeStrips = { top: paints(".scroll-fade-strip-top"), bottom: paints(".scroll-fade-strip-bottom") };
+    claudes.remove(); panel.remove();
+  }
   await chrome.storage.local.set({ frameSidebar: "raised", frameMain: "brush", frameWidth: 40 }); await wait(60);
   results.framesOn = { size: size(), pseudo: pseudo(), hostBorder: getComputedStyle(sb).borderTopWidth + "/" + getComputedStyle(pane).borderTopWidth };
   await chrome.storage.local.set({ frameLayout: "combined", frameAll: "key" }); await wait(60);

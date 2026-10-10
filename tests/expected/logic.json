@@ -36,6 +36,10 @@
    "events": "auto"
   }
  },
+ "codeFadeStrips": {
+  "top": "none",
+  "bottom": "none"
+ },
  "framesOn": {
   "size": "8,8,288,400 | 296,8,912,400",
   "pseudo": {
