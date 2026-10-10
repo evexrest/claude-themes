@@ -3,6 +3,15 @@
 What changed in each version, newest first. Versions before 0.18.0 were made over two days
 and are grouped.
 
+## 0.21.2 (2026-10-10)
+
+A fix for Claude Code.
+
+- With a background on, two dark bands showed at the top and bottom of a Code session
+  once it was scrolled. Claude had changed how it draws the strips that fade those two
+  edges, and the see-through colour this extension gave them came out as black. Over a
+  background the strips now draw nothing.
+
 ## 0.21.1 (2026-10-07)
 
 A polish pass over the editor. It looks and works as before; these are the details.

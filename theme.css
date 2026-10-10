@@ -76,6 +76,14 @@ html[data-wallpaper="on"] .epitaxy-chat-panel [class*="--cds-scroll-fade-strip-c
     --cds-scroll-fade-strip-color: transparent;
 }
 
+/* The strips that fade the transcript's top and bottom edges take that colour too,
+   but Claude works their shades out from it at strengths of its own, and a
+   see-through colour comes out of that as black. Over a picture a strip has no
+   page colour to fade into, so it paints nothing. */
+html[data-wallpaper="on"] .epitaxy-chat-panel :is(.scroll-fade-strip-top, .scroll-fade-strip-bottom) {
+    background-image: none !important;
+}
+
 /* The pictures beside the chat. content.js creates one for each, puts it in the
    page area and works out where the empty space is. They are drawn above the page
    area's own background and below everything in it, so a picture bigger than the
